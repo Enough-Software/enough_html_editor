@@ -1,4 +1,4 @@
-# enough_mail_flutter
+# enough_html_editor
 
 Slim HTML editor for Flutter with full API control and optional Flutter-based widget controls.
 
