@@ -1,0 +1,158 @@
+<!-- this is just a test bed for testing commands and JS faster than within a flutter app -->
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Hello Editor</title>
+        <style>
+            blockquote {
+              font: normal helvetica, sans-serif;
+              margin-top: 10px;
+              margin-bottom: 10px;
+              margin-left: 20px;
+              padding-left: 15px;
+              border-left: 3px solid #ccc;
+            }
+            </style>
+            
+            <script>
+    
+    function bold() {
+        document.execCommand("bold");
+    }
+
+    function italic() {
+        document.execCommand("italic");
+    }
+
+        function underline() {
+        document.execCommand("underline");
+    }
+
+    function getText() {
+        var text = document.getElementById('editor').innerHTML;
+        console.log(text);
+    }
+
+    var isSelectionBold = false;
+    var isSelectionItalic = false;
+    var isSelectionUnderline = false;
+    var isUserInput = false;
+    var selectionTextAlign = undefined;
+    var documentHeight;
+
+
+
+    function onSelectionChange() {
+        //console.log|("onSelectionChange");
+        let {anchorNode, anchorOffset, focusNode, focusOffset} = document.getSelection();
+        // traverse all parents to find <b>, <i> or <u> elements:
+        var isBold = false;
+        var isItalic = false;
+        var isUnderline = false;
+        var nestedBlockqotes = 0;
+        var node = anchorNode;
+        var textAlign = undefined;
+        while (node.parentNode != null && node.id != 'editor') {
+            if (node.nodeName == 'B') {
+                isBold = true;
+            } else if (node.nodeName == 'I') {
+                isItalic = true;
+            } else if (node.nodeName == 'U') {
+                isUnderline = true;
+            } else if (node.nodeName == 'BLOCKQUOTE') {
+                nestedBlockqotes++;
+            }
+            textAlign ??= node.style?.textAlign;
+            if (textAlign == '') {
+                textAlign = undefined;
+            }
+            node = node.parentNode;
+        }
+        if (textAlign != selectionTextAlign) {
+            selectionTextAlign = textAlign;
+            console.log('new text-align:', textAlign);
+        }
+
+        if (isBold != isSelectionBold || isItalic != isSelectionItalic || isUnderline != isSelectionUnderline) {
+            isSelectionBold = isBold;
+            isSelectionItalic = isItalic;
+            isSelectionUnderline = isUnderline;
+            console.log('bold=', isBold, ', italic=', isItalic, ', underline=', isUnderline);
+            var message = 0;
+            if (isBold) {
+                message += 1;
+            }
+            if (isItalic) {
+                message += 2;
+            }
+            if (isUnderline) {
+                message += 4;
+            }
+
+        } else if (isUserInput && nestedBlockqotes > 0 && anchorOffset == focusOffset) {
+            // check if a linebreak has been added in a blockquote
+            console.log('EDIT IN BLOCKQUOTE!!');
+            document.execCommand('insertHTML', false, '<i>YOUR TEXT HERE</i>');
+        } 
+        isUserInput = false;
+        // if (anchorOffset == focusOffset) {
+        //     console.log(anchorNode, anchorOffset); //, focusNode, focusOffset);
+        // }
+        
+    }
+
+    function onInput() {
+        isUserInput = true;
+        console.log('onInput');
+        var height = document.body.scrollHeight;
+        if (height != documentHeight) {
+            documentHeight = height;
+            console.log('height changed to', height);
+        }
+    }
+
+    function onFocusIn() {
+        console.log('got focus');
+    }
+
+    function onBlur() {
+        console.log('lost focus');
+    }
+
+    function onLoaded() {
+        documentHeight = document.body.scrollHeight;
+    }
+
+    document.onselectionchange = onSelectionChange;
+    </script>
+    
+    </head>
+    <body onload="onLoaded">
+        Here is some text outside of the editor.
+        <button onclick="bold();">bold</button>
+        <button onclick="italic();">italic</button>
+        <button onclick="underline();">underline</button>
+        <button onclick="getText();">getText</button>
+        <div id="editor" onfocus="onFocusIn();" onblur="onBlur();" contenteditable="true" oninput="onInput();">Hello <b>ContentEditable</b> 
+            <h2>This is a level 2 heading</h2>
+            <p style="text-align: center;">Here is some text</p>
+            <p>Here is <b>bold</b> text</p>
+            <p style="text-align: right;">Here is <i>some italic sic</i> text</p>
+            <p>Here is <i><b>bold and italic</b></i> text</p>
+            <p>Here is <u><i><b>bold and italic and underline</b></i></u> text</p>
+            <ul><li>one list element</li><li>another point</li></ul>
+            <blockquote>Here is a quote<br/>
+            that spans several lines
+            <blockquote>
+                A second level blockqote 
+            </blockquote>
+            </blockquote>
+            <p>And finally, some code</p>
+            <pre>
+                Hello World
+                What goes on here?
+                rahababajsdjsnj
+            </pre>
+            </div>
+    </body>
+</html>
