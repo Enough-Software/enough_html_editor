@@ -11,6 +11,16 @@ class EditorApi {
 
   set webViewController(WebViewController value) => _webViewController = value;
 
+  /// Define any custom CSS styles, replacing the existing styles.
+  ///
+  /// Also compare [customStyles].
+  set styles(String value) => _htmlEditorState.styles = value;
+
+  /// Define any custom CSS styles, ammending the default styles
+  ///
+  /// Also compare [styles].
+  set customStyles(String value) => _htmlEditorState.styles += value;
+
   /// Callback to be informed when the API can be used fully.
   void Function() onReady;
 
