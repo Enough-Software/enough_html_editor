@@ -36,15 +36,7 @@ class HtmlEditorState extends State<HtmlEditor> {
 <!DOCTYPE html>
 <html>
 <head>
-<style>
-blockquote {
-  font: normal helvetica, sans-serif;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  margin-left: 20px;
-  padding-left: 15px;
-  border-left: 3px solid #ccc;
-}
+<style>==styles==
 #editor {
   min-height: 100px;
 }
@@ -131,6 +123,17 @@ blockquote {
   WebViewController _webViewController;
   double _documentHeight;
   EditorApi _api;
+
+  String styles = '''
+blockquote {
+  font: normal helvetica, sans-serif;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 20px;
+  padding-left: 15px;
+  border-left: 3px solid #ccc;
+}
+  ''';
   EditorApi get api => _api;
 
   @override
@@ -142,8 +145,9 @@ blockquote {
     if (Platform.isAndroid) {
       WebView.platform = SurfaceAndroidWebView();
     }
-    final html =
-        _template.replaceFirst('==content==', widget.initialContent ?? '');
+    final html = _template
+        .replaceFirst('==styles==', styles)
+        .replaceFirst('==content==', widget.initialContent ?? '');
     _initialPageContent = 'data:text/html;base64,' +
         base64Encode(const Utf8Encoder().convert(html));
   }
@@ -196,7 +200,6 @@ blockquote {
           }
         }
       },
-      //navigationDelegate: widget.navigationDelegate ?? handleNavigationProcess,
     );
   }
 
