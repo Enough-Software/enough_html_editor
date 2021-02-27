@@ -4,6 +4,7 @@ import 'editor_api.dart';
 import 'package:flutter/widgets.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+/// Standard format settings
 class FormatSettings {
   final isBold;
   final isItalic;
@@ -11,19 +12,34 @@ class FormatSettings {
   FormatSettings(this.isBold, this.isItalic, this.isUnderline);
 }
 
+/// Standard align settings
 enum ElementAlign { left, center, right, justify }
 
+/// Slim HTML Editor with API
 class HtmlEditor extends StatefulWidget {
+  /// Set the [initialContent] to populate the editor with some existing text
   final String initialContent;
+
+  /// Set [adjustHeight] to let the editor set its height automatically - by default this is `true`.
   final bool adjustHeight;
-  final double minHeight;
+
+  /// Specify the [minHeight] to set a different height than the default `100` pixel.
+  final int minHeight;
+
+  /// Define the `onCreated(EditorApi)` callback to get notified when the API is ready.
   final void Function(EditorApi) onCreated;
 
+  /// Creates a new HTML editor
+  ///
+  /// Set the [initialContent] to populate the editor with some existing text
+  /// Set [adjustHeight] to let the editor set its height automatically - by default this is `true`.
+  /// Specify the [minHeight] to set a different height than the default `100` pixel.
+  /// Define the `onCreated(EditorApi)` callback to get notified when the API is ready.
   HtmlEditor(
       {Key key,
-      this.initialContent,
+      this.initialContent = '',
       this.adjustHeight = true,
-      this.minHeight = 100.0,
+      this.minHeight = 100,
       this.onCreated})
       : super(key: key);
 
@@ -31,15 +47,14 @@ class HtmlEditor extends StatefulWidget {
   HtmlEditorState createState() => HtmlEditorState();
 }
 
+/// You can access the API by accessing the HtmlEditor's state.
+/// The editor state can be accessed directly when using a GlobalKey<HtmlEditorState>.
 class HtmlEditorState extends State<HtmlEditor> {
   static const String _template = '''
 <!DOCTYPE html>
 <html>
 <head>
 <style>==styles==
-#editor {
-  min-height: 100px;
-}
 </style>
 <script>
   var isSelectionBold = false;
@@ -124,6 +139,7 @@ class HtmlEditorState extends State<HtmlEditor> {
   double _documentHeight;
   EditorApi _api;
 
+  /// Allows to replace the existing styles.
   String styles = '''
 blockquote {
   font: normal helvetica, sans-serif;
@@ -133,7 +149,14 @@ blockquote {
   padding-left: 15px;
   border-left: 3px solid #ccc;
 }
+#editor {
+  min-height: ==minHeight==px;
+}
   ''';
+
+  /// Access to the API of the editor.
+  ///
+  /// Instead of accessing the API via the `HtmlEditorState` you can also directly get in in the `HtmlEditor.onCreated(...)` callback.
   EditorApi get api => _api;
 
   @override
@@ -145,8 +168,10 @@ blockquote {
     if (Platform.isAndroid) {
       WebView.platform = SurfaceAndroidWebView();
     }
+    final stylesWithMinHeight =
+        styles.replaceFirst('==minHeight==', '${widget.minHeight}');
     final html = _template
-        .replaceFirst('==styles==', styles)
+        .replaceFirst('==styles==', stylesWithMinHeight)
         .replaceFirst('==content==', widget.initialContent ?? '');
     _initialPageContent = 'data:text/html;base64,' +
         base64Encode(const Utf8Encoder().convert(html));
