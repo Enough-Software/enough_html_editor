@@ -1,3 +1,8 @@
+## [0.0.3] - 2021-03-13
+- `enough_html_editor` is now [null safe](https://dart.dev/null-safety/tour) #6
+- You can now configure if a `blockquote` should be split when the user adds a newline #1
+
+
 ## [0.0.2] - 2021-02-27
 
 * Improve documentation.

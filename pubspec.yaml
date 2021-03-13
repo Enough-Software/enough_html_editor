@@ -1,6 +1,6 @@
 name: enough_html_editor
 description: Slim HTML editor for Flutter with full API control and optional Flutter-based widget controls.
-version: 0.0.2
+version: 0.0.3
 homepage: https://github.com/Enough-Software/enough_html_editor
 
 environment:
