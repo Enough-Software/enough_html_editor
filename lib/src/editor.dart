@@ -25,21 +25,21 @@ class HtmlEditor extends StatefulWidget {
   final int minHeight;
 
   /// Define the `onCreated(EditorApi)` callback to get notified when the API is ready.
-  final void Function(EditorApi) onCreated;
+  final void Function(EditorApi)? onCreated;
 
   /// Creates a new HTML editor
   ///
   /// Set the [initialContent] to populate the editor with some existing text
   /// Set [adjustHeight] to let the editor set its height automatically - by default this is `true`.
   /// Specify the [minHeight] to set a different height than the default `100` pixel.
-  /// Define the `onCreated(EditorApi)` callback to get notified when the API is ready.
-  HtmlEditor(
-      {Key key,
-      this.initialContent = '',
-      this.adjustHeight = true,
-      this.minHeight = 100,
-      this.onCreated})
-      : super(key: key);
+  /// Define the [onCreated] `onCreated(EditorApi)` callback to get notified when the API is ready.
+  HtmlEditor({
+    Key? key,
+    this.initialContent = '',
+    this.adjustHeight = true,
+    this.minHeight = 100,
+    this.onCreated,
+  }) : super(key: key);
 
   @override
   HtmlEditorState createState() => HtmlEditorState();
@@ -74,40 +74,40 @@ class HtmlEditorState extends State<HtmlEditor> {
     var nestedBlockqotes = 0;
     var rootBlockquote;
     while (node.parentNode != null && node.id != 'editor') {
-        if (node.nodeName == 'B') {
-            isBold = true;
-        } else if (node.nodeName == 'I') {
-            isItalic = true;
-        } else if (node.nodeName == 'U') {
-            isUnderline = true;
-        } else if (node.nodeName == 'BLOCKQUOTE') {
-            nestedBlockqotes++;
-            rootBlockquote = node;
-        }
-        if (textAlign == undefined && node.style?.textAlign != undefined && node.style.textAlign != '') {
-          textAlign = node.style.textAlign;
-        }
-        node = node.parentNode;
+      if (node.nodeName == 'B') {
+          isBold = true;
+      } else if (node.nodeName == 'I') {
+          isItalic = true;
+      } else if (node.nodeName == 'U') {
+          isUnderline = true;
+      } else if (node.nodeName == 'BLOCKQUOTE') {
+          nestedBlockqotes++;
+          rootBlockquote = node;
+      }
+      if (textAlign == undefined && node.style?.textAlign != undefined && node.style.textAlign != '') {
+        textAlign = node.style.textAlign;
+      }
+      node = node.parentNode;
     }
     if (isBold != isSelectionBold || isItalic != isSelectionItalic || isUnderline != isSelectionUnderline) {
-        isSelectionBold = isBold;
-        isSelectionItalic = isItalic;
-        isSelectionUnderline = isUnderline;
-        var message = 0;
-        if (isBold) {
-            message += 1;
-        }
-        if (isItalic) {
-            message += 2;
-        }
-        if (isUnderline) {
-            message += 4;
-        }
-        window.flutter_inappwebview.callHandler('FormatSettings', message);
+      isSelectionBold = isBold;
+      isSelectionItalic = isItalic;
+      isSelectionUnderline = isUnderline;
+      var message = 0;
+      if (isBold) {
+          message += 1;
+      }
+      if (isItalic) {
+          message += 2;
+      }
+      if (isUnderline) {
+          message += 4;
+      }
+      window.flutter_inappwebview.callHandler('FormatSettings', message);
     }
     if (textAlign != selectionTextAlign) {
-        selectionTextAlign = textAlign;
-        window.flutter_inappwebview.callHandler('AlignSettings', textAlign);
+      selectionTextAlign = textAlign;
+      window.flutter_inappwebview.callHandler('AlignSettings', textAlign);
     }
     if (isLineBreakInput && nestedBlockqotes > 0 && anchorOffset == focusOffset) {
       let rootNode = rootBlockquote.parentNode;
@@ -188,10 +188,10 @@ class HtmlEditorState extends State<HtmlEditor> {
 </body>
 </html>
 ''';
-  String _initialPageContent;
-  InAppWebViewController _webViewController;
-  double _documentHeight;
-  EditorApi _api;
+  late String _initialPageContent;
+  late InAppWebViewController _webViewController;
+  double? _documentHeight;
+  late EditorApi _api;
 
   /// Allows to replace the existing styles.
   String styles = '''
@@ -221,7 +221,7 @@ blockquote {
         styles.replaceFirst('==minHeight==', '${widget.minHeight}');
     final html = _template
         .replaceFirst('==styles==', stylesWithMinHeight)
-        .replaceFirst('==content==', widget.initialContent ?? '');
+        .replaceFirst('==content==', widget.initialContent);
     _initialPageContent = html;
   }
 
@@ -254,7 +254,7 @@ blockquote {
       onLoadStop: (controller, url) async {
         if (widget.adjustHeight) {
           final scrollHeight = await _webViewController.evaluateJavascript(
-              source: 'document.body.scrollHeight') as int;
+              source: 'document.body.scrollHeight') as int?;
           if ((scrollHeight != null) &&
               mounted &&
               (scrollHeight + 20 > widget.minHeight)) {
@@ -264,7 +264,7 @@ blockquote {
           }
         }
         final scrollWidth = await _webViewController.evaluateJavascript(
-            source: 'document.body.scrollWidth') as int;
+            source: 'document.body.scrollWidth') as int?;
         final size = MediaQuery.of(context).size;
         print(
             'scrollWidth=$scrollWidth available=${size.width} adjustHeight=${widget.adjustHeight}');
@@ -300,29 +300,29 @@ blockquote {
         handlerName: 'InternalUpdate', callback: _onInternalUpdateReceived);
 
     if (widget.onCreated != null) {
-      widget.onCreated(_api);
+      widget.onCreated!(_api);
     }
     if (_api.onReady != null) {
-      _api.onReady();
+      _api.onReady!();
     }
   }
 
   void _onFormatSettingsReceived(List<dynamic> parameters) {
-    print('got format $parameters');
+    // print('got format $parameters');
     if (_api.onFormatSettingsChanged != null && parameters.isNotEmpty) {
-      int numericMessage = parameters.first;
+      final numericMessage = parameters.first as int?;
       if (numericMessage != null) {
         final isBold = (numericMessage & 1) == 1;
         final isItalic = (numericMessage & 2) == 2;
         final isUnderline = (numericMessage & 4) == 4;
-        _api.onFormatSettingsChanged(
+        _api.onFormatSettingsChanged!(
             FormatSettings(isBold, isItalic, isUnderline));
       }
     }
   }
 
   void _onAlignSettingsReceived(List<dynamic> parameters) {
-    print('got align $parameters');
+    // print('got align $parameters');
     if (_api.onAlignSettingsChanged != null && parameters.isNotEmpty) {
       ElementAlign align;
       switch (parameters.first) {
@@ -342,15 +342,15 @@ blockquote {
           align = ElementAlign.left;
           break;
       }
-      _api.onAlignSettingsChanged(align);
+      _api.onAlignSettingsChanged!(align);
     }
   }
 
   void _onInternalUpdateReceived(List<dynamic> parameters) {
-    print('InternalUpdate got update: $parameters');
+    // print('InternalUpdate got update: $parameters');
     if (parameters.isNotEmpty) {
-      final message = parameters.first;
-      if (message.startsWith('h')) {
+      final message = parameters.first as String?;
+      if (message != null && message.startsWith('h')) {
         final height = double.tryParse(message.substring(1));
         if (height != null) {
           setState(() {

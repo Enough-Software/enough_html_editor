@@ -4,10 +4,10 @@ import 'editor.dart';
 import 'editor_api.dart';
 
 class HtmlEditorControls extends StatefulWidget {
-  final GlobalKey<HtmlEditorState> editorKey;
-  final EditorApi editorApi;
+  final GlobalKey<HtmlEditorState>? editorKey;
+  final EditorApi? editorApi;
 
-  HtmlEditorControls({Key key, this.editorKey, this.editorApi})
+  HtmlEditorControls({Key? key, this.editorKey, this.editorApi})
       : super(key: key);
 
   @override
@@ -16,26 +16,26 @@ class HtmlEditorControls extends StatefulWidget {
 
 class _HtmlEditorControlsState extends State<HtmlEditorControls> {
   final isSelected = [false, false, false];
-  var _currentAlignFormat = ElementAlign.left;
-  EditorApi _editorApi;
+  ElementAlign? _currentAlignFormat = ElementAlign.left;
+  EditorApi? _editorApi;
 
   @override
   void initState() {
     super.initState();
     if (widget.editorKey != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _editorApi = widget.editorKey.currentState.api;
+      WidgetsBinding.instance!.addPostFrameCallback((_) {
+        _editorApi = widget.editorKey!.currentState!.api;
         // in init state, the editorKey.currentState is still null,
         // so wait for after the first run
-        widget.editorKey.currentState.api.onFormatSettingsChanged =
+        widget.editorKey!.currentState!.api.onFormatSettingsChanged =
             _onFormatSettingsChanged;
-        widget.editorKey.currentState.api.onAlignSettingsChanged =
+        widget.editorKey!.currentState!.api.onAlignSettingsChanged =
             _onAlignSettingsChanged;
       });
     } else if (widget.editorApi != null) {
       _editorApi = widget.editorApi;
-      widget.editorApi.onFormatSettingsChanged = _onFormatSettingsChanged;
-      widget.editorApi.onAlignSettingsChanged = _onAlignSettingsChanged;
+      widget.editorApi!.onFormatSettingsChanged = _onFormatSettingsChanged;
+      widget.editorApi!.onAlignSettingsChanged = _onAlignSettingsChanged;
     }
   }
 
@@ -49,7 +49,7 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
 
   void _onAlignSettingsChanged(ElementAlign align) {
     setState(() {
-      _currentAlignFormat = align ?? ElementAlign.left;
+      _currentAlignFormat = align;
     });
   }
 
@@ -67,13 +67,13 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
           onPressed: (int index) {
             switch (index) {
               case 0:
-                _editorApi.formatBold();
+                _editorApi!.formatBold();
                 break;
               case 1:
-                _editorApi.formatItalic();
+                _editorApi!.formatItalic();
                 break;
               case 2:
-                _editorApi.formatUnderline();
+                _editorApi!.formatUnderline();
                 break;
             }
             setState(() {
@@ -84,11 +84,11 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
         ),
         IconButton(
           icon: Icon(Icons.format_list_bulleted),
-          onPressed: () => _editorApi.insertUnorderedList(),
+          onPressed: () => _editorApi!.insertUnorderedList(),
         ),
         IconButton(
           icon: Icon(Icons.format_list_numbered),
-          onPressed: () => _editorApi.insertOrderedList(),
+          onPressed: () => _editorApi!.insertOrderedList(),
         ),
         DropdownButton<ElementAlign>(
           items: [
@@ -105,18 +105,19 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
                 value: ElementAlign.justify),
           ],
           onChanged: (align) {
+            align ??= ElementAlign.left;
             switch (align) {
               case ElementAlign.left:
-                _editorApi.formatAlignLeft();
+                _editorApi!.formatAlignLeft();
                 break;
               case ElementAlign.center:
-                _editorApi.formatAlignCenter();
+                _editorApi!.formatAlignCenter();
                 break;
               case ElementAlign.right:
-                _editorApi.formatAlignRight();
+                _editorApi!.formatAlignRight();
                 break;
               case ElementAlign.justify:
-                _editorApi.formatAlignJustify();
+                _editorApi!.formatAlignJustify();
                 break;
             }
             setState(() {
@@ -137,10 +138,10 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
 }
 
 class SliverHeaderHtmlEditorControls extends StatelessWidget {
-  final GlobalKey<HtmlEditorState> editorKey;
-  final EditorApi editorApi;
+  final GlobalKey<HtmlEditorState>? editorKey;
+  final EditorApi? editorApi;
 
-  SliverHeaderHtmlEditorControls({Key key, this.editorKey, this.editorApi})
+  SliverHeaderHtmlEditorControls({Key? key, this.editorKey, this.editorApi})
       : super(key: key);
 
   @override
@@ -158,8 +159,8 @@ class SliverHeaderHtmlEditorControls extends StatelessWidget {
 class _SliverHeaderHtmlEditorControlsDelegate
     extends SliverPersistentHeaderDelegate {
   final double height;
-  final GlobalKey<HtmlEditorState> editorKey;
-  final EditorApi editorApi;
+  final GlobalKey<HtmlEditorState>? editorKey;
+  final EditorApi? editorApi;
 
   _SliverHeaderHtmlEditorControlsDelegate(
       {this.editorKey, this.editorApi, this.height = 48});

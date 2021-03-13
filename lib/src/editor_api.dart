@@ -6,7 +6,7 @@ import 'editor.dart';
 /// Get access to this API either by waiting for the `HtmlEditor.onCreated()` callback or by accessing
 /// the `HtmlEditorState` with a `GlobalKey<HtmlEditorState>`.
 class EditorApi {
-  InAppWebViewController _webViewController;
+  late InAppWebViewController _webViewController;
   final HtmlEditorState _htmlEditorState;
 
   set webViewController(InAppWebViewController value) =>
@@ -23,13 +23,13 @@ class EditorApi {
   set customStyles(String value) => _htmlEditorState.styles += value;
 
   /// Callback to be informed when the API can be used fully.
-  void Function() onReady;
+  void Function()? onReady;
 
   /// Callback to be informed when the format settings have been changed
-  void Function(FormatSettings) onFormatSettingsChanged;
+  void Function(FormatSettings)? onFormatSettingsChanged;
 
   /// Callback to be informed when the align settings have been changed
-  void Function(ElementAlign) onAlignSettingsChanged;
+  void Function(ElementAlign)? onAlignSettingsChanged;
 
   EditorApi(this._htmlEditorState);
 
@@ -97,9 +97,9 @@ class EditorApi {
   /// Retrieves the edited text as HTML
   ///
   /// Compare [getFullHtml()] to the complete HTML document's text.
-  Future<String> getText() async {
+  Future<String?> getText() async {
     final innerHtml = await _webViewController.evaluateJavascript(
-        source: 'document.getElementById("editor").innerHTML;') as String;
+        source: 'document.getElementById("editor").innerHTML;') as String?;
     return innerHtml;
   }
 
@@ -107,7 +107,7 @@ class EditorApi {
   ///
   /// Optionally specify the [content] if you have previously called [getText()] for other reasons.
   /// Compare [getText()] to retrieve only the edited HTML text.
-  Future<String> getFullHtml({String content}) async {
+  Future<String> getFullHtml({String? content}) async {
     content ??= await getText();
     final styles = _htmlEditorState.styles;
     return '''<!DOCTYPE html>
