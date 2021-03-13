@@ -1,4 +1,4 @@
-package de.enough.enough_html_editor_example
+package de.enough.enough_html_example
 
 import io.flutter.embedding.android.FlutterActivity
 

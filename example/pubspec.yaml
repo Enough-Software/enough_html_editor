@@ -1,5 +1,5 @@
-name: enough_html_editor_example
-description: Example for enough_html_editor usage
+name: enough_html_example
+description: Shows how to use the enough_html_editor project
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
@@ -23,19 +23,17 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  enough_html_editor:
-    path: ../../enough_html_editor
+  enough_html_editor: 
+    path: ../
 
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.0
+  cupertino_icons: ^1.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  webview_flutter: ^1.0.7
-  flutter_icons: ^1.1.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

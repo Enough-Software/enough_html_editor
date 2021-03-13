@@ -1,8 +1,6 @@
-import 'dart:io';
-import 'dart:convert';
 import 'editor_api.dart';
 import 'package:flutter/widgets.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 /// Standard format settings
 class FormatSettings {
@@ -61,6 +59,7 @@ class HtmlEditorState extends State<HtmlEditor> {
   var isSelectionItalic = false;
   var isSelectionUnderline = false;
   var selectionTextAlign = undefined;
+  var isLineBreakInput = false;
   var documentHeight;
 
   function onSelectionChange() {
@@ -72,6 +71,8 @@ class HtmlEditorState extends State<HtmlEditor> {
     var isUnderline = false;
     var node = anchorNode;
     var textAlign = undefined;
+    var nestedBlockqotes = 0;
+    var rootBlockquote;
     while (node.parentNode != null && node.id != 'editor') {
         if (node.nodeName == 'B') {
             isBold = true;
@@ -79,6 +80,9 @@ class HtmlEditorState extends State<HtmlEditor> {
             isItalic = true;
         } else if (node.nodeName == 'U') {
             isUnderline = true;
+        } else if (node.nodeName == 'BLOCKQUOTE') {
+            nestedBlockqotes++;
+            rootBlockquote = node;
         }
         if (textAlign == undefined && node.style?.textAlign != undefined && node.style.textAlign != '') {
           textAlign = node.style.textAlign;
@@ -89,7 +93,6 @@ class HtmlEditorState extends State<HtmlEditor> {
         isSelectionBold = isBold;
         isSelectionItalic = isItalic;
         isSelectionUnderline = isUnderline;
-        //console.log('bold=', isBold, ', italic=', isItalic, ', underline=', isUnderline);
         var message = 0;
         if (isBold) {
             message += 1;
@@ -100,42 +103,93 @@ class HtmlEditorState extends State<HtmlEditor> {
         if (isUnderline) {
             message += 4;
         }
-        FormatSettings.postMessage(message);
+        window.flutter_inappwebview.callHandler('FormatSettings', message);
     }
     if (textAlign != selectionTextAlign) {
         selectionTextAlign = textAlign;
-        AlignSettings.postMessage(textAlign);
+        window.flutter_inappwebview.callHandler('AlignSettings', textAlign);
     }
+    if (isLineBreakInput && nestedBlockqotes > 0 && anchorOffset == focusOffset) {
+      let rootNode = rootBlockquote.parentNode;
+      var cloneNode = null;
+      var requiresCloning = false;
+      var node = anchorNode;
+      while (node != rootBlockquote) {
+        let sibling = node.previousSibling;
+        if (sibling != null) {
+          var parentNode = node.parentNode;
+          var currentSibling = sibling;
+          while (currentSibling.previousSibling != null) {
+            currentSibling = currentSibling.previousSibling;
+          }
+          var cloneParentNode = document.createElement(parentNode.nodeName);
+          do {
+            var nextSibling = currentSibling.nextSibling;
+            parentNode.removeChild(currentSibling);
+            cloneParentNode.appendChild(currentSibling);
+            if (currentSibling == sibling) {
+                break;
+            }
+            currentSibling = nextSibling;
+          } while (true);
+          if (cloneNode != null) {
+            cloneParentNode.appendChild(cloneNode);
+          }
+          requiresCloning = true;
+          cloneNode = cloneParentNode;
+        } else if (requiresCloning) {
+          var cloneParentNode = document.createElement(node.nodeName);
+          cloneParentNode.appendChild(cloneNode);
+          cloneNode = cloneParentNode;
+        }
+        node = node.parentNode;
+      }
+      if (cloneNode != null) {
+        rootNode.insertBefore(cloneNode, rootBlockquote);
+      }
+      let textNode = document.createElement("P");
+      let textNodeContent = document.createTextNode('_');
+      textNode.appendChild(textNodeContent);
+      rootNode.insertBefore(textNode, rootBlockquote);
+      let range = new Range();
+      range.setStart(textNodeContent, 0);
+      range.setEnd(textNodeContent, 1);
+      let selection = getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } 
+    isLineBreakInput = false;
   }
 
-  function onInput() {
+  function onInput(inputEvent) {
+    isLineBreakInput = ((inputEvent.inputType == 'insertParagraph') || ((inputEvent.inputType == 'insertText') && (inputEvent.data == null)));
     var height = document.body.scrollHeight;
     if (height != documentHeight) {
         documentHeight = height;
-        InternalUpdate.postMessage('h' + height);
+        window.flutter_inappwebview.callHandler('InternalUpdate', 'h' + height);
     }
   }
 
   function onFocus() {
-    InternalUpdate.postMessage('onfocus');
+    window.flutter_inappwebview.callHandler('InternalUpdate', 'onfocus');
   }
 
   function onLoaded() {
-      documentHeight = document.body.scrollHeight;
+    documentHeight = document.body.scrollHeight;
+    document.onselectionchange = onSelectionChange;
+    document.getElementById('editor').oninput = onInput;
   }
-
-  document.onselectionchange = onSelectionChange;
 </script>
 </head>
-<body onload="onLoaded();">
-<div id="editor" contenteditable="true" oninput="onInput();" onfocus="onFocus();">
+<body onload="onLoaded();" >
+<div id="editor" contenteditable="true" onfocus="onFocus();">
 ==content==
 </div>
 </body>
 </html>
 ''';
   String _initialPageContent;
-  WebViewController _webViewController;
+  InAppWebViewController _webViewController;
   double _documentHeight;
   EditorApi _api;
 
@@ -163,35 +217,22 @@ blockquote {
   void initState() {
     super.initState();
     _api = EditorApi(this);
-
-    // Enable hybrid composition for better editing support.
-    if (Platform.isAndroid) {
-      WebView.platform = SurfaceAndroidWebView();
-    }
     final stylesWithMinHeight =
         styles.replaceFirst('==minHeight==', '${widget.minHeight}');
     final html = _template
         .replaceFirst('==styles==', stylesWithMinHeight)
         .replaceFirst('==content==', widget.initialContent ?? '');
-    _initialPageContent = 'data:text/html;base64,' +
-        base64Encode(const Utf8Encoder().convert(html));
+    _initialPageContent = html;
   }
 
   @override
   Widget build(BuildContext context) {
     if (widget.adjustHeight) {
-      final screenHeight = MediaQuery.of(context).size.height;
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          if (!constraints.hasBoundedHeight) {
-            constraints = constraints.copyWith(
-                maxHeight: _documentHeight ?? screenHeight);
-          }
-          return ConstrainedBox(
-            constraints: constraints,
-            child: _buildEditor(),
-          );
-        },
+      final size = MediaQuery.of(context).size;
+      return SizedBox(
+        height: _documentHeight ?? size.height,
+        width: size.width,
+        child: _buildEditor(),
       );
     } else {
       return _buildEditor();
@@ -206,31 +247,58 @@ blockquote {
   }
 
   Widget _buildWebView() {
-    return WebView(
-      initialUrl: _initialPageContent,
-      javascriptMode: JavascriptMode.unrestricted,
+    return InAppWebView(
+      key: ValueKey(_initialPageContent),
+      initialData: InAppWebViewInitialData(data: _initialPageContent),
       onWebViewCreated: _onWebViewCreated,
-      javascriptChannels: _buildJsChannels(),
-      onPageFinished: (url) async {
+      onLoadStop: (controller, url) async {
         if (widget.adjustHeight) {
-          final scrollHeightText = await _webViewController
-              .evaluateJavascript('document.body.scrollHeight');
-          double height = double.tryParse(scrollHeightText);
-          if ((height != null) &&
+          final scrollHeight = await _webViewController.evaluateJavascript(
+              source: 'document.body.scrollHeight') as int;
+          if ((scrollHeight != null) &&
               mounted &&
-              (widget.minHeight == null || (height + 20 > widget.minHeight))) {
+              (scrollHeight + 20 > widget.minHeight)) {
             setState(() {
-              _documentHeight = height + 20;
+              _documentHeight = scrollHeight + 20.0;
             });
           }
         }
+        final scrollWidth = await _webViewController.evaluateJavascript(
+            source: 'document.body.scrollWidth') as int;
+        final size = MediaQuery.of(context).size;
+        print(
+            'scrollWidth=$scrollWidth available=${size.width} adjustHeight=${widget.adjustHeight}');
+      },
+      initialOptions: InAppWebViewGroupOptions(
+        crossPlatform: InAppWebViewOptions(
+          useShouldOverrideUrlLoading: true,
+          verticalScrollBarEnabled: false,
+        ),
+        android: AndroidInAppWebViewOptions(
+          useWideViewPort: false,
+          loadWithOverviewMode: true,
+          useHybridComposition: true,
+        ),
+      ),
+      // deny browsing while editing:
+      shouldOverrideUrlLoading: (controller, action) =>
+          Future.value(NavigationActionPolicy.CANCEL),
+      onConsoleMessage: (controller, consoleMessage) {
+        print(consoleMessage);
       },
     );
   }
 
-  void _onWebViewCreated(WebViewController controller) {
+  void _onWebViewCreated(InAppWebViewController controller) {
     _webViewController = controller;
     _api.webViewController = controller;
+    controller.addJavaScriptHandler(
+        handlerName: 'FormatSettings', callback: _onFormatSettingsReceived);
+    controller.addJavaScriptHandler(
+        handlerName: 'AlignSettings', callback: _onAlignSettingsReceived);
+    controller.addJavaScriptHandler(
+        handlerName: 'InternalUpdate', callback: _onInternalUpdateReceived);
+
     if (widget.onCreated != null) {
       widget.onCreated(_api);
     }
@@ -239,78 +307,59 @@ blockquote {
     }
   }
 
-  Set<JavascriptChannel> _buildJsChannels() {
-    return [
-      _formatSettingsJavascriptChannel(),
-      _alignSettingsJavascriptChannel(),
-      _internalUpdatesJavascriptChannel(),
-    ].toSet();
+  void _onFormatSettingsReceived(List<dynamic> parameters) {
+    print('got format $parameters');
+    if (_api.onFormatSettingsChanged != null && parameters.isNotEmpty) {
+      int numericMessage = parameters.first;
+      if (numericMessage != null) {
+        final isBold = (numericMessage & 1) == 1;
+        final isItalic = (numericMessage & 2) == 2;
+        final isUnderline = (numericMessage & 4) == 4;
+        _api.onFormatSettingsChanged(
+            FormatSettings(isBold, isItalic, isUnderline));
+      }
+    }
   }
 
-  JavascriptChannel _formatSettingsJavascriptChannel() {
-    return JavascriptChannel(
-      name: 'FormatSettings',
-      onMessageReceived: (JavascriptMessage message) {
-        // print('FormatSettings got update: ${message.message}');
-        if (_api.onFormatSettingsChanged != null) {
-          final numericMessage = int.tryParse(message.message);
-          if (numericMessage != null) {
-            final isBold = (numericMessage & 1) == 1;
-            final isItalic = (numericMessage & 2) == 2;
-            final isUnderline = (numericMessage & 4) == 4;
-            _api.onFormatSettingsChanged(
-                FormatSettings(isBold, isItalic, isUnderline));
-          }
-        }
-      },
-    );
+  void _onAlignSettingsReceived(List<dynamic> parameters) {
+    print('got align $parameters');
+    if (_api.onAlignSettingsChanged != null && parameters.isNotEmpty) {
+      ElementAlign align;
+      switch (parameters.first) {
+        case 'left':
+          align = ElementAlign.left;
+          break;
+        case 'center':
+          align = ElementAlign.center;
+          break;
+        case 'right':
+          align = ElementAlign.right;
+          break;
+        case 'justify':
+          align = ElementAlign.justify;
+          break;
+        default:
+          align = ElementAlign.left;
+          break;
+      }
+      _api.onAlignSettingsChanged(align);
+    }
   }
 
-  JavascriptChannel _alignSettingsJavascriptChannel() {
-    return JavascriptChannel(
-      name: 'AlignSettings',
-      onMessageReceived: (JavascriptMessage message) {
-        // print('AlignSettings got update: ${message.message}');
-        if (_api.onAlignSettingsChanged != null) {
-          ElementAlign align;
-          switch (message.message) {
-            case 'left':
-              align = ElementAlign.left;
-              break;
-            case 'center':
-              align = ElementAlign.center;
-              break;
-            case 'right':
-              align = ElementAlign.right;
-              break;
-            case 'justify':
-              align = ElementAlign.justify;
-              break;
-          }
-          _api.onAlignSettingsChanged(align);
+  void _onInternalUpdateReceived(List<dynamic> parameters) {
+    print('InternalUpdate got update: $parameters');
+    if (parameters.isNotEmpty) {
+      final message = parameters.first;
+      if (message.startsWith('h')) {
+        final height = double.tryParse(message.substring(1));
+        if (height != null) {
+          setState(() {
+            _documentHeight = height + 5;
+          });
         }
-      },
-    );
-  }
-
-  JavascriptChannel _internalUpdatesJavascriptChannel() {
-    return JavascriptChannel(
-      name: 'InternalUpdate',
-      onMessageReceived: (JavascriptMessage message) {
-        print('InternalUpdate got update: ${message.message}');
-        if (message.message.startsWith('h')) {
-          final height = double.tryParse(message.message.substring(1));
-          if (height != null) {
-            setState(() {
-              _documentHeight = height + 5;
-            });
-          }
-        } else if (message.message == 'onfocus') {
-          FocusScope.of(context).unfocus();
-          //_webViewController.
-          //FocusScope.of(context).requestFocus();
-        }
-      },
-    );
+      } else if (message == 'onfocus') {
+        FocusScope.of(context).unfocus();
+      }
+    }
   }
 }

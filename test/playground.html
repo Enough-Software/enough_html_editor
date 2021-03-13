@@ -36,7 +36,7 @@
     var isSelectionBold = false;
     var isSelectionItalic = false;
     var isSelectionUnderline = false;
-    var isUserInput = false;
+    var isLineBreakInput = false;
     var selectionTextAlign = undefined;
     var documentHeight;
 
@@ -49,9 +49,10 @@
         var isBold = false;
         var isItalic = false;
         var isUnderline = false;
-        var nestedBlockqotes = 0;
         var node = anchorNode;
         var textAlign = undefined;
+        var nestedBlockqotes = 0;
+        var rootBlockquote;
         while (node.parentNode != null && node.id != 'editor') {
             if (node.nodeName == 'B') {
                 isBold = true;
@@ -61,6 +62,7 @@
                 isUnderline = true;
             } else if (node.nodeName == 'BLOCKQUOTE') {
                 nestedBlockqotes++;
+                rootBlockquote = node;
             }
             textAlign ??= node.style?.textAlign;
             if (textAlign == '') {
@@ -77,7 +79,7 @@
             isSelectionBold = isBold;
             isSelectionItalic = isItalic;
             isSelectionUnderline = isUnderline;
-            console.log('bold=', isBold, ', italic=', isItalic, ', underline=', isUnderline);
+            // console.log('bold=', isBold, ', italic=', isItalic, ', underline=', isUnderline);
             var message = 0;
             if (isBold) {
                 message += 1;
@@ -89,21 +91,78 @@
                 message += 4;
             }
 
-        } else if (isUserInput && nestedBlockqotes > 0 && anchorOffset == focusOffset) {
-            // check if a linebreak has been added in a blockquote
-            console.log('EDIT IN BLOCKQUOTE!!');
-            document.execCommand('insertHTML', false, '<i>YOUR TEXT HERE</i>');
+        } else if (isLineBreakInput && nestedBlockqotes > 0 && anchorOffset == focusOffset) {
+            //console.log('rootBlockquote', rootBlockquote);
+            // console.log('anchor.nodeName', anchorNode.nodeName, 'offset', anchorOffset);
+            let rootNode = rootBlockquote.parentNode;
+            // var level = 1;
+            var cloneNode = null;
+            var requiresCloning = false;
+            var node = anchorNode;
+            while (node != rootBlockquote) {
+                // console.log(level, node);
+                // console.log(level, 'nodeName', node.nodeName);
+                // console.log(level, 'prevSibling', node.previousSibling);
+                // console.log(level, 'nextSibling', node.nextSibling);
+                let sibling = node.previousSibling;
+                if (sibling != null) {
+                    // move all siblings 'above' the current node to a clone: 
+                    var parentNode = node.parentNode;
+                    var currentSibling = sibling;
+                    while (currentSibling.previousSibling != null) {
+                        currentSibling = currentSibling.previousSibling;
+                    }
+                    var cloneParentNode = document.createElement(parentNode.nodeName);
+                    do {
+                        var nextSibling = currentSibling.nextSibling;
+                        // console.log(level, 'move sibling', currentSibling);
+                        parentNode.removeChild(currentSibling);
+                        cloneParentNode.appendChild(currentSibling);
+                        if (currentSibling == sibling) {
+                            break;
+                        }
+                        currentSibling = nextSibling;
+                    } while (true);
+                    if (cloneNode != null) {
+                        cloneParentNode.appendChild(cloneNode);
+                    }
+                    requiresCloning = true;
+                    cloneNode = cloneParentNode;
+                } else if (requiresCloning) {
+                    // consolone(level, 'create articicial clone ' + node.nodeName + ' for', cloneNode);
+                    var cloneParentNode = document.createElement(node.nodeName);
+                    cloneParentNode.appendChild(cloneNode);
+                    cloneNode = cloneParentNode;
+                }
+                node = node.parentNode;
+                // level++;
+            }
+            if (cloneNode != null) {
+                rootNode.insertBefore(cloneNode, rootBlockquote);
+
+            }
+            let textNode = document.createElement("P");
+            let textNodeContent = document.createTextNode('_');
+            textNode.appendChild(textNodeContent);
+            rootNode.insertBefore(textNode, rootBlockquote);
+            let range = new Range();
+            range.setStart(textNodeContent, 0);
+            range.setEnd(textNodeContent, 1);
+            let selection = getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+
         } 
-        isUserInput = false;
+        isLineBreakInput = false;
         // if (anchorOffset == focusOffset) {
         //     console.log(anchorNode, anchorOffset); //, focusNode, focusOffset);
         // }
         
     }
 
-    function onInput() {
-        isUserInput = true;
-        console.log('onInput');
+    function onInput(inputEvent) {
+        //console.log('inputEvent', inputEvent);
+        isLineBreakInput = ((inputEvent.inputType == 'insertParagraph') || ((inputEvent.inputType == 'insertText') && (inputEvent.data == null)));
         var height = document.body.scrollHeight;
         if (height != documentHeight) {
             documentHeight = height;
@@ -121,19 +180,24 @@
 
     function onLoaded() {
         documentHeight = document.body.scrollHeight;
+        document.getElementById('editor').oninput = onInput;
+        document.onselectionchange = onSelectionChange;
     }
 
-    document.onselectionchange = onSelectionChange;
     </script>
-    
+    <style>
+        #editor {
+            outline: 0px solid transparent;
+        }
+    </style>
     </head>
-    <body onload="onLoaded">
+    <body onload="onLoaded();">
         Here is some text outside of the editor.
         <button onclick="bold();">bold</button>
         <button onclick="italic();">italic</button>
         <button onclick="underline();">underline</button>
         <button onclick="getText();">getText</button>
-        <div id="editor" onfocus="onFocusIn();" onblur="onBlur();" contenteditable="true" oninput="onInput();">Hello <b>ContentEditable</b> 
+        <div id="editor" onfocus="onFocusIn();" onblur="onBlur();" contenteditable="true">Hello <b>ContentEditable</b> 
             <h2>This is a level 2 heading</h2>
             <p style="text-align: center;">Here is some text</p>
             <p>Here is <b>bold</b> text</p>
@@ -141,11 +205,30 @@
             <p>Here is <i><b>bold and italic</b></i> text</p>
             <p>Here is <u><i><b>bold and italic and underline</b></i></u> text</p>
             <ul><li>one list element</li><li>another point</li></ul>
-            <blockquote>Here is a quote<br/>
+            <p>Here is unquoted text...</p>
+            <h2>Nested Quote</h2>
+            <blockquote>Nested quote:
+                San Francisco, officially the City and County of San Francisco, is a cultural, commercial, and financial center of Northern California. 
+                <blockquote>San Francisco is the 16th most populous city in the United States, and the fourth most populous in California, 881,549 residents as of 2019. 
+                    <blockquote>It covers an area of about 46.89 square miles (121.4 km2), mostly at the north end of the San Francisco Peninsula in the San Francisco Bay Area, making it the second most densely populated large U.S. city, and the fifth most densely populated U.S. county, behind only four of the five New York City boroughs. 
+                    </blockquote>
+                        San Francisco is part of the 12th-largest metropolitan statistical area in the United States by population, with 4.7 million people, and the fourth-largest by economic output, with GDP of $592 billion in 2019. With San Jose, it forms the fifth most populous combined statistical area in the United States, with 9.67 million residents as of 2019. Colloquial nicknames for San Francisco include The City, SF, Frisco and San Fran.
+                </blockquote>
+            </blockquote>
+            <h2>Nested Complex Quote</h2>
+            <blockquote>Nested complex<br/>
             that spans several lines
             <blockquote>
                 A second level blockqote 
             </blockquote>
+            </blockquote>
+            <h2>Simple Quote</h2>
+            <blockquote>Simple quote:
+                San Francisco, officially the City and County of San Francisco, is a cultural, commercial, and financial center of Northern California. San Francisco is the 16th most populous city in the United States, and the fourth most populous in California, with 881,549 residents as of 2019. It covers an area of about 46.89 square miles (121.4 km2), mostly at the north end of the San Francisco Peninsula in the San Francisco Bay Area, making it the second most densely populated large U.S. city, and the fifth most densely populated U.S. county, behind only four of the five New York City boroughs. San Francisco is part of the 12th-largest metropolitan statistical area in the United States by population, with 4.7 million people, and the fourth-largest by economic output, with GDP of $592 billion in 2019. With San Jose, it forms the fifth most populous combined statistical area in the United States, with 9.67 million residents as of 2019. Colloquial nicknames for San Francisco include The City, SF, Frisco and San Fran.
+            </blockquote>
+            <h2>Complex Quote</h2>
+            <blockquote>Complex quote:
+                San Francisco, officially <b>the City and County of San Francisco</b>, is a cultural, <br/>commercial, <br/>and financial <br/>center of Northern California. San Francisco is the 16th most populous city in the United States, and the fourth most populous in California, with 881,549 residents as of 2019. It covers an area of about 46.89 square miles (121.4 km2), mostly at the north end of the San Francisco Peninsula in the San Francisco Bay Area, making it the second most densely populated large U.S. city, and the fifth most densely populated U.S. county, behind only four of the five New York City boroughs. San Francisco is part of the 12th-largest metropolitan statistical area in the United States by population, with 4.7 million people, and the fourth-largest by economic output, with GDP of $592 billion in 2019. With San Jose, it forms the fifth most populous combined statistical area in the United States, with 9.67 million residents as of 2019. Colloquial nicknames for San Francisco include The City, SF, Frisco and San Fran.
             </blockquote>
             <p>And finally, some code</p>
             <pre>

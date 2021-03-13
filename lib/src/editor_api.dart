@@ -1,15 +1,16 @@
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'editor.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 /// API to control the `HtmlEditor`.
 ///
 /// Get access to this API either by waiting for the `HtmlEditor.onCreated()` callback or by accessing
 /// the `HtmlEditorState` with a `GlobalKey<HtmlEditorState>`.
 class EditorApi {
-  WebViewController _webViewController;
+  InAppWebViewController _webViewController;
   final HtmlEditorState _htmlEditorState;
 
-  set webViewController(WebViewController value) => _webViewController = value;
+  set webViewController(InAppWebViewController value) =>
+      _webViewController = value;
 
   /// Define any custom CSS styles, replacing the existing styles.
   ///
@@ -84,8 +85,8 @@ class EditorApi {
   }
 
   Future _execCommand(String command) async {
-    await _webViewController
-        .evaluateJavascript('document.execCommand($command);');
+    await _webViewController.evaluateJavascript(
+        source: 'document.execCommand($command);');
     // document.getElementById("editor").focus();
 // FocusScope.of(context).unfocus();
 // Timer(const Duration(milliseconds: 1), () {
@@ -97,16 +98,9 @@ class EditorApi {
   ///
   /// Compare [getFullHtml()] to the complete HTML document's text.
   Future<String> getText() async {
-    var rawHtml = await _webViewController
-        .evaluateJavascript('document.getElementById("editor").innerHTML;');
-    if (rawHtml.startsWith('"')) {
-      rawHtml = rawHtml.substring(1, rawHtml.length - 1).trim();
-    }
-    rawHtml = rawHtml.replaceAll(r'\n', '\n');
-    rawHtml = rawHtml.replaceAll(r'\"', '"');
-    rawHtml = rawHtml.replaceAll(r'\\', r'\');
-    rawHtml = rawHtml.replaceAll(r'\u003C', '<');
-    return rawHtml;
+    final innerHtml = await _webViewController.evaluateJavascript(
+        source: 'document.getElementById("editor").innerHTML;') as String;
+    return innerHtml;
   }
 
   /// Retrieves the edited text within a complete HTML document.
