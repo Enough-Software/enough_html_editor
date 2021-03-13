@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'enough_html_editor Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -21,7 +21,7 @@ class MyApp extends StatelessWidget {
 }
 
 class EditorPage extends StatefulWidget {
-  EditorPage({Key key}) : super(key: key);
+  EditorPage({Key? key}) : super(key: key);
 
   @override
   _EditorPageState createState() => _EditorPageState();
@@ -45,7 +45,7 @@ class _EditorPageState extends State<EditorPage> {
               IconButton(
                 icon: Icon(Icons.send),
                 onPressed: () async {
-                  final text = await _keyEditor.currentState.api.getText();
+                  final text = await _keyEditor.currentState!.api.getText();
                   print('got text: [$text]');
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -90,7 +90,7 @@ class _EditorPageState extends State<EditorPage> {
 
 class ResultScreen extends StatelessWidget {
   final String htmlText;
-  const ResultScreen({Key key, @required this.htmlText}) : super(key: key);
+  const ResultScreen({Key? key, required this.htmlText}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

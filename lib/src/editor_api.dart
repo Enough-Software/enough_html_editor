@@ -97,10 +97,10 @@ class EditorApi {
   /// Retrieves the edited text as HTML
   ///
   /// Compare [getFullHtml()] to the complete HTML document's text.
-  Future<String?> getText() async {
+  Future<String> getText() async {
     final innerHtml = await _webViewController.evaluateJavascript(
         source: 'document.getElementById("editor").innerHTML;') as String?;
-    return innerHtml;
+    return innerHtml ?? '';
   }
 
   /// Retrieves the edited text within a complete HTML document.
