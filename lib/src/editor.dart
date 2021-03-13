@@ -27,18 +27,23 @@ class HtmlEditor extends StatefulWidget {
   /// Define the `onCreated(EditorApi)` callback to get notified when the API is ready.
   final void Function(EditorApi)? onCreated;
 
+  /// Defines if blockquotes should be split when the user adds a new line - defaults to `true`.
+  final bool splitBlockquotes;
+
   /// Creates a new HTML editor
   ///
   /// Set the [initialContent] to populate the editor with some existing text
   /// Set [adjustHeight] to let the editor set its height automatically - by default this is `true`.
   /// Specify the [minHeight] to set a different height than the default `100` pixel.
   /// Define the [onCreated] `onCreated(EditorApi)` callback to get notified when the API is ready.
+  /// Set [splitBlockquotes] to `false` in case block quotes should not be split when the user adds a newline in one - this defaults to `true`.
   HtmlEditor({
     Key? key,
     this.initialContent = '',
     this.adjustHeight = true,
     this.minHeight = 100,
     this.onCreated,
+    this.splitBlockquotes = true,
   }) : super(key: key);
 
   @override
@@ -48,7 +53,7 @@ class HtmlEditor extends StatefulWidget {
 /// You can access the API by accessing the HtmlEditor's state.
 /// The editor state can be accessed directly when using a GlobalKey<HtmlEditorState>.
 class HtmlEditorState extends State<HtmlEditor> {
-  static const String _template = '''
+  static const String _templateStart = '''
 <!DOCTYPE html>
 <html>
 <head>
@@ -109,6 +114,8 @@ class HtmlEditorState extends State<HtmlEditor> {
       selectionTextAlign = textAlign;
       window.flutter_inappwebview.callHandler('AlignSettings', textAlign);
     }
+''';
+  static const String _templateBlockquote = '''
     if (isLineBreakInput && nestedBlockqotes > 0 && anchorOffset == focusOffset) {
       let rootNode = rootBlockquote.parentNode;
       var cloneNode = null;
@@ -158,6 +165,8 @@ class HtmlEditorState extends State<HtmlEditor> {
       selection.removeAllRanges();
       selection.addRange(range);
     } 
+''';
+  static const String _templateContinuation = '''
     isLineBreakInput = false;
   }
 
@@ -219,9 +228,11 @@ blockquote {
     _api = EditorApi(this);
     final stylesWithMinHeight =
         styles.replaceFirst('==minHeight==', '${widget.minHeight}');
-    final html = _template
-        .replaceFirst('==styles==', stylesWithMinHeight)
-        .replaceFirst('==content==', widget.initialContent);
+    final html =
+        _templateStart.replaceFirst('==styles==', stylesWithMinHeight) +
+            (widget.splitBlockquotes ? _templateBlockquote : '') +
+            _templateContinuation.replaceFirst(
+                '==content==', widget.initialContent);
     _initialPageContent = html;
   }
 
