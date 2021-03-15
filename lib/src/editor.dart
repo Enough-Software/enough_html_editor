@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 import 'editor_api.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -258,6 +260,8 @@ blockquote {
   }
 
   Widget _buildWebView() {
+    final theme = Theme.of(context);
+    final isDark = (theme.brightness == Brightness.dark);
     return InAppWebView(
       key: ValueKey(_initialPageContent),
       initialData: InAppWebViewInitialData(data: _initialPageContent),
@@ -284,11 +288,15 @@ blockquote {
         crossPlatform: InAppWebViewOptions(
           useShouldOverrideUrlLoading: true,
           verticalScrollBarEnabled: false,
+          transparentBackground: isDark,
         ),
         android: AndroidInAppWebViewOptions(
           useWideViewPort: false,
           loadWithOverviewMode: true,
           useHybridComposition: true,
+          forceDark: isDark
+              ? AndroidForceDark.FORCE_DARK_ON
+              : AndroidForceDark.FORCE_DARK_OFF,
         ),
       ),
       // deny browsing while editing:
