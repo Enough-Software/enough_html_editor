@@ -109,7 +109,9 @@ class EditorApi {
   /// Compare [getText()] to retrieve only the edited HTML text.
   Future<String> getFullHtml({String? content}) async {
     content ??= await getText();
-    final styles = _htmlEditorState.styles;
+    final styles = _htmlEditorState.styles.replaceFirst('''#editor {
+  min-height: ==minHeight==px;
+}''', '');
     return '''<!DOCTYPE html>
 <html>
 <head>
