@@ -17,6 +17,18 @@ class FormatSettings {
 /// Standard align settings
 enum ElementAlign { left, center, right, justify }
 
+/// Abstracts a text selection menu item.
+class TextSelectionMenuItem {
+  /// The text label of the item
+  final String label;
+
+  /// The callback
+  final dynamic Function(EditorApi api) action;
+
+  /// Creates a new selection menu item with the specified [label] and [action].
+  TextSelectionMenuItem({required this.label, required this.action});
+}
+
 /// Slim HTML Editor with API
 class HtmlEditor extends StatefulWidget {
   /// Set the [initialContent] to populate the editor with some existing text
@@ -34,6 +46,12 @@ class HtmlEditor extends StatefulWidget {
   /// Defines if blockquotes should be split when the user adds a new line - defaults to `true`.
   final bool splitBlockquotes;
 
+  /// Defines if the default text selection menu items `𝗕` (bold), `𝑰` (italic), `U̲` (underlined),`T̶` (strikethrough) should be added - defaults to `true`.
+  final bool addDefaultSelectionMenuItems;
+
+  /// List of custom text selection / context menu items.
+  final List<TextSelectionMenuItem>? textSelectionMenuItems;
+
   /// Creates a new HTML editor
   ///
   /// Set the [initialContent] to populate the editor with some existing text
@@ -41,6 +59,8 @@ class HtmlEditor extends StatefulWidget {
   /// Specify the [minHeight] to set a different height than the default `100` pixel.
   /// Define the [onCreated] `onCreated(EditorApi)` callback to get notified when the API is ready.
   /// Set [splitBlockquotes] to `false` in case block quotes should not be split when the user adds a newline in one - this defaults to `true`.
+  /// Set [addDefaultSelectionMenuItems] to `false` when you do not want to have the default text selection items enabled.
+  /// You can define your own custom context / text selection menu entries using [textSelectionMenuItems].
   HtmlEditor({
     Key? key,
     this.initialContent = '',
@@ -48,6 +68,8 @@ class HtmlEditor extends StatefulWidget {
     this.minHeight = 100,
     this.onCreated,
     this.splitBlockquotes = true,
+    this.addDefaultSelectionMenuItems = true,
+    this.textSelectionMenuItems,
   }) : super(key: key);
 
   @override
@@ -271,6 +293,7 @@ blockquote {
   Widget _buildWebView() {
     final theme = Theme.of(context);
     final isDark = (theme.brightness == Brightness.dark);
+    final textSelectionMenuItems = widget.textSelectionMenuItems;
 
     return InAppWebView(
       key: ValueKey(_initialPageContent),
@@ -317,30 +340,42 @@ blockquote {
       },
       contextMenu: ContextMenu(
         menuItems: [
-          ContextMenuItem(
-            androidId: 1,
-            iosId: '1',
-            title: '𝗕',
-            action: () => _api.formatBold(),
-          ),
-          ContextMenuItem(
-            androidId: 2,
-            iosId: '2',
-            title: '𝑰',
-            action: () => _api.formatItalic(),
-          ),
-          ContextMenuItem(
-            androidId: 3,
-            iosId: '3',
-            title: 'U̲',
-            action: () => _api.formatUnderline(),
-          ),
-          ContextMenuItem(
-            androidId: 4,
-            iosId: '4',
-            title: '̶T̶',
-            action: () => _api.formatStrikeThrough(),
-          ),
+          if (widget.addDefaultSelectionMenuItems) ...{
+            ContextMenuItem(
+              androidId: 1,
+              iosId: '1',
+              title: '𝗕',
+              action: () => _api.formatBold(),
+            ),
+            ContextMenuItem(
+              androidId: 2,
+              iosId: '2',
+              title: '𝑰',
+              action: () => _api.formatItalic(),
+            ),
+            ContextMenuItem(
+              androidId: 3,
+              iosId: '3',
+              title: 'U̲',
+              action: () => _api.formatUnderline(),
+            ),
+            ContextMenuItem(
+              androidId: 4,
+              iosId: '4',
+              title: '̶T̶',
+              action: () => _api.formatStrikeThrough(),
+            ),
+          },
+          if (textSelectionMenuItems != null) ...{
+            for (final item in textSelectionMenuItems) ...{
+              ContextMenuItem(
+                androidId: 100 + textSelectionMenuItems.indexOf(item),
+                iosId: item.label,
+                title: item.label,
+                action: () => item.action(_api),
+              ),
+            },
+          },
         ],
       ),
     );

@@ -83,10 +83,15 @@ class EditorApi {
     return _execCommand('"justifyFull"');
   }
 
-  /// Inserts the specified HTML code
+  /// Inserts the  [html] code at the insertion point (deletes selection).
   Future insertHtml(String html) {
     html = html.replaceAll('"', r'\"');
     return _execCommand('"insertHTML", false, "$html"');
+  }
+
+  /// Inserts the given plain [text] at the insertion point (deletes selection).
+  Future insertText(String text) {
+    return _execCommand('"insertText", false, "$text"');
   }
 
   Future _execCommand(String command) async {
@@ -126,5 +131,10 @@ class EditorApi {
 </head>
 <body>$content</body>
 </html>''';
+  }
+
+  /// Retrieves the currently selected text.
+  Future<String?> getSelectedText() {
+    return _webViewController.getSelectedText();
   }
 }

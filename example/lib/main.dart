@@ -67,6 +67,19 @@ class _EditorPageState extends State<EditorPage> {
           SliverToBoxAdapter(
             child: HtmlEditor(
               key: _keyEditor,
+              textSelectionMenuItems: [
+                TextSelectionMenuItem(
+                  label: 'Upper',
+                  action: (api) async {
+                    final selectedText = await api.getSelectedText();
+                    print('selected text: $selectedText');
+                    if (selectedText != null) {
+                      final replacement = selectedText.toUpperCase();
+                      api.insertText(replacement);
+                    }
+                  },
+                ),
+              ],
               initialContent: '''<p>Here is some text</p>
         <p>Here is <b>bold</b> text</p>
         <p>Here is <i>some italic sic</i> text</p>
