@@ -315,6 +315,34 @@ blockquote {
       onConsoleMessage: (controller, consoleMessage) {
         print(consoleMessage);
       },
+      contextMenu: ContextMenu(
+        menuItems: [
+          ContextMenuItem(
+            androidId: 1,
+            iosId: '1',
+            title: '𝗕',
+            action: () => _api.formatBold(),
+          ),
+          ContextMenuItem(
+            androidId: 2,
+            iosId: '2',
+            title: '𝑰',
+            action: () => _api.formatItalic(),
+          ),
+          ContextMenuItem(
+            androidId: 3,
+            iosId: '3',
+            title: 'U̲',
+            action: () => _api.formatUnderline(),
+          ),
+          ContextMenuItem(
+            androidId: 4,
+            iosId: '4',
+            title: '̶T̶',
+            action: () => _api.formatStrikeThrough(),
+          ),
+        ],
+      ),
     );
   }
 
