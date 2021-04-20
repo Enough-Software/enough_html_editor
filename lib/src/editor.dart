@@ -9,7 +9,9 @@ class FormatSettings {
   final isBold;
   final isItalic;
   final isUnderline;
-  FormatSettings(this.isBold, this.isItalic, this.isUnderline);
+  final isStrikeThrough;
+  FormatSettings(
+      this.isBold, this.isItalic, this.isUnderline, this.isStrikeThrough);
 }
 
 /// Standard align settings
@@ -65,6 +67,7 @@ class HtmlEditorState extends State<HtmlEditor> {
   var isSelectionBold = false;
   var isSelectionItalic = false;
   var isSelectionUnderline = false;
+  var isSelectionStrikeThrough = false;
   var selectionTextAlign = undefined;
   var isLineBreakInput = false;
   var documentHeight;
@@ -76,6 +79,7 @@ class HtmlEditorState extends State<HtmlEditor> {
     var isBold = false;
     var isItalic = false;
     var isUnderline = false;
+    var isStrikeThrough = false;
     var node = anchorNode;
     var textAlign = undefined;
     var nestedBlockqotes = 0;
@@ -87,6 +91,8 @@ class HtmlEditorState extends State<HtmlEditor> {
           isItalic = true;
       } else if (node.nodeName == 'U') {
           isUnderline = true;
+      } else if (node.nodeName == 'STRIKE') {
+          isStrikeThrough = true;
       } else if (node.nodeName == 'BLOCKQUOTE') {
           nestedBlockqotes++;
           rootBlockquote = node;
@@ -96,7 +102,7 @@ class HtmlEditorState extends State<HtmlEditor> {
       }
       node = node.parentNode;
     }
-    if (isBold != isSelectionBold || isItalic != isSelectionItalic || isUnderline != isSelectionUnderline) {
+    if (isBold != isSelectionBold || isItalic != isSelectionItalic || isUnderline != isSelectionUnderline || isStrikeThrough != isSelectionStrikeThrough) {
       isSelectionBold = isBold;
       isSelectionItalic = isItalic;
       isSelectionUnderline = isUnderline;
@@ -109,6 +115,9 @@ class HtmlEditorState extends State<HtmlEditor> {
       }
       if (isUnderline) {
           message += 4;
+      }
+      if (isStrikeThrough) {
+        message += 8;
       }
       window.flutter_inappwebview.callHandler('FormatSettings', message);
     }
@@ -262,6 +271,7 @@ blockquote {
   Widget _buildWebView() {
     final theme = Theme.of(context);
     final isDark = (theme.brightness == Brightness.dark);
+
     return InAppWebView(
       key: ValueKey(_initialPageContent),
       initialData: InAppWebViewInitialData(data: _initialPageContent),
@@ -278,11 +288,11 @@ blockquote {
             });
           }
         }
-        final scrollWidth = await _webViewController.evaluateJavascript(
-            source: 'document.body.scrollWidth') as int?;
-        final size = MediaQuery.of(context).size;
-        print(
-            'scrollWidth=$scrollWidth available=${size.width} adjustHeight=${widget.adjustHeight}');
+        // final scrollWidth = await _webViewController.evaluateJavascript(
+        //     source: 'document.body.scrollWidth') as int?;
+        // final size = MediaQuery.of(context).size;
+        // print(
+        //     'scrollWidth=$scrollWidth available=${size.width} adjustHeight=${widget.adjustHeight}');
       },
       initialOptions: InAppWebViewGroupOptions(
         crossPlatform: InAppWebViewOptions(
@@ -328,21 +338,24 @@ blockquote {
 
   void _onFormatSettingsReceived(List<dynamic> parameters) {
     // print('got format $parameters');
-    if (_api.onFormatSettingsChanged != null && parameters.isNotEmpty) {
+    final callback = _api.onFormatSettingsChanged;
+    if (callback != null && parameters.isNotEmpty) {
       final numericMessage = parameters.first as int?;
       if (numericMessage != null) {
         final isBold = (numericMessage & 1) == 1;
         final isItalic = (numericMessage & 2) == 2;
         final isUnderline = (numericMessage & 4) == 4;
-        _api.onFormatSettingsChanged!(
-            FormatSettings(isBold, isItalic, isUnderline));
+        final isStrikeThrough = (numericMessage & 8) == 8;
+        callback(
+            FormatSettings(isBold, isItalic, isUnderline, isStrikeThrough));
       }
     }
   }
 
   void _onAlignSettingsReceived(List<dynamic> parameters) {
     // print('got align $parameters');
-    if (_api.onAlignSettingsChanged != null && parameters.isNotEmpty) {
+    final callback = _api.onAlignSettingsChanged;
+    if (callback != null && parameters.isNotEmpty) {
       ElementAlign align;
       switch (parameters.first) {
         case 'left':
@@ -361,7 +374,7 @@ blockquote {
           align = ElementAlign.left;
           break;
       }
-      _api.onAlignSettingsChanged!(align);
+      callback(align);
     }
   }
 

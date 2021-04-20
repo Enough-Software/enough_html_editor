@@ -8,34 +8,38 @@ class HtmlEditorControls extends StatefulWidget {
   final EditorApi? editorApi;
 
   HtmlEditorControls({Key? key, this.editorKey, this.editorApi})
-      : super(key: key);
+      : assert(editorKey != null || editorApi != null),
+        super(key: key);
 
   @override
   _HtmlEditorControlsState createState() => _HtmlEditorControlsState();
 }
 
 class _HtmlEditorControlsState extends State<HtmlEditorControls> {
-  final isSelected = [false, false, false];
+  final isSelected = [false, false, false, false];
   ElementAlign? _currentAlignFormat = ElementAlign.left;
-  EditorApi? _editorApi;
+  late EditorApi _editorApi;
 
   @override
   void initState() {
     super.initState();
-    if (widget.editorKey != null) {
+    final key = widget.editorKey;
+    final api = widget.editorApi;
+    if (key != null) {
+      // in init state, the editorKey.currentState is still null,
+      // so wait for after the first run
       WidgetsBinding.instance!.addPostFrameCallback((_) {
-        _editorApi = widget.editorKey!.currentState!.api;
-        // in init state, the editorKey.currentState is still null,
-        // so wait for after the first run
-        widget.editorKey!.currentState!.api.onFormatSettingsChanged =
-            _onFormatSettingsChanged;
-        widget.editorKey!.currentState!.api.onAlignSettingsChanged =
-            _onAlignSettingsChanged;
+        final stateApi = key.currentState!.api;
+        _editorApi = stateApi;
+        stateApi.onFormatSettingsChanged = _onFormatSettingsChanged;
+        stateApi.onAlignSettingsChanged = _onAlignSettingsChanged;
       });
-    } else if (widget.editorApi != null) {
-      _editorApi = widget.editorApi;
-      widget.editorApi!.onFormatSettingsChanged = _onFormatSettingsChanged;
-      widget.editorApi!.onAlignSettingsChanged = _onAlignSettingsChanged;
+    } else if (api != null) {
+      _editorApi = api;
+      api.onFormatSettingsChanged = _onFormatSettingsChanged;
+      api.onAlignSettingsChanged = _onAlignSettingsChanged;
+    } else {
+      throw StateError('no api or live key defined');
     }
   }
 
@@ -44,6 +48,7 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
       isSelected[0] = formatSettings.isBold;
       isSelected[1] = formatSettings.isItalic;
       isSelected[2] = formatSettings.isUnderline;
+      isSelected[3] = formatSettings.isStrikeThrough;
     });
   }
 
@@ -63,17 +68,21 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
             Icon(Icons.format_bold),
             Icon(Icons.format_italic),
             Icon(Icons.format_underlined),
+            Icon(Icons.format_strikethrough),
           ],
           onPressed: (int index) {
             switch (index) {
               case 0:
-                _editorApi!.formatBold();
+                _editorApi.formatBold();
                 break;
               case 1:
-                _editorApi!.formatItalic();
+                _editorApi.formatItalic();
                 break;
               case 2:
-                _editorApi!.formatUnderline();
+                _editorApi.formatUnderline();
+                break;
+              case 3:
+                _editorApi.formatStrikeThrough();
                 break;
             }
             setState(() {
@@ -84,11 +93,11 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
         ),
         IconButton(
           icon: Icon(Icons.format_list_bulleted),
-          onPressed: () => _editorApi!.insertUnorderedList(),
+          onPressed: () => _editorApi.insertUnorderedList(),
         ),
         IconButton(
           icon: Icon(Icons.format_list_numbered),
-          onPressed: () => _editorApi!.insertOrderedList(),
+          onPressed: () => _editorApi.insertOrderedList(),
         ),
         DropdownButton<ElementAlign>(
           items: [
@@ -108,16 +117,16 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
             align ??= ElementAlign.left;
             switch (align) {
               case ElementAlign.left:
-                _editorApi!.formatAlignLeft();
+                _editorApi.formatAlignLeft();
                 break;
               case ElementAlign.center:
-                _editorApi!.formatAlignCenter();
+                _editorApi.formatAlignCenter();
                 break;
               case ElementAlign.right:
-                _editorApi!.formatAlignRight();
+                _editorApi.formatAlignRight();
                 break;
               case ElementAlign.justify:
-                _editorApi!.formatAlignJustify();
+                _editorApi.formatAlignJustify();
                 break;
             }
             setState(() {

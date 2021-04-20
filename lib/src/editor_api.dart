@@ -48,6 +48,11 @@ class EditorApi {
     return _execCommand('"underline"');
   }
 
+  /// Formats the current text to be striked through
+  Future formatStrikeThrough() {
+    return _execCommand('"strikeThrough"');
+  }
+
   /// Inserts an ordered list at the current position
   Future insertOrderedList() {
     return _execCommand('"insertOrderedList"');
