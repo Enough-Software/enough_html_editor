@@ -63,7 +63,16 @@ class _EditorPageState extends State<EditorPage> {
                   TextField(decoration: InputDecoration(hintText: 'Subject')),
             ),
           ),
-          SliverHeaderHtmlEditorControls(editorKey: _keyEditor),
+          SliverHeaderHtmlEditorControls(
+            editorKey: _keyEditor,
+            suffix: TextButton.icon(
+              icon: Icon(Icons.format_shapes),
+              label: Text('custom action'),
+              onPressed: () {
+                print('shapes pressed!');
+              },
+            ),
+          ),
           SliverToBoxAdapter(
             child: HtmlEditor(
               key: _keyEditor,

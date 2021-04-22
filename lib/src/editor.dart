@@ -23,7 +23,7 @@ class TextSelectionMenuItem {
   final String label;
 
   /// The callback
-  final dynamic Function(EditorApi api) action;
+  final dynamic Function(HtmlEditorApi api) action;
 
   /// Creates a new selection menu item with the specified [label] and [action].
   TextSelectionMenuItem({required this.label, required this.action});
@@ -41,7 +41,7 @@ class HtmlEditor extends StatefulWidget {
   final int minHeight;
 
   /// Define the `onCreated(EditorApi)` callback to get notified when the API is ready.
-  final void Function(EditorApi)? onCreated;
+  final void Function(HtmlEditorApi)? onCreated;
 
   /// Defines if blockquotes should be split when the user adds a new line - defaults to `true`.
   final bool splitBlockquotes;
@@ -233,7 +233,7 @@ class HtmlEditorState extends State<HtmlEditor> {
   late String _initialPageContent;
   late InAppWebViewController _webViewController;
   double? _documentHeight;
-  late EditorApi _api;
+  late HtmlEditorApi _api;
 
   /// Allows to replace the existing styles.
   String styles = '''
@@ -253,12 +253,12 @@ blockquote {
   /// Access to the API of the editor.
   ///
   /// Instead of accessing the API via the `HtmlEditorState` you can also directly get in in the `HtmlEditor.onCreated(...)` callback.
-  EditorApi get api => _api;
+  HtmlEditorApi get api => _api;
 
   @override
   void initState() {
     super.initState();
-    _api = EditorApi(this);
+    _api = HtmlEditorApi(this);
     final stylesWithMinHeight =
         styles.replaceFirst('==minHeight==', '${widget.minHeight}');
     final html =

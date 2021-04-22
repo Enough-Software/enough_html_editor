@@ -5,7 +5,7 @@ import 'editor.dart';
 ///
 /// Get access to this API either by waiting for the `HtmlEditor.onCreated()` callback or by accessing
 /// the `HtmlEditorState` with a `GlobalKey<HtmlEditorState>`.
-class EditorApi {
+class HtmlEditorApi {
   late InAppWebViewController _webViewController;
   final HtmlEditorState _htmlEditorState;
 
@@ -31,7 +31,7 @@ class EditorApi {
   /// Callback to be informed when the align settings have been changed
   void Function(ElementAlign)? onAlignSettingsChanged;
 
-  EditorApi(this._htmlEditorState);
+  HtmlEditorApi(this._htmlEditorState);
 
   /// Formats the current text to be bold
   Future formatBold() {

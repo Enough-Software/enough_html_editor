@@ -3,11 +3,17 @@ import 'package:flutter/widgets.dart';
 import 'editor.dart';
 import 'editor_api.dart';
 
+/// An example for editor controls.
+///
+/// With `enough_html_editor` you can create your very own editor controls.
 class HtmlEditorControls extends StatefulWidget {
   final GlobalKey<HtmlEditorState>? editorKey;
-  final EditorApi? editorApi;
+  final HtmlEditorApi? editorApi;
+  final Widget? prefix;
+  final Widget? suffix;
 
-  HtmlEditorControls({Key? key, this.editorKey, this.editorApi})
+  HtmlEditorControls(
+      {Key? key, this.editorKey, this.editorApi, this.prefix, this.suffix})
       : assert(editorKey != null || editorApi != null),
         super(key: key);
 
@@ -18,7 +24,7 @@ class HtmlEditorControls extends StatefulWidget {
 class _HtmlEditorControlsState extends State<HtmlEditorControls> {
   final isSelected = [false, false, false, false];
   ElementAlign? _currentAlignFormat = ElementAlign.left;
-  late EditorApi _editorApi;
+  late HtmlEditorApi _editorApi;
 
   @override
   void initState() {
@@ -60,9 +66,14 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
+    final prefix = widget.prefix;
+    final suffix = widget.suffix;
+    return ListView(
+      scrollDirection: Axis.horizontal,
       children: [
+        if (prefix != null) ...{
+          prefix,
+        },
         ToggleButtons(
           children: [
             Icon(Icons.format_bold),
@@ -141,6 +152,9 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
           ],
           value: _currentAlignFormat,
         ),
+        if (suffix != null) ...{
+          suffix,
+        },
       ],
     );
   }
@@ -148,10 +162,14 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
 
 class SliverHeaderHtmlEditorControls extends StatelessWidget {
   final GlobalKey<HtmlEditorState>? editorKey;
-  final EditorApi? editorApi;
+  final HtmlEditorApi? editorApi;
+  final Widget? prefix;
+  final Widget? suffix;
 
-  SliverHeaderHtmlEditorControls({Key? key, this.editorKey, this.editorApi})
-      : super(key: key);
+  SliverHeaderHtmlEditorControls(
+      {Key? key, this.editorKey, this.editorApi, this.prefix, this.suffix})
+      : assert(editorKey != null || editorApi != null),
+        super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -159,6 +177,8 @@ class SliverHeaderHtmlEditorControls extends StatelessWidget {
       delegate: _SliverHeaderHtmlEditorControlsDelegate(
         editorKey: editorKey,
         editorApi: editorApi,
+        prefix: prefix,
+        suffix: suffix,
       ),
       pinned: true,
     );
@@ -169,16 +189,27 @@ class _SliverHeaderHtmlEditorControlsDelegate
     extends SliverPersistentHeaderDelegate {
   final double height;
   final GlobalKey<HtmlEditorState>? editorKey;
-  final EditorApi? editorApi;
+  final HtmlEditorApi? editorApi;
+  final Widget? prefix;
+  final Widget? suffix;
 
   _SliverHeaderHtmlEditorControlsDelegate(
-      {this.editorKey, this.editorApi, this.height = 48});
+      {this.editorKey,
+      this.editorApi,
+      this.prefix,
+      this.suffix,
+      this.height = 48});
 
   @override
   Widget build(context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: Theme.of(context).canvasColor,
-      child: HtmlEditorControls(editorKey: editorKey, editorApi: editorApi),
+      child: HtmlEditorControls(
+        editorKey: editorKey,
+        editorApi: editorApi,
+        prefix: prefix,
+        suffix: suffix,
+      ),
     );
   }
 
