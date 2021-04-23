@@ -1,3 +1,8 @@
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:image/image.dart' as img;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'editor.dart';
 
@@ -9,8 +14,16 @@ class HtmlEditorApi {
   late InAppWebViewController _webViewController;
   final HtmlEditorState _htmlEditorState;
 
-  set webViewController(InAppWebViewController value) =>
-      _webViewController = value;
+  set webViewController(InAppWebViewController value) {
+    _webViewController = value;
+    //TODO wait for InAppWebView project to approve this
+    //value.onImeCommitContent = _onImeCommitContent;
+  }
+
+  // void _onImeCommitContent(String mimeType, Uint8List data) {
+  //   // print('HtmlEditor: onImeCommitContent: received $mimeType');
+  //   insertImageData(data, mimeType);
+  // }
 
   /// Define any custom CSS styles, replacing the existing styles.
   ///
@@ -84,14 +97,45 @@ class HtmlEditorApi {
   }
 
   /// Inserts the  [html] code at the insertion point (deletes selection).
-  Future insertHtml(String html) {
+  Future insertHtml(String html) async {
     html = html.replaceAll('"', r'\"');
-    return _execCommand('"insertHTML", false, "$html"');
+    await _execCommand('"insertHTML", false, "$html"');
+    return _htmlEditorState.onDocumentChanged();
   }
 
   /// Inserts the given plain [text] at the insertion point (deletes selection).
-  Future insertText(String text) {
-    return _execCommand('"insertText", false, "$text"');
+  Future insertText(String text) async {
+    await _execCommand('"insertText", false, "$text"');
+    return _htmlEditorState.onDocumentChanged();
+  }
+
+  /// Converts the given [file] with the specifid [mimeType] into image data and inserts it into the editor.
+  ///
+  /// Optionally set the given [maxWidth] for the decoded image.
+  Future insertImageFile(File file, String mimeType, {int? maxWidth}) async {
+    final data = await file.readAsBytes();
+    return insertImageData(data, mimeType, maxWidth: maxWidth);
+  }
+
+  /// Inserts the given image [data] with the specifid [mimeType] into the editor.
+  ///
+  /// Optionally set the given [maxWidth] for the decoded image.
+  Future insertImageData(Uint8List data, String mimeType,
+      {int? maxWidth}) async {
+    if (maxWidth != null) {
+      final image = img.decodeImage(data);
+      if (image == null) {
+        return;
+      }
+      if (image.width > maxWidth) {
+        final copy = img.copyResize(image, width: maxWidth);
+        data = img.encodePng(copy) as Uint8List;
+        mimeType = 'image/png';
+      }
+    }
+    final base64Data = base64Encode(data);
+    return insertHtml(
+        '<img src="data:$mimeType;base64,$base64Data" style="max-width: 100%" />');
   }
 
   Future _execCommand(String command) async {

@@ -446,14 +446,31 @@ blockquote {
     if (parameters.isNotEmpty) {
       final message = parameters.first as String?;
       if (message != null && message.startsWith('h')) {
-        final height = double.tryParse(message.substring(1));
-        if (height != null) {
-          setState(() {
-            _documentHeight = height + 5;
-          });
+        if (widget.adjustHeight) {
+          final height = double.tryParse(message.substring(1));
+          if (height != null) {
+            setState(() {
+              _documentHeight = height + 5;
+            });
+          }
         }
       } else if (message == 'onfocus') {
         FocusScope.of(context).unfocus();
+      }
+    }
+  }
+
+  /// Notifies the editor about a change of the document that can influence the height.
+  ///
+  /// The height will be measured and applied if [HtmlEditor.adjustHeight] is set to true.
+  Future<void> onDocumentChanged() async {
+    if (widget.adjustHeight) {
+      final scrollHeight = await _webViewController.evaluateJavascript(
+          source: 'document.body.scrollHeight') as int?;
+      if (scrollHeight != null) {
+        setState(() {
+          _documentHeight = scrollHeight + 5;
+        });
       }
     }
   }
