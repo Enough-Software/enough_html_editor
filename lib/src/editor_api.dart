@@ -16,14 +16,13 @@ class HtmlEditorApi {
 
   set webViewController(InAppWebViewController value) {
     _webViewController = value;
-    //TODO wait for InAppWebView project to approve this
-    //value.onImeCommitContent = _onImeCommitContent;
+    value.onImeCommitContent = _onImeCommitContent;
   }
 
-  // void _onImeCommitContent(String mimeType, Uint8List data) {
-  //   // print('HtmlEditor: onImeCommitContent: received $mimeType');
-  //   insertImageData(data, mimeType);
-  // }
+  void _onImeCommitContent(String mimeType, Uint8List data) {
+    print('HtmlEditor: onImeCommitContent: received $mimeType');
+    insertImageData(data, mimeType);
+  }
 
   /// Define any custom CSS styles, replacing the existing styles.
   ///
