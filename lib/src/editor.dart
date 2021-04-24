@@ -205,10 +205,14 @@ class HtmlEditorState extends State<HtmlEditor> {
 
   function onInput(inputEvent) {
     isLineBreakInput = ((inputEvent.inputType == 'insertParagraph') || ((inputEvent.inputType == 'insertText') && (inputEvent.data == null)));
+    // if (isLineBreakInput) {
+    //   document.execCommand('insertLineBreak');
+    //   inputEvent.preventDefault();
+    // }
     var height = document.body.scrollHeight;
     if (height != documentHeight) {
-        documentHeight = height;
-        window.flutter_inappwebview.callHandler('InternalUpdate', 'h' + height);
+      documentHeight = height;
+      window.flutter_inappwebview.callHandler('InternalUpdate', 'h' + height);
     }
   }
 
@@ -216,14 +220,24 @@ class HtmlEditorState extends State<HtmlEditor> {
     window.flutter_inappwebview.callHandler('InternalUpdate', 'onfocus');
   }
 
+  function onKeyDown(event) {
+    //console.log('keydown', event.key, event);
+    if (event.keyCode === 13 || event.key === 'Enter') {
+      document.execCommand('insertLineBreak');
+      event.preventDefault();
+    }
+  }
+
   function onLoaded() {
     documentHeight = document.body.scrollHeight;
     document.onselectionchange = onSelectionChange;
-    document.getElementById('editor').oninput = onInput;
+    var editor = document.getElementById('editor');
+    editor.oninput = onInput;
+    editor.onkeydown = onKeyDown;
+    document.onselectionchange = onSelectionChange;
   }
 </script>
 </head>
-<body onload="onLoaded();" >
 <div id="editor" contenteditable="true" onfocus="onFocus();">
 ==content==
 </div>

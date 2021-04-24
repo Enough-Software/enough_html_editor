@@ -161,9 +161,9 @@
     }
 
     function onInput(inputEvent) {
-        //console.log('inputEvent', inputEvent);
+        console.log('inputEvent', inputEvent);
         isLineBreakInput = ((inputEvent.inputType == 'insertParagraph') || ((inputEvent.inputType == 'insertText') && (inputEvent.data == null)));
-        var height = document.body.scrollHeight;
+    var height = document.body.scrollHeight;
         if (height != documentHeight) {
             documentHeight = height;
             console.log('height changed to', height);
@@ -178,10 +178,27 @@
         console.log('lost focus');
     }
 
+    function onKeyDown(event) {
+        console.log('onKeyDown', event);
+        if (event.keyCode == 13 || event.key == 'Enter') {
+            document.execCommand('insertLineBreak');
+            event.preventDefault();
+        }
+    }
+
     function onLoaded() {
         documentHeight = document.body.scrollHeight;
-        document.getElementById('editor').oninput = onInput;
+        var editor = document.getElementById('editor');
+        editor.oninput = onInput;
+        editor.onkeydown = onKeyDown;
         document.onselectionchange = onSelectionChange;
+        // document.addEventListener('keydown', event => {
+        //     //console.log('keydown', event.key, event);
+        //     if (event.keyCode == 13 || event.key == 'Enter') {
+        //         document.execCommand('insertLineBreak');
+        //         event.preventDefault();
+        //     }
+        // });
     }
 
     </script>
