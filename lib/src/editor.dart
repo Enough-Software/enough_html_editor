@@ -234,10 +234,10 @@ class HtmlEditorState extends State<HtmlEditor> {
     var editor = document.getElementById('editor');
     editor.oninput = onInput;
     editor.onkeydown = onKeyDown;
-    document.onselectionchange = onSelectionChange;
   }
 </script>
 </head>
+<body onload="onLoaded();">
 <div id="editor" contenteditable="true" onfocus="onFocus();">
 ==content==
 </div>
