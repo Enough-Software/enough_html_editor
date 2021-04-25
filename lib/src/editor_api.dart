@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui';
 
 import 'package:image/image.dart' as img;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -43,6 +44,28 @@ class HtmlEditorApi {
 
   /// Callback to be informed when the align settings have been changed
   void Function(ElementAlign)? onAlignSettingsChanged;
+
+  final List<void Function(ColorSetting)> _colorChangedSettings = [];
+
+  /// Callback to be informed when the color settings have been changed
+  set onColorChanged(void Function(ColorSetting)? value) {
+    if (value != null) {
+      _colorChangedSettings.add(value);
+    }
+  }
+
+  void Function(ColorSetting)? get onColorChanged {
+    if (_colorChangedSettings.isEmpty) {
+      return null;
+    }
+    return _callOnColorChanged;
+  }
+
+  void _callOnColorChanged(ColorSetting colorSetting) {
+    for (final callback in _colorChangedSettings) {
+      callback(colorSetting);
+    }
+  }
 
   HtmlEditorApi(this._htmlEditorState);
 
@@ -136,6 +159,44 @@ class HtmlEditorApi {
     final base64Data = base64Encode(data);
     return insertHtml(
         '<img src="data:$mimeType;base64,$base64Data" style="max-width: 100%" />');
+  }
+
+  String _toHex(Color color) {
+    final buffer = StringBuffer();
+    _appendHex(color.red, buffer);
+    _appendHex(color.green, buffer);
+    _appendHex(color.blue, buffer);
+    return buffer.toString();
+  }
+
+  void _appendHex(int value, StringBuffer buffer) {
+    final text = value.toRadixString(16);
+    if (text.length < 2) {
+      buffer.write('0');
+    }
+    buffer.write(text);
+  }
+
+  /// Sets the given [color] as the current foreground / text color.
+  ///
+  /// Optionally specify the [opacity] being between `1.0` (fully opaque) and `0.0` (fully transparent).
+  Future setForegroundColor(Color color, {double opacity = 1.0}) async {
+    if (opacity < 1.0) {
+      return _execCommand(
+          '"foreColor", false, "rgba(${color.red},${color.green},${color.blue},$opacity)"');
+    }
+    return _execCommand('"foreColor", false, "#${_toHex(color)}"');
+  }
+
+  /// Sets the given [color] as the current text background color.
+  ///
+  /// Optionally specify the [opacity] being between `1.0` (fully opaque) and `0.0` (fully transparent).
+  Future setBackgroundColor(Color color, {double opacity = 1.0}) async {
+    if (opacity < 1.0) {
+      return _execCommand(
+          '"backColor", false, "rgba(${color.red},${color.green},${color.blue},$opacity)"');
+    }
+    return _execCommand('"backColor", false, "#${_toHex(color)}"');
   }
 
   Future _execCommand(String command) async {

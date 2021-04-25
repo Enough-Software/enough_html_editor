@@ -14,6 +14,14 @@ class FormatSettings {
       this.isBold, this.isItalic, this.isUnderline, this.isStrikeThrough);
 }
 
+/// Standard color settings
+class ColorSetting {
+  final Color? foreground;
+  final Color? background;
+
+  ColorSetting(this.foreground, this.background);
+}
+
 /// Standard align settings
 enum ElementAlign { left, center, right, justify }
 
@@ -91,6 +99,8 @@ class HtmlEditorState extends State<HtmlEditor> {
   var isSelectionUnderline = false;
   var isSelectionStrikeThrough = false;
   var selectionTextAlign = undefined;
+  var selectionForegroundColor = undefined;
+  var selectionBackgroundColor = undefined;
   var isLineBreakInput = false;
   var documentHeight;
 
@@ -106,18 +116,40 @@ class HtmlEditorState extends State<HtmlEditor> {
     var textAlign = undefined;
     var nestedBlockqotes = 0;
     var rootBlockquote;
+    var foregroundColor = undefined;
+    var backgroundColor = undefined;
     while (node.parentNode != null && node.id != 'editor') {
       if (node.nodeName == 'B') {
           isBold = true;
-      } else if (node.nodeName == 'I') {
+      } else if (node.nodeName === 'I') {
           isItalic = true;
-      } else if (node.nodeName == 'U') {
+      } else if (node.nodeName === 'U') {
           isUnderline = true;
-      } else if (node.nodeName == 'STRIKE') {
+      } else if (node.nodeName === 'STRIKE') {
           isStrikeThrough = true;
-      } else if (node.nodeName == 'BLOCKQUOTE') {
+      } else if (node.nodeName === 'BLOCKQUOTE') {
           nestedBlockqotes++;
           rootBlockquote = node;
+      } else if (node.nodeName === 'SPAN' && node.style != undefined) {
+        // check for color, bold, etc in style:
+        if (node.style.fontWeight === 'bold') {
+          isBold = true;
+        }
+        if (node.style.fontStyle === 'italic') {
+          isItalic = true;
+        }
+        if (node.style.textDecorationLine === 'underline') {
+          isUnderline = true;
+        }
+        if (node.style.textDecorationLine === 'line-through') {
+          isStrikeThrough = true;
+        }
+        if (foregroundColor == undefined && node.style.color != undefined) {
+          foregroundColor = node.style.color;
+        }
+        if (backgroundColor == undefined && node.style.backgroundColor != undefined) {
+          backgroundColor = node.style.backgroundColor;
+        }
       }
       if (textAlign == undefined && node.style?.textAlign != undefined && node.style.textAlign != '') {
         textAlign = node.style.textAlign;
@@ -128,6 +160,7 @@ class HtmlEditorState extends State<HtmlEditor> {
       isSelectionBold = isBold;
       isSelectionItalic = isItalic;
       isSelectionUnderline = isUnderline;
+      isSelectionStrikeThrough = isStrikeThrough;
       var message = 0;
       if (isBold) {
           message += 1;
@@ -146,6 +179,11 @@ class HtmlEditorState extends State<HtmlEditor> {
     if (textAlign != selectionTextAlign) {
       selectionTextAlign = textAlign;
       window.flutter_inappwebview.callHandler('AlignSettings', textAlign);
+    }
+    if (foregroundColor != selectionForegroundColor || backgroundColor != selectionBackgroundColor) {
+      selectionForegroundColor = foregroundColor;
+      selectionBackgroundColor = backgroundColor;
+      window.flutter_inappwebview.callHandler('ColorSettings', foregroundColor, backgroundColor);
     }
 ''';
   static const String _templateBlockquote = '''
@@ -234,6 +272,7 @@ class HtmlEditorState extends State<HtmlEditor> {
     var editor = document.getElementById('editor');
     editor.oninput = onInput;
     editor.onkeydown = onKeyDown;
+    document.execCommand("styleWithCSS", false, true);
   }
 </script>
 </head>
@@ -403,6 +442,8 @@ blockquote {
     controller.addJavaScriptHandler(
         handlerName: 'AlignSettings', callback: _onAlignSettingsReceived);
     controller.addJavaScriptHandler(
+        handlerName: 'ColorSettings', callback: _onColorSettingsReceived);
+    controller.addJavaScriptHandler(
         handlerName: 'InternalUpdate', callback: _onInternalUpdateReceived);
 
     if (widget.onCreated != null) {
@@ -453,6 +494,40 @@ blockquote {
       }
       callback(align);
     }
+  }
+
+  void _onColorSettingsReceived(List<dynamic> parameters) {
+    // print('got colors  $parameters');
+    final callback = _api.onColorChanged;
+    if (callback != null && parameters.length == 2) {
+      final foreground = _parseColor(parameters[0]);
+      final background = _parseColor(parameters[1]);
+      callback(ColorSetting(foreground, background));
+    }
+  }
+
+  Color? _parseColor(String? colorValue) {
+    Color? color;
+    if (colorValue != null) {
+      final startsWithRgb = colorValue.startsWith('rgb(');
+      if ((startsWithRgb || colorValue.startsWith('rgba(')) &&
+          colorValue.endsWith(')')) {
+        try {
+          final values = colorValue
+              .substring(startsWithRgb ? 'rgb('.length : 'rgba('.length,
+                  colorValue.length - 1)
+              .split(',')
+              .map((text) => int.parse(text.trim()))
+              .toList();
+          color = startsWithRgb
+              ? Color.fromARGB(0xff, values[0], values[1], values[2])
+              : Color.fromARGB(values[3], values[0], values[1], values[2]);
+        } catch (e, s) {
+          print('Error: unable to parse color value $colorValue: $e $s');
+        }
+      }
+    }
+    return color;
   }
 
   void _onInternalUpdateReceived(List<dynamic> parameters) {
