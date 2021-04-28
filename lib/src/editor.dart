@@ -91,7 +91,11 @@ class HtmlEditorState extends State<HtmlEditor> {
 <!DOCTYPE html>
 <html>
 <head>
-<style>==styles==
+<style>
+  #editor {
+      outline: 0px solid transparent;
+  }
+==styles==
 </style>
 <script>
   var isSelectionBold = false;

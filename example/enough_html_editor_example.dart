@@ -20,6 +20,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// Example how to use the simplified [PackagedHtmlEditor] that combines the default controls and the editor.
 class EditorPage extends StatefulWidget {
   EditorPage({Key? key}) : super(key: key);
 
@@ -28,7 +29,60 @@ class EditorPage extends StatefulWidget {
 }
 
 class _EditorPageState extends State<EditorPage> {
-  final _keyEditor = GlobalKey<HtmlEditorState>();
+  HtmlEditorApi? _editorApi;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('PackagedHtmlEditor Demo'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.send),
+            onPressed: () async {
+              final text = await _editorApi!.getText();
+              print('got text: [$text]');
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => ResultScreen(htmlText: text),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+      body: PackagedHtmlEditor(
+        onCreated: (api) {
+          _editorApi = api;
+        },
+        initialContent: '''<p>Here is some text</p>
+        <p>Here is <b>bold</b> text</p>
+        <p>Here is <i>some italic sic</i> text</p>
+        <p>Here is <i><b>bold and italic</b></i> text</p>
+        <p style="text-align: center;">Here is <u><i><b>bold and italic and underline</b></i></u> text</p>
+        <ul><li>one list element</li><li>another point</li></ul>
+        <blockquote>Here is a quote<br/>
+          that spans several lines<br/>
+          <blockquote>
+              Another second level blockqote 
+          </blockquote>
+      </blockquote>
+''',
+      ),
+    );
+  }
+}
+
+/// Example how to use editor within a a CustomScrollView
+class CustomScrollEditorPage extends StatefulWidget {
+  CustomScrollEditorPage({Key? key}) : super(key: key);
+
+  @override
+  _CustomScrollEditorPageState createState() => _CustomScrollEditorPageState();
+}
+
+class _CustomScrollEditorPageState extends State<CustomScrollEditorPage> {
+  HtmlEditorApi? _editorApi;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +99,7 @@ class _EditorPageState extends State<EditorPage> {
               IconButton(
                 icon: Icon(Icons.send),
                 onPressed: () async {
-                  final text = await _keyEditor.currentState!.api.getText();
+                  final text = await _editorApi!.getText();
                   print('got text: [$text]');
                   Navigator.of(context).push(
                     MaterialPageRoute(
@@ -63,10 +117,16 @@ class _EditorPageState extends State<EditorPage> {
                   TextField(decoration: InputDecoration(hintText: 'Subject')),
             ),
           ),
-          SliverHeaderHtmlEditorControls(editorKey: _keyEditor),
+          if (_editorApi != null) ...{
+            SliverHeaderHtmlEditorControls(editorApi: _editorApi),
+          },
           SliverToBoxAdapter(
             child: HtmlEditor(
-              key: _keyEditor,
+              onCreated: (api) {
+                setState(() {
+                  _editorApi = api;
+                });
+              },
               initialContent: '''<p>Here is some text</p>
         <p>Here is <b>bold</b> text</p>
         <p>Here is <i>some italic sic</i> text</p>
