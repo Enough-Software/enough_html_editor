@@ -1,6 +1,7 @@
 # enough_html_editor
 
 Slim HTML editor for Flutter with full API control and optional Flutter-based widget controls.
+![screenshot](editor.png)
 
 ## API Documentation
 Check out the full API documentation at https://pub.dev/documentation/enough_html_editor/latest/
@@ -11,6 +12,7 @@ The current `enough_html_editor` package the following widgets:
 * `HtmlEditorControls` optional editor controls.
 * `SliverHeaderHtmlEditorControls` wrapper to use the editor controls within a `CustomScrollView` as a sticky header. 
 * `HtmlEditorApi` - not a widget - the API to control the editor, use the API to access the edited HTML text or to set the current text bold, add an unordered list, etc.
+* `PackagedHtmlEditor` a simple to use Widget that contains both the `HtmlEditor` and the `HtmlEditorControls`
 
 ### Access API
 You choose between two options to access the API:
@@ -47,46 +49,31 @@ You choose between two options to access the API:
 
 Either the API or the global key is required for creating the `HtmlEditorControls`.
 
-## Quick example
+## Quick Start
+Use the `PackagedHtmlEditor` for a quick start. This contains both the default controls and the editor.
 ```dart
 HtmlEditorApi _editorApi;
 
 @override
 Widget build(BuildContext context) {
-    return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-            if (_editorApi != null) ...{
-              SliverHeaderHtmlEditorControls(editorApi: _editorApi),
-            },
-            SliverToBoxAdapter(
-              child: FutureBuilder<String>(
-                future: loadMailTextFuture,
-                builder: (widget, snapshot) {
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.none:
-                    case ConnectionState.waiting:
-                    case ConnectionState.active:
-                      return Row(children: [CircularProgressIndicator()]);
-                      break;
-                    case ConnectionState.done:
-                      return HtmlEditor(
-                        onCreated: (api) {
-                          setState(() {
-                            _editorApi = api;
-                          });
-                        },
-                        initialContent: snapshot.data,
-                      );
-                      break;
-                  }
-                  return Container();
-                },
-              ),
-            ),
-        ],
-      ),
-    );
+    return PackagedHtmlEditor(
+          onCreated: (api) {
+            _editorApi = api;
+          },
+          initialContent: '''<p>Here is some text</p>
+          <p>Here is <b>bold</b> text</p>
+          <p>Here is <i>some italic sic</i> text</p>
+          <p>Here is <i><b>bold and italic</b></i> text</p>
+          <p style="text-align: center;">Here is <u><i><b>bold and italic and underline</b></i></u> text</p>
+          <ul><li>one list element</li><li>another point</li></ul>
+          <blockquote>Here is a quote<br/>
+            that spans several lines<br/>
+            <blockquote>
+                Another second level blockqote 
+            </blockquote>
+        </blockquote>
+''',
+        );
 }
 ```
 
@@ -95,7 +82,7 @@ Add this dependency your pubspec.yaml file:
 
 ```
 dependencies:
-  enough_html_editor: ^0.0.2
+  enough_html_editor: ^0.0.4
 ```
 The latest version or `enough_html_editor` is [![enough_html_editor version](https://img.shields.io/pub/v/enough_html_editor.svg)](https://pub.dartlang.org/packages/enough_html_editor).
 

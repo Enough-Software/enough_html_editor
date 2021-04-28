@@ -1,5 +1,12 @@
-## [0.0.4] - not yet released
+## [0.0.4] - 2021-04-28
 - Support dark theme
+- Simpler usage with `PackagedHtmlEditor` #2
+- Select text foreground and background colors #12, $14
+- New strike through option
+- Bold, italic, underline text is now detected from inline CSS styles, too #5
+- Optionally specify your own context menu items using the `textSelectionMenuItems` parameter
+- Optionally specify your own widgets for the predefined `HtmlEditorControls` widget using the `prefix` and/or `suffix` parameters
+
 
 ## [0.0.3] - 2021-03-13
 - `enough_html_editor` is now [null safe](https://dart.dev/null-safety/tour) #6
