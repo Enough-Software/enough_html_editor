@@ -242,4 +242,17 @@ class HtmlEditorApi {
   Future<String?> getSelectedText() {
     return _webViewController.getSelectedText();
   }
+
+  /// Replaces all text parts [from] with the replacement [replace] and returns the updated text.
+  Future<String> replaceAll(String from, String replace) async {
+    final text = (await getText()).replaceAll(from, replace);
+    setText(text);
+    return text;
+  }
+
+  /// Sets the given text, replacing the previous text completely
+  Future<void> setText(String text) {
+    final html = _htmlEditorState.generateHtmlDocument(text);
+    return _webViewController.loadData(data: html);
+  }
 }

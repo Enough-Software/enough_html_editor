@@ -316,14 +316,21 @@ blockquote {
   void initState() {
     super.initState();
     _api = HtmlEditorApi(this);
+    _initialPageContent = generateHtmlDocument(widget.initialContent);
+  }
+
+  /// Generates the editor document html from the specified [content].
+  String generateHtmlDocument(String content) {
+    final buffer = StringBuffer();
     final stylesWithMinHeight =
         styles.replaceFirst('==minHeight==', '${widget.minHeight}');
-    final html =
-        _templateStart.replaceFirst('==styles==', stylesWithMinHeight) +
-            (widget.splitBlockquotes ? _templateBlockquote : '') +
-            _templateContinuation.replaceFirst(
-                '==content==', widget.initialContent);
-    _initialPageContent = html;
+    buffer
+        .write(_templateStart.replaceFirst('==styles==', stylesWithMinHeight));
+    if (widget.splitBlockquotes) {
+      buffer.write(_templateBlockquote);
+    }
+    buffer.write(_templateContinuation.replaceFirst('==content==', content));
+    return buffer.toString();
   }
 
   @override
