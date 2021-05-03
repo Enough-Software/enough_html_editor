@@ -66,7 +66,8 @@ class _EditorPageState extends State<EditorPage> {
           onCreated: (api) {
             _editorApi = api;
           },
-          initialContent: '''<p>Here is some text</p>
+          initialContent:
+              '''<p>Here is some text</p> with a <a href="https://github.com/Enough-Software/enough_html_editor">link</a>.
           <p>Here is <b>bold</b> text</p>
           <p>Here is <i>some italic sic</i> text</p>
           <p>Here is <i><b>bold and italic</b></i> text</p>

@@ -22,6 +22,14 @@ class ColorSetting {
   ColorSetting(this.foreground, this.background);
 }
 
+/// Link settings
+class LinkSettings {
+  final String url;
+  final String text;
+
+  LinkSettings(this.url, this.text);
+}
+
 /// Standard align settings
 enum ElementAlign { left, center, right, justify }
 
@@ -105,8 +113,10 @@ class HtmlEditorState extends State<HtmlEditor> {
   var selectionTextAlign = undefined;
   var selectionForegroundColor = undefined;
   var selectionBackgroundColor = undefined;
+  var isSelectionInLink = false;
   var isLineBreakInput = false;
   var documentHeight;
+  var selectionRange = undefined;
 
   function onSelectionChange() {
     //console.log|("onSelectionChange");
@@ -122,6 +132,8 @@ class HtmlEditorState extends State<HtmlEditor> {
     var rootBlockquote;
     var foregroundColor = undefined;
     var backgroundColor = undefined;
+    var linkUrl = undefined;
+    var linkText = undefined;
     while (node.parentNode != null && node.id != 'editor') {
       if (node.nodeName == 'B') {
           isBold = true;
@@ -161,6 +173,9 @@ class HtmlEditorState extends State<HtmlEditor> {
         if (backgroundColor == undefined && node.style.backgroundColor != undefined) {
           backgroundColor = node.style.backgroundColor;
         }
+      } else if (node.nodeName === 'A' && linkUrl == undefined) {
+        linkUrl = node.href;
+        linkText = node.textContent;
       }
       if (textAlign == undefined && node.style?.textAlign != undefined && node.style.textAlign != '') {
         textAlign = node.style.textAlign;
@@ -195,6 +210,15 @@ class HtmlEditorState extends State<HtmlEditor> {
       selectionForegroundColor = foregroundColor;
       selectionBackgroundColor = backgroundColor;
       window.flutter_inappwebview.callHandler('ColorSettings', foregroundColor, backgroundColor);
+    }
+    if (linkUrl != undefined || isSelectionInLink === true) {
+        if (linkUrl != undefined) {
+          isSelectionInLink = true;
+          window.flutter_inappwebview.callHandler('LinkSettings', linkUrl, linkText);
+        } else {
+          isSelectionInLink = false;
+          window.flutter_inappwebview.callHandler('LinkSettings');
+        }
     }
 ''';
   static const String _templateBlockquote = '''
@@ -274,6 +298,40 @@ class HtmlEditorState extends State<HtmlEditor> {
     if (event.keyCode === 13 || event.key === 'Enter') {
       document.execCommand('insertLineBreak');
       event.preventDefault();
+    }
+  }
+
+  function editLink(href, text) {
+    let selection = document.getSelection();
+    var node = selection.anchorNode;
+    while (node != undefined && node.nodeName != 'A') {
+      node = node.parentNode;
+    }
+    if (node != undefined && node.nodeName === 'A') {
+      node.href = href;
+      node.textContent = text;
+    }
+  }
+
+  function selectNode() {
+    let selection = document.getSelection();
+    let range = new Range();
+    range.setStartBefore(selection.anchorNode);
+    range.setEndAfter(selection.anchorNode);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  function storeSelectionRange() {
+    selectionRange = document.getSelection().getRangeAt(0);
+    return selectionRange.toString();
+  }
+
+  function restoreSelectionRange() {
+    if (selectionRange != undefined) {
+      let selection = document.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(selectionRange);
     }
   }
 
@@ -455,6 +513,8 @@ blockquote {
     controller.addJavaScriptHandler(
         handlerName: 'ColorSettings', callback: _onColorSettingsReceived);
     controller.addJavaScriptHandler(
+        handlerName: 'LinkSettings', callback: _onLinkSettingsReceived);
+    controller.addJavaScriptHandler(
         handlerName: 'InternalUpdate', callback: _onInternalUpdateReceived);
 
     if (widget.onCreated != null) {
@@ -539,6 +599,20 @@ blockquote {
       }
     }
     return color;
+  }
+
+  void _onLinkSettingsReceived(List<dynamic> parameters) {
+    // print('got link $parameters');
+    final callback = _api.onLinkSettingsChanged;
+    if (callback != null) {
+      if (parameters.length == 2) {
+        String url = parameters[0];
+        String text = parameters[1];
+        callback(LinkSettings(url, text));
+      } else {
+        callback(null);
+      }
+    }
   }
 
   void _onInternalUpdateReceived(List<dynamic> parameters) {

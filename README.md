@@ -77,6 +77,14 @@ Widget build(BuildContext context) {
 }
 ```
 
+Use the `HtmlEditorApi` that you receive in the `onCreated` callback to query the final text:
+```dart
+// retrieve only the edited text as HTML code: 
+final text = await _editorApi.getText();
+// retrieve the full document as HTML code:
+final fullHtml = await _editorApi.getFullHtml();
+```
+
 ## Installation
 Add this dependency your pubspec.yaml file:
 

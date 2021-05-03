@@ -54,12 +54,18 @@ class HtmlEditorApi {
     }
   }
 
+  /// Getter for color changes callback
   void Function(ColorSetting)? get onColorChanged {
     if (_colorChangedSettings.isEmpty) {
       return null;
     }
     return _callOnColorChanged;
   }
+
+  /// Callback to be informed when the link settings have been changed.
+  ///
+  /// Getting a `null` value as the current link settings means that no link is currently selected
+  void Function(LinkSettings?)? onLinkSettingsChanged;
 
   void _callOnColorChanged(ColorSetting colorSetting) {
     for (final callback in _colorChangedSettings) {
@@ -119,17 +125,31 @@ class HtmlEditorApi {
     return _execCommand('"justifyFull"');
   }
 
-  /// Inserts the  [html] code at the insertion point (deletes selection).
+  /// Inserts the  [html] code at the insertion point (replaces selection).
   Future insertHtml(String html) async {
     html = html.replaceAll('"', r'\"');
     await _execCommand('"insertHTML", false, "$html"');
     return _htmlEditorState.onDocumentChanged();
   }
 
-  /// Inserts the given plain [text] at the insertion point (deletes selection).
+  /// Inserts the given plain [text] at the insertion point (replaces selection).
   Future insertText(String text) async {
     await _execCommand('"insertText", false, "$text"');
     return _htmlEditorState.onDocumentChanged();
+  }
+
+  /// Inserts a link to [href] at the current position (replaces selection).
+  ///
+  /// Optionally specify the user-visible [text], by default the [href] will be user visible.
+  /// You can define a link [target] such as `'_blank'`, by default no target will be defined.
+  Future insertLink(String href, {String? text, String? target}) {
+    final buffer = StringBuffer()..write('<a href="')..write(href)..write('"');
+    if (target != null) {
+      buffer..write(' target="')..write(target)..write('"');
+    }
+    buffer..write('>')..write(text ?? href)..write('</a>');
+    final html = buffer.toString();
+    return insertHtml(html);
   }
 
   /// Converts the given [file] with the specifid [mimeType] into image data and inserts it into the editor.
@@ -202,11 +222,6 @@ class HtmlEditorApi {
   Future _execCommand(String command) async {
     await _webViewController.evaluateJavascript(
         source: 'document.execCommand($command);');
-    // document.getElementById("editor").focus();
-// FocusScope.of(context).unfocus();
-// Timer(const Duration(milliseconds: 1), () {
-    // FocusScope.of(context).requestFocus();
-// });
   }
 
   /// Retrieves the edited text as HTML
@@ -224,7 +239,8 @@ class HtmlEditorApi {
   /// Compare [getText()] to retrieve only the edited HTML text.
   Future<String> getFullHtml({String? content}) async {
     content ??= await getText();
-    final styles = _htmlEditorState.styles.replaceFirst('''#editor {
+    final styles = _htmlEditorState.styles
+        .replaceFirst('''#editor {
   min-height: ==minHeight==px;
 }''', '');
     return '''<!DOCTYPE html>
@@ -243,6 +259,16 @@ class HtmlEditorApi {
     return _webViewController.getSelectedText();
   }
 
+  Future storeSelectionRange() {
+    return _webViewController.evaluateJavascript(
+        source: 'storeSelectionRange();');
+  }
+
+  Future restoreSelectionRange() {
+    return _webViewController.evaluateJavascript(
+        source: 'restoreSelectionRange();');
+  }
+
   /// Replaces all text parts [from] with the replacement [replace] and returns the updated text.
   Future<String> replaceAll(String from, String replace) async {
     final text = (await getText()).replaceAll(from, replace);
@@ -254,5 +280,15 @@ class HtmlEditorApi {
   Future<void> setText(String text) {
     final html = _htmlEditorState.generateHtmlDocument(text);
     return _webViewController.loadData(data: html);
+  }
+
+  /// Selects the HTML DOM node at the current position fully.
+  Future<void> selectCurrentNode() {
+    return _webViewController.evaluateJavascript(source: 'selectNode();');
+  }
+
+  Future<void> editCurrentLink(String href, String text) {
+    return _webViewController
+        .evaluateJavascript(source: '''editLink('$href', '$text');''');
   }
 }

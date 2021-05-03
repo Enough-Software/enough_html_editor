@@ -3,40 +3,16 @@ import 'package:flutter/widgets.dart';
 import 'editor.dart';
 import 'editor_api.dart';
 
-/// An example for editor controls.
-///
-/// With `enough_html_editor` you can create your very own editor controls.
-class HtmlEditorControls extends StatefulWidget {
+abstract class _BaseHtmlEditorControls extends StatefulWidget {
   final GlobalKey<HtmlEditorState>? editorKey;
   final HtmlEditorApi? editorApi;
-  final Widget? prefix;
-  final Widget? suffix;
-  final List<Color>? foregroundColors;
-  final List<Color>? backgroundColors;
-
-  HtmlEditorControls({
-    Key? key,
-    this.editorKey,
-    this.editorApi,
-    this.prefix,
-    this.suffix,
-    this.foregroundColors,
-    this.backgroundColors,
-  })  : assert(editorKey != null || editorApi != null),
+  _BaseHtmlEditorControls({Key? key, this.editorApi, this.editorKey})
+      : assert(editorApi != null || editorKey != null,
+            'Please define either the editorApi or editorKey pararameter.'),
         super(key: key);
 
-  @override
-  _HtmlEditorControlsState createState() => _HtmlEditorControlsState();
-}
-
-class _HtmlEditorControlsState extends State<HtmlEditorControls> {
-  final isSelected = [false, false, false, false];
-  ElementAlign? _currentAlignFormat = ElementAlign.left;
-  late HtmlEditorApi _editorApi;
-
-  @override
-  void initState() {
-    super.initState();
+  static void initApi(_BaseHtmlEditorControls widget,
+      void Function(HtmlEditorApi api) initWithApi) {
     final key = widget.editorKey;
     final api = widget.editorApi;
     if (key != null) {
@@ -44,31 +20,67 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
       // so wait for after the first run
       WidgetsBinding.instance!.addPostFrameCallback((_) {
         final stateApi = key.currentState!.api;
-        _editorApi = stateApi;
-        stateApi.onFormatSettingsChanged = _onFormatSettingsChanged;
-        stateApi.onAlignSettingsChanged = _onAlignSettingsChanged;
+        initWithApi(stateApi);
       });
     } else if (api != null) {
-      _editorApi = api;
-      api.onFormatSettingsChanged = _onFormatSettingsChanged;
-      api.onAlignSettingsChanged = _onAlignSettingsChanged;
-    } else {
-      throw StateError('no api or live key defined');
+      initWithApi(api);
     }
   }
+}
 
-  void _onFormatSettingsChanged(FormatSettings formatSettings) {
-    setState(() {
-      isSelected[0] = formatSettings.isBold;
-      isSelected[1] = formatSettings.isItalic;
-      isSelected[2] = formatSettings.isUnderline;
-      isSelected[3] = formatSettings.isStrikeThrough;
-    });
+// class HtmlEditorInheritedWidget extends InheritedWidget
+class HtmlEditorApiWidget extends InheritedWidget {
+  final HtmlEditorApi editorApi;
+  HtmlEditorApiWidget(
+      {Key? key, required this.editorApi, required Widget child})
+      : super(key: key, child: child);
+
+  static HtmlEditorApiWidget? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<HtmlEditorApiWidget>();
   }
 
-  void _onAlignSettingsChanged(ElementAlign align) {
-    setState(() {
-      _currentAlignFormat = align;
+  @override
+  bool updateShouldNotify(HtmlEditorApiWidget oldWidget) {
+    return true;
+  }
+}
+
+/// An example for editor controls.
+///
+/// With `enough_html_editor` you can create your very own editor controls.
+class HtmlEditorControls extends _BaseHtmlEditorControls {
+  final Widget? prefix;
+  final Widget? suffix;
+  final List<Color>? foregroundColors;
+  final List<Color>? backgroundColors;
+
+  HtmlEditorControls({
+    Key? key,
+    GlobalKey<HtmlEditorState>? editorKey,
+    HtmlEditorApi? editorApi,
+    this.prefix,
+    this.suffix,
+    this.foregroundColors,
+    this.backgroundColors,
+  }) : super(key: key, editorApi: editorApi, editorKey: editorKey);
+
+  @override
+  _HtmlEditorControlsState createState() => _HtmlEditorControlsState();
+}
+
+class _HtmlEditorControlsState extends State<HtmlEditorControls> {
+  late HtmlEditorApi _editorApi;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _BaseHtmlEditorControls.initApi(widget, (api) {
+      _editorApi = api;
+      _isInitialized = true;
+      if (widget.editorApi == null) {
+        setState(() {});
+      }
     });
   }
 
@@ -77,117 +89,56 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
     final prefix = widget.prefix;
     final suffix = widget.suffix;
     final size = MediaQuery.of(context).size;
-    return SizedBox(
-      width: size.width,
-      height: 50,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        children: [
-          if (prefix != null) ...{
-            prefix,
-          },
-          ToggleButtons(
-            children: [
-              Icon(Icons.format_bold),
-              Icon(Icons.format_italic),
-              Icon(Icons.format_underlined),
-              Icon(Icons.format_strikethrough),
-            ],
-            onPressed: (int index) {
-              switch (index) {
-                case 0:
-                  _editorApi.formatBold();
-                  break;
-                case 1:
-                  _editorApi.formatItalic();
-                  break;
-                case 2:
-                  _editorApi.formatUnderline();
-                  break;
-                case 3:
-                  _editorApi.formatStrikeThrough();
-                  break;
-              }
-              setState(() {
-                isSelected[index] = !isSelected[index];
-              });
+    if (!_isInitialized) {
+      return CircularProgressIndicator();
+    }
+    return HtmlEditorApiWidget(
+      editorApi: _editorApi,
+      child: SizedBox(
+        width: size.width,
+        height: 50,
+        child: ListView(
+          scrollDirection: Axis.horizontal,
+          children: [
+            if (prefix != null) ...{
+              prefix,
             },
-            isSelected: isSelected,
-          ),
-          IconButton(
-            icon: Icon(Icons.format_list_bulleted),
-            onPressed: () => _editorApi.insertUnorderedList(),
-          ),
-          IconButton(
-            icon: Icon(Icons.format_list_numbered),
-            onPressed: () => _editorApi.insertOrderedList(),
-          ),
-          DropdownButton<ElementAlign>(
-            items: [
-              DropdownMenuItem<ElementAlign>(
-                  child: Icon(Icons.format_align_left),
-                  value: ElementAlign.left),
-              DropdownMenuItem<ElementAlign>(
-                  child: Icon(Icons.format_align_center),
-                  value: ElementAlign.center),
-              DropdownMenuItem<ElementAlign>(
-                  child: Icon(Icons.format_align_right),
-                  value: ElementAlign.right),
-              DropdownMenuItem<ElementAlign>(
-                  child: Icon(Icons.format_align_justify),
-                  value: ElementAlign.justify),
-            ],
-            onChanged: (align) {
-              align ??= ElementAlign.left;
-              switch (align) {
-                case ElementAlign.left:
-                  _editorApi.formatAlignLeft();
-                  break;
-                case ElementAlign.center:
-                  _editorApi.formatAlignCenter();
-                  break;
-                case ElementAlign.right:
-                  _editorApi.formatAlignRight();
-                  break;
-                case ElementAlign.justify:
-                  _editorApi.formatAlignJustify();
-                  break;
-              }
-              setState(() {
-                _currentAlignFormat = align;
-              });
+            BaseFormatButtons(),
+            IconButton(
+              icon: Icon(Icons.format_list_bulleted),
+              onPressed: () => _editorApi.insertUnorderedList(),
+            ),
+            IconButton(
+              icon: Icon(Icons.format_list_numbered),
+              onPressed: () => _editorApi.insertOrderedList(),
+            ),
+            AlignDropdown(),
+            ColorPicker(
+              colors: widget.foregroundColors ??
+                  [Colors.black, Colors.white, ...Colors.accents],
+              mode: ColorPickerMode.foreground,
+              editorApi: widget.editorApi,
+              editorKey: widget.editorKey,
+            ),
+            ColorPicker(
+              colors: widget.backgroundColors ??
+                  [Colors.white, Colors.black, ...Colors.accents],
+              mode: ColorPickerMode.background,
+              editorApi: widget.editorApi,
+              editorKey: widget.editorKey,
+            ),
+            LinkButton(),
+            if (suffix != null) ...{
+              suffix,
             },
-            selectedItemBuilder: (context) => [
-              Icon(Icons.format_align_left),
-              Icon(Icons.format_align_center),
-              Icon(Icons.format_align_right),
-              Icon(Icons.format_align_justify),
-            ],
-            value: _currentAlignFormat,
-          ),
-          ColorPicker(
-            colors: widget.foregroundColors ??
-                [Colors.black, Colors.white, ...Colors.accents],
-            mode: ColorPickerMode.foreground,
-            editorApi: widget.editorApi,
-            editorKey: widget.editorKey,
-          ),
-          ColorPicker(
-            colors: widget.backgroundColors ??
-                [Colors.white, Colors.black, ...Colors.accents],
-            mode: ColorPickerMode.background,
-            editorApi: widget.editorApi,
-            editorKey: widget.editorKey,
-          ),
-          if (suffix != null) ...{
-            suffix,
-          },
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
+/// HTML editor controls to be used within a sliver-based view, e.g. a `CustomScrollView`.
 class SliverHeaderHtmlEditorControls extends StatelessWidget {
   final GlobalKey<HtmlEditorState>? editorKey;
   final HtmlEditorApi? editorApi;
@@ -251,25 +202,325 @@ class _SliverHeaderHtmlEditorControlsDelegate
   bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) => false;
 }
 
+/// Controls the base format settings bold, italic, underlined and strike through
+///
+/// This widget depends on a [HtmlEditorApiWidget] in the widget tree.
+class BaseFormatButtons extends StatefulWidget {
+  BaseFormatButtons({Key? key}) : super(key: key);
+
+  @override
+  _BaseFormatButtonsState createState() => _BaseFormatButtonsState();
+}
+
+class _BaseFormatButtonsState extends State<BaseFormatButtons> {
+  final isSelected = [false, false, false, false];
+
+  void _onFormatSettingsChanged(FormatSettings formatSettings) {
+    setState(() {
+      isSelected[0] = formatSettings.isBold;
+      isSelected[1] = formatSettings.isItalic;
+      isSelected[2] = formatSettings.isUnderline;
+      isSelected[3] = formatSettings.isStrikeThrough;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final api = HtmlEditorApiWidget.of(context)!.editorApi;
+    api.onFormatSettingsChanged = _onFormatSettingsChanged;
+
+    return ToggleButtons(
+      children: [
+        Icon(Icons.format_bold),
+        Icon(Icons.format_italic),
+        Icon(Icons.format_underlined),
+        Icon(Icons.format_strikethrough),
+      ],
+      onPressed: (int index) {
+        switch (index) {
+          case 0:
+            api.formatBold();
+            break;
+          case 1:
+            api.formatItalic();
+            break;
+          case 2:
+            api.formatUnderline();
+            break;
+          case 3:
+            api.formatStrikeThrough();
+            break;
+        }
+        setState(() {
+          isSelected[index] = !isSelected[index];
+        });
+      },
+      isSelected: isSelected,
+    );
+  }
+}
+
+/// Controls the align format settings left, right, center and justify
+///
+/// This widget depends on a [HtmlEditorApiWidget] in the widget tree.
+class AlignDropdown extends StatefulWidget {
+  AlignDropdown({Key? key}) : super(key: key);
+
+  @override
+  _AlignDropdownState createState() => _AlignDropdownState();
+}
+
+class _AlignDropdownState extends State<AlignDropdown> {
+  ElementAlign _currentAlignFormat = ElementAlign.left;
+
+  @override
+  Widget build(BuildContext context) {
+    final api = HtmlEditorApiWidget.of(context)!.editorApi;
+    api.onAlignSettingsChanged = _onAlignSettingsChanged;
+
+    return DropdownButton<ElementAlign>(
+      items: [
+        DropdownMenuItem<ElementAlign>(
+            child: Icon(Icons.format_align_left), value: ElementAlign.left),
+        DropdownMenuItem<ElementAlign>(
+            child: Icon(Icons.format_align_center), value: ElementAlign.center),
+        DropdownMenuItem<ElementAlign>(
+            child: Icon(Icons.format_align_right), value: ElementAlign.right),
+        DropdownMenuItem<ElementAlign>(
+            child: Icon(Icons.format_align_justify),
+            value: ElementAlign.justify),
+      ],
+      onChanged: (value) {
+        final align = value ?? ElementAlign.left;
+        switch (align) {
+          case ElementAlign.left:
+            api.formatAlignLeft();
+            break;
+          case ElementAlign.center:
+            api.formatAlignCenter();
+            break;
+          case ElementAlign.right:
+            api.formatAlignRight();
+            break;
+          case ElementAlign.justify:
+            api.formatAlignJustify();
+            break;
+        }
+        setState(() {
+          _currentAlignFormat = align;
+        });
+      },
+      selectedItemBuilder: (context) => [
+        Icon(Icons.format_align_left),
+        Icon(Icons.format_align_center),
+        Icon(Icons.format_align_right),
+        Icon(Icons.format_align_justify),
+      ],
+      value: _currentAlignFormat,
+    );
+  }
+
+  void _onAlignSettingsChanged(ElementAlign align) {
+    setState(() {
+      _currentAlignFormat = align;
+    });
+  }
+}
+
+/// Allows to enter and edit links
+///
+/// This widget depends on a [HtmlEditorApiWidget] in the widget tree.
+class LinkButton extends StatefulWidget {
+  LinkButton({Key? key}) : super(key: key);
+
+  @override
+  _LinkButtonState createState() => _LinkButtonState();
+}
+
+class _LinkButtonState extends State<LinkButton> {
+  final _urlController = TextEditingController();
+  final _textController = TextEditingController();
+  bool _isInLink = false;
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final api = HtmlEditorApiWidget.of(context)!.editorApi;
+    final buttonColor = _isInLink ? Theme.of(context).accentColor : null;
+    api.onLinkSettingsChanged = _onLinkSettingsChanged;
+    return IconButton(
+      icon: Icon(Icons.link),
+      onPressed: () => _editLink(api),
+      color: buttonColor,
+    );
+  }
+
+  void _onLinkSettingsChanged(LinkSettings? linkSettings) {
+    if (linkSettings != null) {
+      _urlController.text = linkSettings.url;
+      _textController.text = linkSettings.text;
+    }
+    setState(() {
+      _isInLink = (linkSettings != null);
+    });
+  }
+
+  Future _editLink(HtmlEditorApi api) async {
+    var restoreSelectionRange = false;
+    if (!_isInLink) {
+      final selectedText = await api.storeSelectionRange() ?? '';
+      restoreSelectionRange = selectedText.isNotEmpty;
+      _textController.text = selectedText;
+      final urlText = selectedText.contains('://') ? selectedText : '';
+      _urlController.text = urlText;
+    }
+    final result = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: LinkEditor(
+            urlController: _urlController,
+            textController: _textController,
+          ),
+          actions: [
+            IconButton(
+              icon: Icon(Icons.cancel),
+              onPressed: () => Navigator.of(context).pop(false),
+            ),
+            IconButton(
+              icon: Icon(Icons.done),
+              onPressed: () => Navigator.of(context).pop(true),
+            ),
+          ],
+        );
+      },
+    );
+    if (result == true && _urlController.text.trim().isNotEmpty) {
+      // check link validity?
+      var url = _urlController.text.trim();
+      if (!url.contains(':')) {
+        url = 'https://' + url;
+      }
+      var text = _textController.text.trim();
+      if (text.isEmpty) {
+        text = url;
+      }
+      if (_isInLink) {
+        api.editCurrentLink(url, text);
+      } else {
+        if (restoreSelectionRange) {
+          await api.restoreSelectionRange();
+        }
+        api.insertLink(url, text: text);
+      }
+    }
+  }
+}
+
+class LinkEditor extends StatefulWidget {
+  final TextEditingController urlController;
+  final TextEditingController textController;
+  LinkEditor(
+      {Key? key, required this.urlController, required this.textController})
+      : super(key: key);
+
+  @override
+  _LinkEditorState createState() => _LinkEditorState();
+}
+
+class _LinkEditorState extends State<LinkEditor> {
+  late String _previewText;
+
+  @override
+  void initState() {
+    super.initState();
+    _previewText = widget.textController.text.isEmpty
+        ? widget.urlController.text
+        : widget.textController.text;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        TextField(
+          controller: widget.urlController,
+          decoration: InputDecoration(
+            icon: Icon(Icons.link),
+            suffix: IconButton(
+              icon: Icon(Icons.clear),
+              onPressed: () => widget.urlController.text = '',
+            ),
+          ),
+          autofocus: true,
+          keyboardType: TextInputType.url,
+          onChanged: (text) => _updatePreview(),
+        ),
+        TextField(
+          controller: widget.textController,
+          decoration: InputDecoration(
+            icon: Icon(Icons.text_fields),
+            suffix: IconButton(
+              icon: Icon(Icons.clear),
+              onPressed: () => widget.textController.text = '',
+            ),
+          ),
+          autofocus: true,
+          keyboardType: TextInputType.text,
+          onChanged: (text) => _updatePreview(),
+        ),
+        Divider(),
+        TextButton(
+          child: Text(_previewText),
+          onPressed: () {
+            ScaffoldMessenger.of(context)
+                .showSnackBar(SnackBar(content: Text(url)));
+          },
+        ),
+      ],
+    );
+  }
+
+  String get url {
+    var text = widget.urlController.text;
+    if (!text.contains(':')) {
+      text = 'https://' + text;
+    }
+    return text;
+  }
+
+  void _updatePreview() {
+    setState(() {
+      _previewText = widget.textController.text.isNotEmpty
+          ? widget.textController.text
+          : widget.urlController.text;
+    });
+  }
+}
+
 /// The mode for the ColorPicker widget
 enum ColorPickerMode { foreground, background }
 
 /// Simple color picker
-class ColorPicker extends StatefulWidget {
+class ColorPicker extends _BaseHtmlEditorControls {
   final List<Color> colors;
-  final HtmlEditorApi? editorApi;
-  final GlobalKey<HtmlEditorState>? editorKey;
   final ColorPickerMode mode;
 
   ColorPicker(
       {Key? key,
       required this.colors,
       required this.mode,
-      this.editorApi,
-      this.editorKey})
+      HtmlEditorApi? editorApi,
+      GlobalKey<HtmlEditorState>? editorKey})
       : assert(colors.isNotEmpty),
-        assert(editorApi != null || editorKey != null),
-        super(key: key);
+        super(key: key, editorApi: editorApi, editorKey: editorKey);
 
   @override
   _ColorPickerState createState() => _ColorPickerState();
@@ -286,22 +537,10 @@ class _ColorPickerState extends State<ColorPicker> {
     super.initState();
     currentColor = widget.colors.first;
     lastColors.add(currentColor);
-    final key = widget.editorKey;
-    final api = widget.editorApi;
-    if (key != null) {
-      // in init state, the editorKey.currentState is still null,
-      // so wait for after the first run
-      WidgetsBinding.instance!.addPostFrameCallback((_) {
-        final stateApi = key.currentState!.api;
-        _editorApi = stateApi;
-        stateApi.onColorChanged = _onColorChanged;
-      });
-    } else if (api != null) {
+    _BaseHtmlEditorControls.initApi(widget, (api) {
       _editorApi = api;
       api.onColorChanged = _onColorChanged;
-    } else {
-      throw StateError('no api or live key defined');
-    }
+    });
   }
 
   Color? _getColor(ColorSetting colorSetting) {
