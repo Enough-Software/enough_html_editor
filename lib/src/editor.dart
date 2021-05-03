@@ -142,11 +142,18 @@ class HtmlEditorState extends State<HtmlEditor> {
         if (node.style.fontStyle === 'italic') {
           isItalic = true;
         }
-        if (node.style.textDecorationLine === 'underline') {
+        var textDecorationLine = node.style.textDecorationLine;
+        if (textDecorationLine === 'underline') {
           isUnderline = true;
-        }
-        if (node.style.textDecorationLine === 'line-through') {
+        } else if (textDecorationLine === 'line-through') {
           isStrikeThrough = true;
+        } else if (textDecorationLine != undefined) {
+          if (!isUnderline) {
+            isUnderline = textDecorationLine.includes('underline');
+          }
+          if (!isStrikeThrough) {
+            isStrikeThrough = textDecorationLine.includes('line-through');
+          }
         }
         if (foregroundColor == undefined && node.style.color != undefined) {
           foregroundColor = node.style.color;
@@ -348,13 +355,6 @@ blockquote {
   }
 
   Widget _buildEditor() {
-    return FocusScope(
-      canRequestFocus: true,
-      child: _buildWebView(),
-    );
-  }
-
-  Widget _buildWebView() {
     final theme = Theme.of(context);
     final isDark = (theme.brightness == Brightness.dark);
     final textSelectionMenuItems = widget.textSelectionMenuItems;
@@ -550,7 +550,7 @@ blockquote {
           final height = double.tryParse(message.substring(1));
           if (height != null) {
             setState(() {
-              _documentHeight = height + 5;
+              _documentHeight = height + 15;
             });
           }
         }
