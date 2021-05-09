@@ -15,6 +15,12 @@ class HtmlEditorApi {
   late InAppWebViewController _webViewController;
   final HtmlEditorState _htmlEditorState;
 
+  /// The document's background color, defaults to `null`
+  String? _documentBackgroundColor;
+
+  /// The document's foreground color, defaults to `null`
+  String? _documentForegroundColor;
+
   set webViewController(InAppWebViewController value) {
     _webViewController = value;
     //TODO wait for InAppWebView project to approve this
@@ -49,7 +55,7 @@ class HtmlEditorApi {
 
   /// Callback to be informed when the color settings have been changed
   set onColorChanged(void Function(ColorSetting)? value) {
-    if (value != null) {
+    if (value != null && !_colorChangedSettings.contains(value)) {
       _colorChangedSettings.add(value);
     }
   }
@@ -197,26 +203,43 @@ class HtmlEditorApi {
     buffer.write(text);
   }
 
+  String _getColor(Color color, double opacity) {
+    if (opacity < 1.0) {
+      return 'rgba(${color.red},${color.green},${color.blue},$opacity)';
+    }
+    return '#${_toHex(color)}';
+  }
+
   /// Sets the given [color] as the current foreground / text color.
   ///
   /// Optionally specify the [opacity] being between `1.0` (fully opaque) and `0.0` (fully transparent).
   Future setColorTextForeground(Color color, {double opacity = 1.0}) async {
-    if (opacity < 1.0) {
-      return _execCommand(
-          '"foreColor", false, "rgba(${color.red},${color.green},${color.blue},$opacity)"');
-    }
-    return _execCommand('"foreColor", false, "#${_toHex(color)}"');
+    final colorText = _getColor(color, opacity);
+    return _execCommand('"foreColor", false, "$colorText"');
   }
 
   /// Sets the given [color] as the current text background color.
   ///
   /// Optionally specify the [opacity] being between `1.0` (fully opaque) and `0.0` (fully transparent).
   Future setColorTextBackground(Color color, {double opacity = 1.0}) async {
-    if (opacity < 1.0) {
-      return _execCommand(
-          '"backColor", false, "rgba(${color.red},${color.green},${color.blue},$opacity)"');
-    }
-    return _execCommand('"backColor", false, "#${_toHex(color)}"');
+    final colorText = _getColor(color, opacity);
+    return _execCommand('"backColor", false, "$colorText"');
+  }
+
+  /// Sets the document's background color
+  Future setColorDocumentBackground(Color color) async {
+    final colorText = _getColor(color, 1.0);
+    _documentBackgroundColor = colorText;
+    return _webViewController.evaluateJavascript(
+        source: 'document.body.style.backgroundColor="$colorText";');
+  }
+
+  /// Sets the document's foreground color
+  Future setColorDocumentForeground(Color color) async {
+    final colorText = _getColor(color, 1.0);
+    _documentForegroundColor = colorText;
+    return _webViewController.evaluateJavascript(
+        source: 'document.body.style.color="$colorText";');
   }
 
   Future _execCommand(String command) async {
@@ -239,6 +262,14 @@ class HtmlEditorApi {
   /// Compare [getText()] to retrieve only the edited HTML text.
   Future<String> getFullHtml({String? content}) async {
     content ??= await getText();
+    final bodyStyle = (_documentBackgroundColor != null &&
+            _documentForegroundColor != null)
+        ? ' style="color: $_documentForegroundColor;background-color: $_documentBackgroundColor;"'
+        : _documentForegroundColor != null
+            ? ' style="color: $_documentForegroundColor;"'
+            : _documentBackgroundColor != null
+                ? ' style="background-color: $_documentBackgroundColor;"'
+                : '';
     final styles = _htmlEditorState.styles
         .replaceFirst('''#editor {
   min-height: ==minHeight==px;
@@ -250,7 +281,7 @@ class HtmlEditorApi {
 <meta http-equiv="content-type" content="text/html;charset="utf-8">
 <style>$styles</style>
 </head>
-<body>$content</body>
+<body$bodyStyle>$content</body>
 </html>''';
   }
 

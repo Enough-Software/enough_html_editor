@@ -50,12 +50,14 @@ class HtmlEditorControls extends StatefulWidget {
   final Widget? suffix;
   final List<Color>? textForegroundColors;
   final List<Color>? textBackgroundColors;
+  final List<Color>? documentForegroundColors;
+  final List<Color>? documentBackgroundColors;
 
   /// Creates a new `HtmlEditorControls`.
   ///
   /// You have to specify either the [editorApi] or the [editorKey].
   /// Optionally specify your own [prefix] and [suffix] widgets. These widgets can access the `HtmlEditorApi` by calling `HtmlEditorApiWidget.of(context)`, e.g. `final api = HtmlEditorApiWidget.of(context)!.editorApi;`
-  /// Optionally specify the [textForegroundColors] and [textBackgroundColors]. By default these are deducted from the material accent colors + black & white.
+  /// Optionally specify the [textForegroundColors], [textBackgroundColors], [documentForegroundColors] and [documentBackgroundColors]. By default these are deducted from the material accent colors + black & white.
   HtmlEditorControls({
     Key? key,
     this.editorApi,
@@ -64,6 +66,8 @@ class HtmlEditorControls extends StatefulWidget {
     this.suffix,
     this.textForegroundColors,
     this.textBackgroundColors,
+    this.documentForegroundColors,
+    this.documentBackgroundColors,
   })  : assert(editorApi != null || editorKey != null,
             'Please define either the editorApi or editorKey pararameter.'),
         super(key: key);

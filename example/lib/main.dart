@@ -40,7 +40,7 @@ class _EditorPageState extends State<EditorPage> {
           IconButton(
             icon: Icon(Icons.send),
             onPressed: () async {
-              final text = await _editorApi!.getText();
+              final text = await _editorApi!.getFullHtml();
               print('got text: [$text]');
               Navigator.of(context).push(
                 MaterialPageRoute(

@@ -6,12 +6,27 @@ import 'base.dart';
 
 /// Combines color pickers for text foreground and text background colors
 class ColorControls extends StatelessWidget {
-  final List<Color> textForegroundColors;
-  final List<Color> textBackgroundColors;
+  static final List<Color> _grayscales = [
+    Colors.grey.shade100,
+    Colors.grey.shade200,
+    Colors.grey.shade300,
+    Colors.grey.shade400,
+    Colors.grey.shade500,
+    Colors.grey.shade600,
+    Colors.grey.shade700,
+    Colors.grey.shade800,
+    Colors.grey.shade900
+  ];
+  final List<Color>? textForegroundColors;
+  final List<Color>? textBackgroundColors;
+  final List<Color>? documentForegroundColors;
+  final List<Color>? documentBackgroundColors;
   ColorControls({
     Key? key,
-    required this.textForegroundColors,
-    required this.textBackgroundColors,
+    this.textForegroundColors,
+    this.textBackgroundColors,
+    this.documentForegroundColors,
+    this.documentBackgroundColors,
   });
 
   @override
@@ -20,41 +35,42 @@ class ColorControls extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        // text foreground:
         ColorPicker(
-          colors: textForegroundColors,
-          builder: (context, color) => Column(
-            children: [
-              Icon(Icons.text_format),
-              Container(
-                width: 20,
-                height: 5,
-                decoration: BoxDecoration(
-                  border: Border.all(),
-                  color: color,
-                ),
-              ),
-            ],
-          ),
+          colors: textForegroundColors ??
+              [Colors.black, Colors.white, ..._grayscales, ...Colors.accents],
+          icon: Icon(Icons.text_format),
           getColor: (ColorSetting setting) => setting.textForeground,
           setColor: (color, api) => api.setColorTextForeground(color),
         ),
+        // text background:
         ColorPicker(
-          colors: textBackgroundColors,
-          builder: (context, color) => Column(
-            children: [
-              Icon(Icons.brush),
-              Container(
-                width: 20,
-                height: 5,
-                decoration: BoxDecoration(
-                  border: Border.all(),
-                  color: color,
-                ),
-              ),
-            ],
-          ),
+          colors: textBackgroundColors ??
+              [Colors.white, Colors.black, ..._grayscales, ...Colors.accents],
+          icon: Icon(Icons.brush),
           getColor: (ColorSetting setting) => setting.textBackground,
           setColor: (color, api) => api.setColorTextBackground(color),
+        ),
+        // document foreground:
+        ColorPicker(
+          colors: documentForegroundColors ??
+              [Colors.black, Colors.white, ..._grayscales, ...Colors.accents],
+          icon: Icon(Icons.text_fields),
+          setColor: (color, api) => api.setColorDocumentForeground(color),
+        ),
+        // document background:
+        ColorPicker(
+          colors: documentBackgroundColors ??
+              [Colors.white, Colors.black, ..._grayscales, ...Colors.accents],
+          builder: (context, color) => Container(
+            width: 20,
+            height: 40,
+            decoration: BoxDecoration(
+              border: Border.all(),
+              color: color,
+            ),
+          ),
+          setColor: (color, api) => api.setColorDocumentBackground(color),
         ),
       ],
     );
@@ -64,17 +80,21 @@ class ColorControls extends StatelessWidget {
 /// Simple picker widget for a single color
 class ColorPicker extends StatefulWidget {
   final List<Color> colors;
-  final Widget Function(BuildContext context, Color selectecColor) builder;
-  final Color? Function(ColorSetting setting) getColor;
+  final Widget Function(BuildContext context, Color selectecColor)? builder;
+  final Widget? icon;
+  final Color? Function(ColorSetting setting)? getColor;
   final Future Function(Color color, HtmlEditorApi api) setColor;
 
   ColorPicker({
     Key? key,
     required this.colors,
-    required this.builder,
-    required this.getColor,
     required this.setColor,
-  })   : assert(colors.isNotEmpty),
+    this.getColor,
+    this.builder,
+    this.icon,
+  })  : assert(colors.isNotEmpty),
+        assert(builder != null || icon != null,
+            'Please specify either an builder or an icon'),
         super(key: key);
 
   @override
@@ -93,28 +113,8 @@ class _ColorPickerState extends State<ColorPicker> {
     lastColors.add(currentColor);
   }
 
-  // Widget _buildIndicator() {
-  //   final builder = widget.builder;
-  //   if (builder != null) {
-  //     return builder(context, currentColor);
-  //   }
-  //   if (widget.mode == ColorPickerMode.textForeground) {
-  //     return Text(
-  //       'T',
-  //       style: TextStyle(
-  //           color: currentColor, fontWeight: FontWeight.bold, fontSize: 22),
-  //     );
-  //   } else {
-  //     return Container(
-  //       width: 16,
-  //       height: 16,
-  //       decoration: BoxDecoration(border: Border.all(), color: currentColor),
-  //     );
-  //   }
-  // }
-
   void _onColorChanged(ColorSetting colorSetting) {
-    final color = widget.getColor(colorSetting);
+    final color = widget.getColor!(colorSetting);
     if (color == currentColor ||
         (color == null && currentColor == widget.colors.first)) {
       // ignore
@@ -143,7 +143,25 @@ class _ColorPickerState extends State<ColorPicker> {
   @override
   Widget build(BuildContext context) {
     final api = HtmlEditorApiWidget.of(context)!.editorApi;
-    api.onColorChanged = _onColorChanged;
+    if (widget.getColor != null) {
+      api.onColorChanged = _onColorChanged;
+    }
+    final builder = widget.builder;
+    final iconWidget = builder != null
+        ? builder(context, currentColor)
+        : Column(
+            children: [
+              widget.icon!,
+              Container(
+                width: 20,
+                height: 5,
+                decoration: BoxDecoration(
+                  border: Border.all(),
+                  color: currentColor,
+                ),
+              ),
+            ],
+          );
     return WillPopScope(
       onWillPop: () {
         if (_overlayEntry == null) {
@@ -153,7 +171,7 @@ class _ColorPickerState extends State<ColorPicker> {
         return Future.value(false);
       },
       child: IconButton(
-        icon: widget.builder(context, currentColor),
+        icon: iconWidget,
         onPressed: () {
           final entry = _buildThreadsOverlay(api);
           _overlayEntry = entry;
