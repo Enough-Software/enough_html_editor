@@ -16,10 +16,10 @@ class FormatSettings {
 
 /// Standard color settings
 class ColorSetting {
-  final Color? foreground;
-  final Color? background;
+  final Color? textForeground;
+  final Color? textBackground;
 
-  ColorSetting(this.foreground, this.background);
+  ColorSetting(this.textForeground, this.textBackground);
 }
 
 /// Link settings

@@ -52,6 +52,8 @@ Either the API or the global key is required for creating the `HtmlEditorControl
 ## Quick Start
 Use the `PackagedHtmlEditor` for a quick start. This contains both the default controls and the editor.
 ```dart
+import 'package:enough_html_editor/enough_html_editor.dart';
+[...]
 HtmlEditorApi _editorApi;
 
 @override

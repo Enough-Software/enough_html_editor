@@ -200,7 +200,7 @@ class HtmlEditorApi {
   /// Sets the given [color] as the current foreground / text color.
   ///
   /// Optionally specify the [opacity] being between `1.0` (fully opaque) and `0.0` (fully transparent).
-  Future setForegroundColor(Color color, {double opacity = 1.0}) async {
+  Future setColorTextForeground(Color color, {double opacity = 1.0}) async {
     if (opacity < 1.0) {
       return _execCommand(
           '"foreColor", false, "rgba(${color.red},${color.green},${color.blue},$opacity)"');
@@ -211,7 +211,7 @@ class HtmlEditorApi {
   /// Sets the given [color] as the current text background color.
   ///
   /// Optionally specify the [opacity] being between `1.0` (fully opaque) and `0.0` (fully transparent).
-  Future setBackgroundColor(Color color, {double opacity = 1.0}) async {
+  Future setColorTextBackground(Color color, {double opacity = 1.0}) async {
     if (opacity < 1.0) {
       return _execCommand(
           '"backColor", false, "rgba(${color.red},${color.green},${color.blue},$opacity)"');
