@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../editor_api.dart';
 import '../models.dart';
 import 'base.dart';
 
@@ -36,6 +35,9 @@ class _AlignDropdownState extends State<AlignDropdown> {
       ],
       onChanged: (value) {
         final align = value ?? ElementAlign.left;
+        setState(() {
+          _currentAlignFormat = align;
+        });
         switch (align) {
           case ElementAlign.left:
             api.formatAlignLeft();
@@ -50,9 +52,6 @@ class _AlignDropdownState extends State<AlignDropdown> {
             api.formatAlignJustify();
             break;
         }
-        setState(() {
-          _currentAlignFormat = align;
-        });
       },
       selectedItemBuilder: (context) => [
         Icon(Icons.format_align_left),
