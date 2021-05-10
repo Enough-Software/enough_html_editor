@@ -34,6 +34,9 @@ class PackagedHtmlEditor extends StatefulWidget {
   /// Define the `onCreated(EditorApi)` callback to get notified when the API is ready and to retrieve the end result.
   final void Function(HtmlEditorApi)? onCreated;
 
+  /// Set `excludeDocumentLevelControls` to `true` in case document level controls such as the page background color should be excluded.
+  final bool excludeDocumentLevelControls;
+
   /// Creates a new packaged HTML editor
   ///
   /// Set the [initialContent] to populate the editor with some existing text
@@ -43,6 +46,7 @@ class PackagedHtmlEditor extends StatefulWidget {
   /// Set [splitBlockquotes] to `false` in case block quotes should not be split when the user adds a newline in one - this defaults to `true`.
   /// Set [addDefaultSelectionMenuItems] to `false` when you do not want to have the default text selection items enabled.
   /// You can define your own custom context / text selection menu entries using [textSelectionMenuItems].
+  /// Set [excludeDocumentLevelControls] to `true` in case controls that affect the whole document like the page background color should be excluded.
   PackagedHtmlEditor({
     Key? key,
     this.initialContent = '',
@@ -52,6 +56,7 @@ class PackagedHtmlEditor extends StatefulWidget {
     this.splitBlockquotes = true,
     this.addDefaultSelectionMenuItems = true,
     this.textSelectionMenuItems,
+    this.excludeDocumentLevelControls = false,
   }) : super(key: key);
 
   @override
@@ -85,6 +90,7 @@ class PackagedHtmlEditorState extends State<PackagedHtmlEditor> {
         } else ...{
           HtmlEditorControls(
             editorApi: editorApi,
+            excludeDocumentLevelControls: widget.excludeDocumentLevelControls,
           ),
         },
         HtmlEditor(

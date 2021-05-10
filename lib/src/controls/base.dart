@@ -52,12 +52,14 @@ class HtmlEditorControls extends StatefulWidget {
   final List<Color>? textBackgroundColors;
   final List<Color>? documentForegroundColors;
   final List<Color>? documentBackgroundColors;
+  final bool excludeDocumentLevelControls;
 
   /// Creates a new `HtmlEditorControls`.
   ///
   /// You have to specify either the [editorApi] or the [editorKey].
   /// Optionally specify your own [prefix] and [suffix] widgets. These widgets can access the `HtmlEditorApi` by calling `HtmlEditorApiWidget.of(context)`, e.g. `final api = HtmlEditorApiWidget.of(context)!.editorApi;`
   /// Optionally specify the [textForegroundColors], [textBackgroundColors], [documentForegroundColors] and [documentBackgroundColors]. By default these are deducted from the material accent colors + black & white.
+  /// Set [excludeDocumentLevelControls] to `true` in case controls that affect the whole document like the page background color should be excluded.
   HtmlEditorControls({
     Key? key,
     this.editorApi,
@@ -68,6 +70,7 @@ class HtmlEditorControls extends StatefulWidget {
     this.textBackgroundColors,
     this.documentForegroundColors,
     this.documentBackgroundColors,
+    this.excludeDocumentLevelControls = false,
   })  : assert(editorApi != null || editorKey != null,
             'Please define either the editorApi or editorKey pararameter.'),
         super(key: key);
@@ -116,6 +119,7 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
             ),
             AlignDropdown(),
             ColorControls(
+              excludeDocumentLevelControls: widget.excludeDocumentLevelControls,
               textForegroundColors: widget.textForegroundColors ??
                   [Colors.black, Colors.white, ...Colors.accents],
               textBackgroundColors: widget.textBackgroundColors ??

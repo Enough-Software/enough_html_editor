@@ -10,10 +10,16 @@ class SliverHeaderHtmlEditorControls extends StatelessWidget {
   final HtmlEditorApi? editorApi;
   final Widget? prefix;
   final Widget? suffix;
+  final bool excludeDocumentLevelControls;
 
-  SliverHeaderHtmlEditorControls(
-      {Key? key, this.editorKey, this.editorApi, this.prefix, this.suffix})
-      : assert(editorKey != null || editorApi != null),
+  SliverHeaderHtmlEditorControls({
+    Key? key,
+    this.editorKey,
+    this.editorApi,
+    this.prefix,
+    this.suffix,
+    this.excludeDocumentLevelControls = false,
+  })  : assert(editorKey != null || editorApi != null),
         super(key: key);
 
   @override

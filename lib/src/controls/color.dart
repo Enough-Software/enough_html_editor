@@ -21,12 +21,14 @@ class ColorControls extends StatelessWidget {
   final List<Color>? textBackgroundColors;
   final List<Color>? documentForegroundColors;
   final List<Color>? documentBackgroundColors;
+  final bool excludeDocumentLevelControls;
   ColorControls({
     Key? key,
     this.textForegroundColors,
     this.textBackgroundColors,
     this.documentForegroundColors,
     this.documentBackgroundColors,
+    this.excludeDocumentLevelControls = false,
   });
 
   @override
@@ -51,27 +53,29 @@ class ColorControls extends StatelessWidget {
           getColor: (ColorSetting setting) => setting.textBackground,
           setColor: (color, api) => api.setColorTextBackground(color),
         ),
-        // document foreground:
-        ColorPicker(
-          colors: documentForegroundColors ??
-              [Colors.black, Colors.white, ..._grayscales, ...Colors.accents],
-          icon: Icon(Icons.text_fields),
-          setColor: (color, api) => api.setColorDocumentForeground(color),
-        ),
-        // document background:
-        ColorPicker(
-          colors: documentBackgroundColors ??
-              [Colors.white, Colors.black, ..._grayscales, ...Colors.accents],
-          builder: (context, color) => Container(
-            width: 20,
-            height: 40,
-            decoration: BoxDecoration(
-              border: Border.all(),
-              color: color,
-            ),
+        if (!excludeDocumentLevelControls) ...{
+          // document foreground:
+          ColorPicker(
+            colors: documentForegroundColors ??
+                [Colors.black, Colors.white, ..._grayscales, ...Colors.accents],
+            icon: Icon(Icons.text_fields),
+            setColor: (color, api) => api.setColorDocumentForeground(color),
           ),
-          setColor: (color, api) => api.setColorDocumentBackground(color),
-        ),
+          // document background:
+          ColorPicker(
+            colors: documentBackgroundColors ??
+                [Colors.white, Colors.black, ..._grayscales, ...Colors.accents],
+            builder: (context, color) => Container(
+              width: 20,
+              height: 40,
+              decoration: BoxDecoration(
+                border: Border.all(),
+                color: color,
+              ),
+            ),
+            setColor: (color, api) => api.setColorDocumentBackground(color),
+          ),
+        },
       ],
     );
   }
