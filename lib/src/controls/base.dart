@@ -1,4 +1,3 @@
-// class HtmlEditorInheritedWidget extends InheritedWidget
 import 'package:flutter/material.dart';
 
 import '../../enough_html_editor.dart';
@@ -117,6 +116,7 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
               icon: Icon(Icons.format_list_numbered),
               onPressed: () => _editorApi.insertOrderedList(),
             ),
+            FontSizeDropdown(),
             AlignDropdown(),
             ColorControls(
               excludeDocumentLevelControls: widget.excludeDocumentLevelControls,

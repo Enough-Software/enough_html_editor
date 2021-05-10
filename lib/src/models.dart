@@ -42,3 +42,12 @@ class TextSelectionMenuItem {
   /// Creates a new selection menu item with the specified [label] and [action].
   TextSelectionMenuItem({required this.label, required this.action});
 }
+
+/// Font-sizes
+enum FontSize { xSmall, small, medium, large, xLarge, xxLarge, xxxLarge }
+
+/// Encapsulates the font size (for now)
+class FontSetting {
+  final FontSize fontSize;
+  FontSetting(this.fontSize);
+}

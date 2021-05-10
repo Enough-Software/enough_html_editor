@@ -52,6 +52,9 @@ class HtmlEditorApi {
   /// Callback to be informed when the align settings have been changed
   void Function(ElementAlign)? onAlignSettingsChanged;
 
+  /// Callback to be informed when the font size have been changed
+  void Function(FontSize)? onFontSizeChanged;
+
   final List<void Function(ColorSetting)> _colorChangedSettings = [];
 
   /// Callback to be informed when the color settings have been changed
@@ -130,6 +133,11 @@ class HtmlEditorApi {
   /// Formats the current paragraph to justify
   Future formatAlignJustify() {
     return _execCommand('"justifyFull"');
+  }
+
+  /// Formats the font size
+  Future formatFontSize(FontSize size) {
+    return _execCommand('"fontSize", false, ${size.index + 1}');
   }
 
   /// Inserts the  [html] code at the insertion point (replaces selection).

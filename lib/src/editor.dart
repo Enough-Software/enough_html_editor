@@ -74,6 +74,7 @@ class HtmlEditorState extends State<HtmlEditor> {
   var selectionTextAlign = undefined;
   var selectionForegroundColor = undefined;
   var selectionBackgroundColor = undefined;
+  var selectionFontSize = undefined;
   var isSelectionInLink = false;
   var isLineBreakInput = false;
   var documentHeight;
@@ -95,6 +96,8 @@ class HtmlEditorState extends State<HtmlEditor> {
     var backgroundColor = undefined;
     var linkUrl = undefined;
     var linkText = undefined;
+    var fontSize = undefined;
+
     while (node.parentNode != null && node.id != 'editor') {
       if (node.nodeName == 'B') {
           isBold = true;
@@ -114,6 +117,9 @@ class HtmlEditorState extends State<HtmlEditor> {
         }
         if (node.style.fontStyle === 'italic') {
           isItalic = true;
+        }
+        if (fontSize == undefined && node.style.fontSize != undefined) {
+          fontSize = node.style.fontSize;
         }
         var textDecorationLine = node.style.textDecorationLine;
         if (textDecorationLine === 'underline') {
@@ -180,6 +186,10 @@ class HtmlEditorState extends State<HtmlEditor> {
           isSelectionInLink = false;
           window.flutter_inappwebview.callHandler('LinkSettings');
         }
+    }
+    if (fontSize != selectionFontSize) {
+      selectionFontSize = fontSize;
+      window.flutter_inappwebview.callHandler('FontSizeSettings', fontSize);
     }
 ''';
   static const String _templateBlockquote = '''
@@ -470,6 +480,8 @@ blockquote {
     controller.addJavaScriptHandler(
         handlerName: 'FormatSettings', callback: _onFormatSettingsReceived);
     controller.addJavaScriptHandler(
+        handlerName: 'FontSizeSettings', callback: _onFontSizeSettingsReceived);
+    controller.addJavaScriptHandler(
         handlerName: 'AlignSettings', callback: _onAlignSettingsReceived);
     controller.addJavaScriptHandler(
         handlerName: 'ColorSettings', callback: _onColorSettingsReceived);
@@ -498,6 +510,43 @@ blockquote {
         final isStrikeThrough = (numericMessage & 8) == 8;
         callback(
             FormatSettings(isBold, isItalic, isUnderline, isStrikeThrough));
+      }
+    }
+  }
+
+  void _onFontSizeSettingsReceived(List<dynamic> parameters) {
+    print('got size $parameters');
+    final callback = _api.onFontSizeChanged;
+    if (callback != null && parameters.isNotEmpty) {
+      FontSize? size;
+      switch (parameters.first) {
+        case 'x-small':
+          size = FontSize.xSmall;
+          break;
+        case 'small':
+          size = FontSize.small;
+          break;
+        case 'medium':
+          size = FontSize.medium;
+          break;
+        case 'large':
+          size = FontSize.large;
+          break;
+        case 'x-large':
+          size = FontSize.xLarge;
+          break;
+        case 'xx-large':
+          size = FontSize.xxLarge;
+          break;
+        case 'xxx-large':
+          size = FontSize.xxxLarge;
+          break;
+        case null:
+          size = FontSize.medium;
+          break;
+      }
+      if (size != null) {
+        callback(size);
       }
     }
   }
