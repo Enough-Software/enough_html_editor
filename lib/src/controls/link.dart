@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../editor.dart';
 import '../editor_api.dart';
+import '../models.dart';
 import 'base.dart';
 
 /// Allows to enter and edit links

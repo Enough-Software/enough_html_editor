@@ -6,6 +6,7 @@ import 'dart:ui';
 import 'package:image/image.dart' as img;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'editor.dart';
+import 'models.dart';
 
 /// API to control the `HtmlEditor`.
 ///

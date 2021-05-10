@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../editor.dart';
+import '../editor_api.dart';
+import '../models.dart';
 import 'base.dart';
 
 /// Controls the align format settings left, right, center and justify

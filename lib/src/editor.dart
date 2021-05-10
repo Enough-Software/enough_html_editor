@@ -4,46 +4,7 @@ import 'editor_api.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
-/// Standard format settings
-class FormatSettings {
-  final isBold;
-  final isItalic;
-  final isUnderline;
-  final isStrikeThrough;
-  FormatSettings(
-      this.isBold, this.isItalic, this.isUnderline, this.isStrikeThrough);
-}
-
-/// Standard color settings
-class ColorSetting {
-  final Color? textForeground;
-  final Color? textBackground;
-
-  ColorSetting(this.textForeground, this.textBackground);
-}
-
-/// Link settings
-class LinkSettings {
-  final String url;
-  final String text;
-
-  LinkSettings(this.url, this.text);
-}
-
-/// Standard align settings
-enum ElementAlign { left, center, right, justify }
-
-/// Abstracts a text selection menu item.
-class TextSelectionMenuItem {
-  /// The text label of the item
-  final String label;
-
-  /// The callback
-  final dynamic Function(HtmlEditorApi api) action;
-
-  /// Creates a new selection menu item with the specified [label] and [action].
-  TextSelectionMenuItem({required this.label, required this.action});
-}
+import 'models.dart';
 
 /// Slim HTML Editor with API
 class HtmlEditor extends StatefulWidget {

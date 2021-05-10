@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../editor.dart';
+import '../models.dart';
 import 'base.dart';
 
 /// Controls the base format settings bold, italic, underlined and strike through

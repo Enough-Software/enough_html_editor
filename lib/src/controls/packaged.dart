@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../editor.dart';
 import '../editor_api.dart';
+import '../models.dart';
 import 'base.dart';
 
 /// A combination of controls and editor for a simpler usage.
