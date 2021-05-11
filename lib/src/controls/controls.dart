@@ -9,3 +9,4 @@ export 'color.dart';
 export 'link.dart';
 export 'standard_formatting.dart';
 export 'font_size.dart';
+export 'font_family.dart';

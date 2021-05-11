@@ -117,6 +117,7 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
               onPressed: () => _editorApi.insertOrderedList(),
             ),
             FontSizeDropdown(),
+            FontFamilyDropdown(),
             AlignDropdown(),
             ColorControls(
               excludeDocumentLevelControls: widget.excludeDocumentLevelControls,

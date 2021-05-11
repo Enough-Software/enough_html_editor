@@ -75,6 +75,7 @@ class HtmlEditorState extends State<HtmlEditor> {
   var selectionForegroundColor = undefined;
   var selectionBackgroundColor = undefined;
   var selectionFontSize = undefined;
+  var selectionFontFamily = undefined;
   var isSelectionInLink = false;
   var isLineBreakInput = false;
   var documentHeight;
@@ -97,6 +98,7 @@ class HtmlEditorState extends State<HtmlEditor> {
     var linkUrl = undefined;
     var linkText = undefined;
     var fontSize = undefined;
+    var fontFamily = undefined;
 
     while (node.parentNode != null && node.id != 'editor') {
       if (node.nodeName == 'B') {
@@ -120,6 +122,9 @@ class HtmlEditorState extends State<HtmlEditor> {
         }
         if (fontSize == undefined && node.style.fontSize != undefined) {
           fontSize = node.style.fontSize;
+        }
+        if (fontFamily == undefined && node.style.fontFamily != undefined) {
+          fontFamily = node.style.fontFamily;
         }
         var textDecorationLine = node.style.textDecorationLine;
         if (textDecorationLine === 'underline') {
@@ -190,6 +195,10 @@ class HtmlEditorState extends State<HtmlEditor> {
     if (fontSize != selectionFontSize) {
       selectionFontSize = fontSize;
       window.flutter_inappwebview.callHandler('FontSizeSettings', fontSize);
+    }
+    if (fontFamily != selectionFontFamily) {
+      selectionFontFamily = fontFamily;
+      window.flutter_inappwebview.callHandler('FontFamilySettings', fontFamily);
     }
 ''';
   static const String _templateBlockquote = '''
@@ -482,6 +491,9 @@ blockquote {
     controller.addJavaScriptHandler(
         handlerName: 'FontSizeSettings', callback: _onFontSizeSettingsReceived);
     controller.addJavaScriptHandler(
+        handlerName: 'FontFamilySettings',
+        callback: _onFontFamilySettingsReceived);
+    controller.addJavaScriptHandler(
         handlerName: 'AlignSettings', callback: _onAlignSettingsReceived);
     controller.addJavaScriptHandler(
         handlerName: 'ColorSettings', callback: _onColorSettingsReceived);
@@ -515,7 +527,7 @@ blockquote {
   }
 
   void _onFontSizeSettingsReceived(List<dynamic> parameters) {
-    print('got size $parameters');
+    // print('got size $parameters');
     final callback = _api.onFontSizeChanged;
     if (callback != null && parameters.isNotEmpty) {
       FontSize? size;
@@ -548,6 +560,24 @@ blockquote {
       if (size != null) {
         callback(size);
       }
+    }
+  }
+
+  static Map<String, SafeFont>? _fontsByName;
+  void _onFontFamilySettingsReceived(List<dynamic> parameters) {
+    // print('got size $parameters');
+    final callback = _api.onFontFamilyChanged;
+    if (callback != null && parameters.isNotEmpty) {
+      var map = _fontsByName;
+      if (map == null) {
+        map = <String, SafeFont>{};
+        for (final font in SafeFont.values) {
+          map[font.name] = font;
+        }
+        _fontsByName = map;
+      }
+      SafeFont? font = parameters.first == null ? null : map[parameters.first];
+      callback(font);
     }
   }
 

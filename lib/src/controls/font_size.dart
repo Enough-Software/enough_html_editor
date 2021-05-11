@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models.dart';
 import 'base.dart';
 
-/// Controls the base format settings bold, italic, underlined and strike through
+/// Controls the font size of the selected / current text.
 ///
 /// This widget depends on a [HtmlEditorApiWidget] in the widget tree.
 class FontSizeDropdown extends StatefulWidget {
@@ -34,7 +34,7 @@ class _FontSizeDropdownState extends State<FontSizeDropdown> {
           setState(() {
             currentSize = value;
           });
-          api.formatFontSize(value);
+          api.setFontSize(value);
         }
       },
       selectedItemBuilder: (context) => [

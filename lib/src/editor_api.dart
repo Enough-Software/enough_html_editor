@@ -52,8 +52,11 @@ class HtmlEditorApi {
   /// Callback to be informed when the align settings have been changed
   void Function(ElementAlign)? onAlignSettingsChanged;
 
-  /// Callback to be informed when the font size have been changed
+  /// Callback to be informed when the font size has been changed
   void Function(FontSize)? onFontSizeChanged;
+
+  /// Callback to be informed when the font family has been changed
+  void Function(SafeFont?)? onFontFamilyChanged;
 
   final List<void Function(ColorSetting)> _colorChangedSettings = [];
 
@@ -135,9 +138,19 @@ class HtmlEditorApi {
     return _execCommand('"justifyFull"');
   }
 
-  /// Formats the font size
-  Future formatFontSize(FontSize size) {
+  /// Sets the [size] of the selected text
+  Future setFontSize(FontSize size) {
     return _execCommand('"fontSize", false, ${size.index + 1}');
+  }
+
+  /// Sets the [font] of the selected text
+  Future setFont(SafeFont font) {
+    return setFontFamily(font.name);
+  }
+
+  /// Sets the [fontFamilyName] of the selected text
+  Future setFontFamily(String fontFamilyName) {
+    return _execCommand('"fontName", false, "$fontFamilyName"');
   }
 
   /// Inserts the  [html] code at the insertion point (replaces selection).

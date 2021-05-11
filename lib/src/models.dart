@@ -51,3 +51,32 @@ class FontSetting {
   final FontSize fontSize;
   FontSetting(this.fontSize);
 }
+
+/// Contains safe font names that can be used across mobile, web and desktop
+enum SafeFont {
+  sansSerif,
+  serif,
+  monospace,
+  cursive,
+  courier,
+  timesNewRoman,
+}
+
+extension SafeFontNamesExtension on SafeFont {
+  String get name {
+    switch (this) {
+      case SafeFont.sansSerif:
+        return 'sans-serif';
+      case SafeFont.serif:
+        return 'serif';
+      case SafeFont.monospace:
+        return 'monospace';
+      case SafeFont.cursive:
+        return 'cursive';
+      case SafeFont.courier:
+        return 'Courier';
+      case SafeFont.timesNewRoman:
+        return 'Times New Roman';
+    }
+  }
+}
