@@ -121,10 +121,10 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
             AlignDropdown(),
             ColorControls(
               excludeDocumentLevelControls: widget.excludeDocumentLevelControls,
-              textForegroundColors: widget.textForegroundColors ??
-                  [Colors.black, Colors.white, ...Colors.accents],
-              textBackgroundColors: widget.textBackgroundColors ??
-                  [Colors.white, Colors.black, ...Colors.accents],
+              textForegroundColors: widget.textForegroundColors,
+              textBackgroundColors: widget.textBackgroundColors,
+              documentForegroundColors: widget.documentForegroundColors,
+              documentBackgroundColors: widget.documentBackgroundColors,
             ),
             LinkButton(),
             if (suffix != null) ...{
