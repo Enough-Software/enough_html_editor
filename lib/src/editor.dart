@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'editor_api.dart';
@@ -669,7 +671,9 @@ blockquote {
           }
         }
       } else if (message == 'onfocus') {
-        FocusScope.of(context).unfocus();
+        if (Platform.isAndroid) {
+          FocusScope.of(context).unfocus();
+        }
       }
     }
   }
