@@ -46,6 +46,8 @@ class _FontFamilyDropdownState extends State<FontFamilyDropdown> {
                   font.name,
                   style: selectedTextStyle,
                   overflow: TextOverflow.fade,
+                  textAlign: TextAlign.right,
+                  softWrap: false,
                 ),
               ),
             ),

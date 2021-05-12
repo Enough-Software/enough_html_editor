@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../enough_html_editor.dart';
+import '../editor.dart';
 import '../editor_api.dart';
 import 'controls.dart';
 
@@ -47,10 +47,7 @@ class HtmlEditorControls extends StatefulWidget {
   final HtmlEditorApi? editorApi;
   final Widget? prefix;
   final Widget? suffix;
-  final List<Color>? textForegroundColors;
-  final List<Color>? textBackgroundColors;
-  final List<Color>? documentForegroundColors;
-  final List<Color>? documentBackgroundColors;
+  final List<Color>? themeColors;
   final bool excludeDocumentLevelControls;
 
   /// Creates a new `HtmlEditorControls`.
@@ -59,16 +56,14 @@ class HtmlEditorControls extends StatefulWidget {
   /// Optionally specify your own [prefix] and [suffix] widgets. These widgets can access the `HtmlEditorApi` by calling `HtmlEditorApiWidget.of(context)`, e.g. `final api = HtmlEditorApiWidget.of(context)!.editorApi;`
   /// Optionally specify the [textForegroundColors], [textBackgroundColors], [documentForegroundColors] and [documentBackgroundColors]. By default these are deducted from the material accent colors + black & white.
   /// Set [excludeDocumentLevelControls] to `true` in case controls that affect the whole document like the page background color should be excluded.
+  /// Optionally specify the list of [themeColors], by default grayscales and accent colors will be used.
   HtmlEditorControls({
     Key? key,
     this.editorApi,
     this.editorKey,
     this.prefix,
     this.suffix,
-    this.textForegroundColors,
-    this.textBackgroundColors,
-    this.documentForegroundColors,
-    this.documentBackgroundColors,
+    this.themeColors,
     this.excludeDocumentLevelControls = false,
   })  : assert(editorApi != null || editorKey != null,
             'Please define either the editorApi or editorKey pararameter.'),
@@ -120,11 +115,8 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
             FontFamilyDropdown(),
             AlignDropdown(),
             ColorControls(
+              themeColors: widget.themeColors,
               excludeDocumentLevelControls: widget.excludeDocumentLevelControls,
-              textForegroundColors: widget.textForegroundColors,
-              textBackgroundColors: widget.textBackgroundColors,
-              documentForegroundColors: widget.documentForegroundColors,
-              documentBackgroundColors: widget.documentBackgroundColors,
             ),
             LinkButton(),
             if (suffix != null) ...{
