@@ -406,7 +406,7 @@ blockquote {
       onLoadStop: (controller, url) async {
         if (widget.adjustHeight) {
           final scrollHeight = await _webViewController.evaluateJavascript(
-              source: 'document.body.scrollHeight') as int?;
+              source: 'document.body.scrollHeight');
           if ((scrollHeight != null) &&
               mounted &&
               (scrollHeight + 20 > widget.minHeight)) {
@@ -437,8 +437,10 @@ blockquote {
         ),
       ),
       // deny browsing while editing:
-      shouldOverrideUrlLoading: (controller, action) =>
-          Future.value(NavigationActionPolicy.CANCEL),
+      shouldOverrideUrlLoading: (controller, action) => Future.value(
+          action.request.url?.host == ''
+              ? NavigationActionPolicy.ALLOW
+              : NavigationActionPolicy.CANCEL),
       onConsoleMessage: (controller, consoleMessage) {
         print(consoleMessage);
       },
