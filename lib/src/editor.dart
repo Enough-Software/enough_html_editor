@@ -673,9 +673,7 @@ blockquote {
           }
         }
       } else if (message == 'onfocus') {
-        if (Platform.isAndroid) {
-          FocusScope.of(context).unfocus();
-        }
+        FocusScope.of(context).unfocus();
       }
     }
   }
