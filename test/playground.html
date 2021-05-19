@@ -36,6 +36,7 @@
     var isSelectionBold = false;
     var isSelectionItalic = false;
     var isSelectionUnderline = false;
+    var isSelectionStrikeThrough = false;
     var isLineBreakInput = false;
     var selectionTextAlign = undefined;
     var documentHeight;
@@ -49,6 +50,7 @@
         var isBold = false;
         var isItalic = false;
         var isUnderline = false;
+        var isStrikeThrough = false;
         var node = anchorNode;
         var textAlign = undefined;
         var nestedBlockqotes = 0;
@@ -63,7 +65,34 @@
             } else if (node.nodeName == 'BLOCKQUOTE') {
                 nestedBlockqotes++;
                 rootBlockquote = node;
+            } else if (node.nodeName === 'SPAN' && node.style != undefined) {
+        // check for color, bold, etc in style:
+        if (node.style.fontWeight === 'bold') {
+          isBold = true;
+        }
+        if (node.style.fontStyle === 'italic') {
+          isItalic = true;
+        }
+        var textDecorationLine = node.style.textDecorationLine;
+        if (textDecorationLine === '') {
+          textDecorationLine = node.style.textDecoration;
+        }
+        console.log('text-decoration: ' + textDecorationLine, textDecorationLine, ', style=', node.style);
+        if (textDecorationLine != undefined) {
+          if (textDecorationLine === 'underline') {
+            isUnderline = true;
+          } else if (textDecorationLine === 'line-through') {
+            isStrikeThrough = true;
+          } else {
+            if (!isUnderline) {
+              isUnderline = textDecorationLine.includes('underline');
             }
+            if (!isStrikeThrough) {
+              isStrikeThrough = textDecorationLine.includes('line-through');
+            }
+          }
+        }
+           } 
             textAlign ??= node.style?.textAlign;
             if (textAlign == '') {
                 textAlign = undefined;
@@ -75,11 +104,12 @@
             console.log('new text-align:', textAlign);
         }
 
-        if (isBold != isSelectionBold || isItalic != isSelectionItalic || isUnderline != isSelectionUnderline) {
+        if (isBold != isSelectionBold || isItalic != isSelectionItalic || isUnderline != isSelectionUnderline || isStrikeThrough != isSelectionStrikeThrough) {
             isSelectionBold = isBold;
             isSelectionItalic = isItalic;
             isSelectionUnderline = isUnderline;
-            // console.log('bold=', isBold, ', italic=', isItalic, ', underline=', isUnderline);
+            isSelectionStrikeThrough = isStrikeThrough;
+            console.log('bold=', isBold, ', italic=', isItalic, ', underline=', isUnderline, ', strike-through=', isStrikeThrough);
             var message = 0;
             if (isBold) {
                 message += 1;
@@ -222,7 +252,7 @@
             <p>Here is <i><b>bold and italic</b></i> text</p>
             <p>Here is <u><i><b>bold and italic and underline</b></i></u> text</p>
             <ul><li>one list element</li><li>another point</li></ul>
-            <p>Here is unquoted text...</p>
+            <p>Here is unquoted text... with <span style="text-decoration: underline;">underlined</span> text</p>
             <h2>Nested Quote</h2>
             <blockquote>Nested quote:
                 San Francisco, officially the City and County of San Francisco, is a cultural, commercial, and financial center of Northern California. 
