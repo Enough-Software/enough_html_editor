@@ -129,16 +129,21 @@ class HtmlEditorState extends State<HtmlEditor> {
           fontFamily = node.style.fontFamily;
         }
         var textDecorationLine = node.style.textDecorationLine;
-        if (textDecorationLine === 'underline') {
-          isUnderline = true;
-        } else if (textDecorationLine === 'line-through') {
-          isStrikeThrough = true;
-        } else if (textDecorationLine != undefined) {
-          if (!isUnderline) {
-            isUnderline = textDecorationLine.includes('underline');
-          }
-          if (!isStrikeThrough) {
-            isStrikeThrough = textDecorationLine.includes('line-through');
+        if (textDecorationLine === '') {
+          textDecorationLine = node.style.textDecoration;
+        }
+        if (textDecorationLine != undefined) {
+          if (textDecorationLine === 'underline') {
+            isUnderline = true;
+          } else if (textDecorationLine === 'line-through') {
+            isStrikeThrough = true;
+          } else {
+            if (!isUnderline) {
+              isUnderline = textDecorationLine.includes('underline');
+            }
+            if (!isStrikeThrough) {
+              isStrikeThrough = textDecorationLine.includes('line-through');
+            }
           }
         }
         if (foregroundColor == undefined && node.style.color != undefined) {
@@ -406,12 +411,12 @@ blockquote {
       onLoadStop: (controller, url) async {
         if (widget.adjustHeight) {
           final scrollHeight = await _webViewController.evaluateJavascript(
-              source: 'document.body.scrollHeight') as int?;
+              source: 'document.body.scrollHeight');
           if ((scrollHeight != null) &&
               mounted &&
-              (scrollHeight + 20 > widget.minHeight)) {
+              (scrollHeight + 15 > widget.minHeight)) {
             setState(() {
-              _documentHeight = scrollHeight + 20.0;
+              _documentHeight = scrollHeight + 15.0;
             });
           }
         }
@@ -437,8 +442,10 @@ blockquote {
         ),
       ),
       // deny browsing while editing:
-      shouldOverrideUrlLoading: (controller, action) =>
-          Future.value(NavigationActionPolicy.CANCEL),
+      shouldOverrideUrlLoading: (controller, action) => Future.value(
+          action.request.url?.host == ''
+              ? NavigationActionPolicy.ALLOW
+              : NavigationActionPolicy.CANCEL),
       onConsoleMessage: (controller, consoleMessage) {
         print(consoleMessage);
       },
@@ -671,9 +678,7 @@ blockquote {
           }
         }
       } else if (message == 'onfocus') {
-        if (Platform.isAndroid) {
-          FocusScope.of(context).unfocus();
-        }
+        FocusScope.of(context).unfocus();
       }
     }
   }
@@ -684,10 +689,10 @@ blockquote {
   Future<void> onDocumentChanged() async {
     if (widget.adjustHeight) {
       final scrollHeight = await _webViewController.evaluateJavascript(
-          source: 'document.body.scrollHeight') as int?;
+          source: 'document.body.scrollHeight');
       if (scrollHeight != null) {
         setState(() {
-          _documentHeight = scrollHeight + 5;
+          _documentHeight = scrollHeight + 15;
         });
       }
     }
