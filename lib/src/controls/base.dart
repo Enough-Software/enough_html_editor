@@ -96,33 +96,36 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
       child: SizedBox(
         width: size.width,
         height: 50,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          children: [
-            if (prefix != null) ...{
-              prefix,
-            },
-            BaseFormatButtons(),
-            IconButton(
-              icon: Icon(Icons.format_list_bulleted),
-              onPressed: () => _editorApi.insertUnorderedList(),
-            ),
-            IconButton(
-              icon: Icon(Icons.format_list_numbered),
-              onPressed: () => _editorApi.insertOrderedList(),
-            ),
-            FontSizeDropdown(),
-            FontFamilyDropdown(),
-            AlignDropdown(),
-            ColorControls(
-              themeColors: widget.themeColors,
-              excludeDocumentLevelControls: widget.excludeDocumentLevelControls,
-            ),
-            LinkButton(),
-            if (suffix != null) ...{
-              suffix,
-            },
-          ],
+        child: Material(
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              if (prefix != null) ...{
+                prefix,
+              },
+              BaseFormatButtons(),
+              IconButton(
+                icon: Icon(Icons.format_list_bulleted),
+                onPressed: () => _editorApi.insertUnorderedList(),
+              ),
+              IconButton(
+                icon: Icon(Icons.format_list_numbered),
+                onPressed: () => _editorApi.insertOrderedList(),
+              ),
+              FontSizeDropdown(),
+              FontFamilyDropdown(),
+              AlignDropdown(),
+              ColorControls(
+                themeColors: widget.themeColors,
+                excludeDocumentLevelControls:
+                    widget.excludeDocumentLevelControls,
+              ),
+              LinkButton(),
+              if (suffix != null) ...{
+                suffix,
+              },
+            ],
+          ),
         ),
       ),
     );
