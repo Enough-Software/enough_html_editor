@@ -1,3 +1,4 @@
+import 'package:enough_platform_widgets/enough_platform_widgets.dart';
 import 'package:flutter/material.dart';
 
 import '../models.dart';
@@ -21,7 +22,7 @@ class _AlignDropdownState extends State<AlignDropdown> {
     final api = HtmlEditorApiWidget.of(context)!.editorApi;
     api.onAlignSettingsChanged = _onAlignSettingsChanged;
 
-    return DropdownButton<ElementAlign>(
+    return PlatformDropdownButton<ElementAlign>(
       items: [
         DropdownMenuItem<ElementAlign>(
             child: Icon(Icons.format_align_left), value: ElementAlign.left),

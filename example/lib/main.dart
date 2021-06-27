@@ -1,5 +1,7 @@
 import 'package:enough_html_editor/enough_html_editor.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:enough_platform_widgets/enough_platform_widgets.dart';
 
 void main() {
   runApp(MyApp());
@@ -9,11 +11,15 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return PlatformSnackApp(
       title: 'enough_html_editor Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
+      materialTheme: ThemeData(
+        primarySwatch: Colors.green,
         visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      cupertinoTheme: CupertinoThemeData(
+        primaryColor: CupertinoColors.activeGreen,
+        brightness: Brightness.light,
       ),
       home: EditorPage(), //MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -33,11 +39,11 @@ class _EditorPageState extends State<EditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: Text('PackagedHtmlEditor'),
-        actions: [
-          IconButton(
+        trailingActions: [
+          DensePlatformIconButton(
             icon: Icon(Icons.send),
             onPressed: () async {
               final text = await _editorApi!.getText();
@@ -49,7 +55,7 @@ class _EditorPageState extends State<EditorPage> {
               );
             },
           ),
-          IconButton(
+          DensePlatformIconButton(
             icon: Icon(Icons.looks_two),
             onPressed: () {
               Navigator.of(context).push(
@@ -62,24 +68,26 @@ class _EditorPageState extends State<EditorPage> {
         ],
       ),
       body: SingleChildScrollView(
-        child: PackagedHtmlEditor(
-          onCreated: (api) {
-            _editorApi = api;
-          },
-          initialContent:
-              '''<p>Here is some text</p> with a <a href="https://github.com/Enough-Software/enough_html_editor">link</a>.
-          <p>Here is <b>bold</b> text</p>
-          <p>Here is <i>some italic sic</i> text</p>
-          <p>Here is <i><b>bold and italic</b></i> text</p>
-          <p style="text-align: center;">Here is <u><i><b>bold and italic and underline</b></i></u> text</p>
-          <ul><li>one list element</li><li>another point</li></ul>
-          <blockquote>Here is a quote<br/>
-            that spans several lines<br/>
-            <blockquote>
-                Another second level blockqote 
-            </blockquote>
-        </blockquote>
+        child: SafeArea(
+          child: PackagedHtmlEditor(
+            onCreated: (api) {
+              _editorApi = api;
+            },
+            initialContent:
+                '''<p>Here is some text</p> with a <a href="https://github.com/Enough-Software/enough_html_editor">link</a>.
+            <p>Here is <b>bold</b> text</p>
+            <p>Here is <i>some italic sic</i> text</p>
+            <p>Here is <i><b>bold and italic</b></i> text</p>
+            <p style="text-align: center;">Here is <u><i><b>bold and italic and underline</b></i></u> text</p>
+            <ul><li>one list element</li><li>another point</li></ul>
+            <blockquote>Here is a quote<br/>
+              that spans several lines<br/>
+              <blockquote>
+                  Another second level blockqote 
+              </blockquote>
+          </blockquote>
 ''',
+          ),
         ),
       ),
     );
@@ -99,17 +107,17 @@ class _CustomScrollEditorPageState extends State<CustomScrollEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PlatformScaffold(
       body: CustomScrollView(
         physics: BouncingScrollPhysics(),
         slivers: [
-          SliverAppBar(
+          PlatformSliverAppBar(
             title: Text('Sticky controls'),
             floating: false,
             pinned: true,
             stretch: true,
             actions: [
-              IconButton(
+              DensePlatformIconButton(
                 icon: Icon(Icons.send),
                 onPressed: () async {
                   final text = await _editorApi!.getText();
@@ -121,7 +129,7 @@ class _CustomScrollEditorPageState extends State<CustomScrollEditorPage> {
                   );
                 },
               ),
-              IconButton(
+              DensePlatformIconButton(
                 icon: Icon(Icons.looks_one),
                 onPressed: () {
                   Navigator.of(context).push(
@@ -136,8 +144,8 @@ class _CustomScrollEditorPageState extends State<CustomScrollEditorPage> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child:
-                  TextField(decoration: InputDecoration(hintText: 'Subject')),
+              child: DecoratedPlatformTextField(
+                  decoration: InputDecoration(hintText: 'Subject')),
             ),
           ),
           if (_editorApi != null) ...{
@@ -177,12 +185,12 @@ class ResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
+    return PlatformScaffold(
+      appBar: PlatformAppBar(
         title: Text('Result'),
       ),
       body: SingleChildScrollView(
-        child: SelectableText(htmlText),
+        child: SafeArea(child: SelectableText(htmlText)),
       ),
     );
   }

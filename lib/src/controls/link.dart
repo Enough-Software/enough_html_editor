@@ -1,3 +1,4 @@
+import 'package:enough_platform_widgets/enough_platform_widgets.dart';
 import 'package:flutter/material.dart';
 
 import '../editor_api.dart';
@@ -31,7 +32,7 @@ class _LinkButtonState extends State<LinkButton> {
     final api = HtmlEditorApiWidget.of(context)!.editorApi;
     final buttonColor = _isInLink ? Theme.of(context).accentColor : null;
     api.onLinkSettingsChanged = _onLinkSettingsChanged;
-    return IconButton(
+    return DensePlatformIconButton(
       icon: Icon(Icons.link),
       onPressed: () => _editLink(api),
       color: buttonColor,
@@ -57,26 +58,13 @@ class _LinkButtonState extends State<LinkButton> {
       final urlText = selectedText.contains('://') ? selectedText : '';
       _urlController.text = urlText;
     }
-    final result = await showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          content: LinkEditor(
-            urlController: _urlController,
-            textController: _textController,
-          ),
-          actions: [
-            IconButton(
-              icon: Icon(Icons.cancel),
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
-            IconButton(
-              icon: Icon(Icons.done),
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
-          ],
-        );
-      },
+    final result = await DialogHelper.showWidgetDialog(
+      context,
+      LinkEditor(
+        urlController: _urlController,
+        textController: _textController,
+      ),
+      defaultActions: DialogActions.okAndCancel,
     );
     if (result == true && _urlController.text.trim().isNotEmpty) {
       // check link validity?
@@ -127,12 +115,12 @@ class _LinkEditorState extends State<LinkEditor> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        TextField(
+        DecoratedPlatformTextField(
           controller: widget.urlController,
           decoration: InputDecoration(
             icon: Icon(Icons.link),
             suffix: IconButton(
-              icon: Icon(Icons.clear),
+              icon: Icon(CommonPlatformIcons.clear),
               onPressed: () => widget.urlController.text = '',
             ),
           ),
@@ -140,12 +128,12 @@ class _LinkEditorState extends State<LinkEditor> {
           keyboardType: TextInputType.url,
           onChanged: (text) => _updatePreview(),
         ),
-        TextField(
+        DecoratedPlatformTextField(
           controller: widget.textController,
           decoration: InputDecoration(
             icon: Icon(Icons.text_fields),
-            suffix: IconButton(
-              icon: Icon(Icons.clear),
+            suffix: DensePlatformIconButton(
+              icon: Icon(CommonPlatformIcons.clear),
               onPressed: () => widget.textController.text = '',
             ),
           ),
@@ -154,7 +142,7 @@ class _LinkEditorState extends State<LinkEditor> {
           onChanged: (text) => _updatePreview(),
         ),
         Divider(),
-        TextButton(
+        PlatformTextButton(
           child: Text(_previewText),
           onPressed: () {
             ScaffoldMessenger.of(context)

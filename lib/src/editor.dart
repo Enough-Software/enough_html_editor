@@ -431,6 +431,7 @@ blockquote {
           useShouldOverrideUrlLoading: true,
           verticalScrollBarEnabled: false,
           transparentBackground: isDark,
+          supportZoom: false,
         ),
         android: AndroidInAppWebViewOptions(
           useWideViewPort: false,
@@ -439,6 +440,9 @@ blockquote {
           forceDark: isDark
               ? AndroidForceDark.FORCE_DARK_ON
               : AndroidForceDark.FORCE_DARK_OFF,
+        ),
+        ios: IOSInAppWebViewOptions(
+          enableViewportScale: false,
         ),
       ),
       // deny browsing while editing:

@@ -1,3 +1,4 @@
+import 'package:enough_platform_widgets/enough_platform_widgets.dart';
 import 'package:flutter/material.dart';
 
 import '../editor.dart';
@@ -104,11 +105,11 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
                 prefix,
               },
               BaseFormatButtons(),
-              IconButton(
+              DensePlatformIconButton(
                 icon: Icon(Icons.format_list_bulleted),
                 onPressed: () => _editorApi.insertUnorderedList(),
               ),
-              IconButton(
+              DensePlatformIconButton(
                 icon: Icon(Icons.format_list_numbered),
                 onPressed: () => _editorApi.insertOrderedList(),
               ),

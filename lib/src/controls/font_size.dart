@@ -1,3 +1,4 @@
+import 'package:enough_platform_widgets/enough_platform_widgets.dart';
 import 'package:flutter/material.dart';
 
 import '../models.dart';
@@ -27,7 +28,7 @@ class _FontSizeDropdownState extends State<FontSizeDropdown> {
     final api = HtmlEditorApiWidget.of(context)!.editorApi;
     api.onFontSizeChanged = _onFontSizeChanged;
     final selectedTextStyle = TextStyle(fontSize: 12);
-    return DropdownButton<FontSize>(
+    return PlatformDropdownButton<FontSize>(
       value: currentSize,
       onChanged: (value) {
         if (value != null) {

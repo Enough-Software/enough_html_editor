@@ -10,10 +10,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_inappwebview: ^5.3.2
-    # path: ../flutter_inappwebview
+  flutter_inappwebview: #^5.3.2
+    path: ../flutter_inappwebview
   image: ^3.0.2
-  flutter_colorpicker: ^0.4.0
+  flutter_colorpicker: 0.4.0
+  enough_platform_widgets:
+    path: ../enough_platform_widgets
 
 dev_dependencies:
   flutter_test:

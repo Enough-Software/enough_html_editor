@@ -1,3 +1,4 @@
+import 'package:enough_platform_widgets/enough_platform_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
@@ -178,18 +179,122 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
         _removeOverlay();
         return Future.value(false);
       },
-      child: IconButton(
+      child: DensePlatformIconButton(
         icon: iconWidget,
         onPressed: () {
-          final entry = _buildOverlay(api);
-          _overlayEntry = entry;
-          final state = Overlay.of(context);
-          if (state != null && state.mounted) {
-            state.insert(entry);
-          }
+          _showColorSelectionSheet(api);
+          // if (_overlayEntry != null) {
+          //   _removeOverlay();
+          // }
+          // final entry = _buildOverlay(api);
+          // _overlayEntry = entry;
+          // final state = Overlay.of(context);
+          // if (state != null && state.mounted) {
+          //   print('color: insert overlay');
+          //   state.insert(entry);
+          // }
         },
       ),
     );
+  }
+
+  void _showColorSelectionSheet(HtmlEditorApi api) async {
+    final width = MediaQuery.of(context).size.width - 32.0;
+    final themeColors = widget.themeColors;
+    final color = await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return SingleChildScrollView(
+          child: Padding(
+            padding: MediaQuery.of(context).viewInsets,
+            child: Material(
+              elevation: 4.0,
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.access_time),
+                      for (final color in _lastColors) ...{
+                        DensePlatformIconButton(
+                          icon: _buildColorPreview(color),
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            setState(() {
+                              _currentColor = color;
+                              _pickedColor = color;
+                            });
+                          },
+                        ),
+                      },
+                    ],
+                  ),
+                  if (themeColors != null) ...{
+                    SizedBox(
+                      width: width,
+                      height: 20,
+                      child: ListView(
+                        padding: EdgeInsets.zero,
+                        children: themeColors
+                            .map((c) => InkWell(
+                                  child: _buildColorPreview(c),
+                                  onTap: () {
+                                    setState(() {
+                                      _currentColor = c;
+                                      _pickedColor = c;
+                                    });
+                                  },
+                                ))
+                            .toList(),
+                        scrollDirection: Axis.horizontal,
+                      ),
+                    ),
+                  },
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: ColorPicker(
+                          pickerColor: _currentColor,
+                          onColorChanged: (color) => _pickedColor = color,
+                          colorPickerWidth: width * 0.6,
+                          enableAlpha: false,
+                          paletteType: PaletteType.hsv,
+                          showLabel: false,
+                        ),
+                      ),
+                      Column(
+                        children: [
+                          DensePlatformIconButton(
+                            icon: Icon(CommonPlatformIcons.cancel),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          DensePlatformIconButton(
+                            icon: Icon(CommonPlatformIcons.ok),
+                            onPressed: () {
+                              Navigator.of(context).pop(_pickedColor);
+                              // final col = _pickedColor;
+                              // if (col != null) {
+                              //   _setColor(col, api);
+                              // }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    if (color != null) {
+      _setColor(color, api);
+    }
   }
 
   void _removeOverlay() {
@@ -197,6 +302,7 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
     if (entry != null) {
       entry.remove();
       _overlayEntry = null;
+      print('color: removed overlay');
     }
   }
 
@@ -229,6 +335,8 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
         WidgetsBinding.instance!.window.devicePixelRatio);
     // final height = viewInsets.bottom - top;
     final themeColors = widget.themeColors;
+    print(
+        'color: buildOverlay at $left, $top, w=$width, bottom=${viewInsets.bottom}');
     return OverlayEntry(
       builder: (context) => GestureDetector(
         onTap: () {
@@ -251,7 +359,7 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
                         children: [
                           Icon(Icons.access_time),
                           for (final color in _lastColors) ...{
-                            IconButton(
+                            DensePlatformIconButton(
                               icon: _buildColorPreview(color),
                               visualDensity: VisualDensity.compact,
                               onPressed: () => _setColor(color, api),
@@ -290,13 +398,13 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
                           ),
                           Column(
                             children: [
-                              IconButton(
+                              DensePlatformIconButton(
                                 icon: Icon(Icons.close),
                                 onPressed: () {
                                   _removeOverlay();
                                 },
                               ),
-                              IconButton(
+                              DensePlatformIconButton(
                                 icon: Icon(Icons.done),
                                 onPressed: () {
                                   final col = _pickedColor;
@@ -327,7 +435,7 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
     if (_lastColors.length >= 5) {
       _lastColors.removeLast();
     }
-    _removeOverlay();
+    // _removeOverlay();
     setState(() {});
     await widget.setColor(color, api);
     final themeColors = widget.themeColors;

@@ -1,3 +1,5 @@
+import 'package:enough_platform_widgets/enough_platform_widgets.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../models.dart';
@@ -30,12 +32,12 @@ class _BaseFormatButtonsState extends State<BaseFormatButtons> {
     final api = HtmlEditorApiWidget.of(context)!.editorApi;
     api.onFormatSettingsChanged = _onFormatSettingsChanged;
 
-    return ToggleButtons(
+    return PlatformToggleButtons(
       children: [
-        Icon(Icons.format_bold),
-        Icon(Icons.format_italic),
-        Icon(Icons.format_underlined),
-        Icon(Icons.format_strikethrough),
+        Icon(CommonPlatformIcons.bold),
+        Icon(CommonPlatformIcons.italic),
+        Icon(CommonPlatformIcons.underlined),
+        Icon(CommonPlatformIcons.strikethrough),
       ],
       onPressed: (int index) {
         switch (index) {
@@ -57,6 +59,7 @@ class _BaseFormatButtonsState extends State<BaseFormatButtons> {
         });
       },
       isSelected: isSelected,
+      cupertinoPadding: EdgeInsets.symmetric(horizontal: 8.0),
     );
   }
 }
