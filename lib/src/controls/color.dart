@@ -107,10 +107,8 @@ class ColorPickerControl extends StatefulWidget {
 }
 
 class _ColorPickerControlState extends State<ColorPickerControl> {
-  OverlayEntry? _overlayEntry;
   late Color _currentColor;
   List<Color> _lastColors = [];
-  Color? _pickedColor;
 
   @override
   void initState() {
@@ -127,26 +125,25 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
     }
     final col = color ?? widget.color;
     final themeColors = widget.themeColors;
+    var isChanged = false;
     if (themeColors != null) {
       if (!themeColors.any((existing) => (existing.value == col.value))) {
         themeColors.insert(0, col);
+        isChanged = true;
       }
     }
-    _lastColors.insert(0, col);
-    if (_lastColors.length >= 5) {
-      _lastColors.removeLast();
+    if (!_lastColors.any((c) => c.value == col.value)) {
+      _lastColors.insert(0, col);
+      if (_lastColors.length >= 5) {
+        _lastColors.removeLast();
+      }
+      isChanged = true;
     }
-    setState(() {
-      _currentColor = col;
-    });
-  }
-
-  @override
-  void dispose() {
-    if (_overlayEntry != null) {
-      _removeOverlay();
+    if (isChanged) {
+      setState(() {
+        _currentColor = col;
+      });
     }
-    super.dispose();
   }
 
   @override
@@ -171,124 +168,23 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
               ),
             ],
           );
-    return WillPopScope(
-      onWillPop: () {
-        if (_overlayEntry == null) {
-          return Future.value(true);
-        }
-        _removeOverlay();
-        return Future.value(false);
+    return DensePlatformIconButton(
+      icon: iconWidget,
+      onPressed: () {
+        _showColorSelectionSheet(api);
       },
-      child: DensePlatformIconButton(
-        icon: iconWidget,
-        onPressed: () {
-          _showColorSelectionSheet(api);
-          // if (_overlayEntry != null) {
-          //   _removeOverlay();
-          // }
-          // final entry = _buildOverlay(api);
-          // _overlayEntry = entry;
-          // final state = Overlay.of(context);
-          // if (state != null && state.mounted) {
-          //   print('color: insert overlay');
-          //   state.insert(entry);
-          // }
-        },
-      ),
     );
   }
 
   void _showColorSelectionSheet(HtmlEditorApi api) async {
-    final width = MediaQuery.of(context).size.width - 32.0;
-    final themeColors = widget.themeColors;
     final color = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (context) {
-        return SingleChildScrollView(
-          child: Padding(
-            padding: MediaQuery.of(context).viewInsets,
-            child: Material(
-              elevation: 4.0,
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.access_time),
-                      for (final color in _lastColors) ...{
-                        DensePlatformIconButton(
-                          icon: _buildColorPreview(color),
-                          visualDensity: VisualDensity.compact,
-                          onPressed: () {
-                            setState(() {
-                              _currentColor = color;
-                              _pickedColor = color;
-                            });
-                          },
-                        ),
-                      },
-                    ],
-                  ),
-                  if (themeColors != null) ...{
-                    SizedBox(
-                      width: width,
-                      height: 20,
-                      child: ListView(
-                        padding: EdgeInsets.zero,
-                        children: themeColors
-                            .map((c) => InkWell(
-                                  child: _buildColorPreview(c),
-                                  onTap: () {
-                                    setState(() {
-                                      _currentColor = c;
-                                      _pickedColor = c;
-                                    });
-                                  },
-                                ))
-                            .toList(),
-                        scrollDirection: Axis.horizontal,
-                      ),
-                    ),
-                  },
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: ColorPicker(
-                          pickerColor: _currentColor,
-                          onColorChanged: (color) => _pickedColor = color,
-                          colorPickerWidth: width * 0.6,
-                          enableAlpha: false,
-                          paletteType: PaletteType.hsv,
-                          showLabel: false,
-                        ),
-                      ),
-                      Column(
-                        children: [
-                          DensePlatformIconButton(
-                            icon: Icon(CommonPlatformIcons.cancel),
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          DensePlatformIconButton(
-                            icon: Icon(CommonPlatformIcons.ok),
-                            onPressed: () {
-                              Navigator.of(context).pop(_pickedColor);
-                              // final col = _pickedColor;
-                              // if (col != null) {
-                              //   _setColor(col, api);
-                              // }
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+        return _ColorSelector(
+          color: _currentColor,
+          lastColors: _lastColors,
+          themeColors: widget.themeColors,
         );
       },
     );
@@ -297,13 +193,138 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
     }
   }
 
-  void _removeOverlay() {
-    final entry = _overlayEntry;
-    if (entry != null) {
-      entry.remove();
-      _overlayEntry = null;
-      print('color: removed overlay');
+  void _setColor(Color color, HtmlEditorApi api) async {
+    _currentColor = color;
+    _lastColors.removeWhere((c) => c.value == color.value);
+    _lastColors.insert(0, color);
+    if (_lastColors.length >= 5) {
+      _lastColors.removeLast();
     }
+    await widget.setColor(color, api);
+    final themeColors = widget.themeColors;
+    if (themeColors != null) {
+      if (!themeColors.any((existing) => (existing.value == color.value))) {
+        themeColors.insert(0, color);
+      }
+    }
+  }
+}
+
+class _ColorSelector extends StatefulWidget {
+  final Color color;
+  final List<Color> lastColors;
+  final List<Color>? themeColors;
+  _ColorSelector({
+    Key? key,
+    required this.color,
+    required this.lastColors,
+    required this.themeColors,
+  }) : super(key: key);
+
+  @override
+  __ColorSelectorState createState() => __ColorSelectorState();
+}
+
+class __ColorSelectorState extends State<_ColorSelector> {
+  late Color _color;
+
+  @override
+  void initState() {
+    _color = widget.color;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.of(context).size.width - 32.0;
+    final themeColors = widget.themeColors;
+    return SingleChildScrollView(
+      child: Padding(
+        padding: MediaQuery.of(context).viewInsets,
+        child: Material(
+          elevation: 4.0,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    Icon(Icons.access_time),
+                    for (final color in widget.lastColors) ...{
+                      DensePlatformIconButton(
+                        padding: EdgeInsets.all(4.0),
+                        icon: _buildColorPreview(color),
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () {
+                          setState(() {
+                            _color = color;
+                          });
+                        },
+                      ),
+                    },
+                  ],
+                ),
+              ),
+              if (themeColors != null) ...{
+                SizedBox(
+                  width: width,
+                  height: 20,
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: themeColors
+                        .map((c) => InkWell(
+                              child: _buildColorPreview(c),
+                              onTap: () {
+                                setState(() {
+                                  _color = c;
+                                });
+                              },
+                            ))
+                        .toList(),
+                    scrollDirection: Axis.horizontal,
+                  ),
+                ),
+              },
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: ColorPicker(
+                      pickerColor: _color,
+                      onColorChanged: (color) => _color = color,
+                      colorPickerWidth: width * 0.6,
+                      enableAlpha: false,
+                      paletteType: PaletteType.hsv,
+                      showLabel: false,
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      DensePlatformIconButton(
+                        icon: Icon(CommonPlatformIcons.cancel),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      DensePlatformIconButton(
+                        icon: Icon(CommonPlatformIcons.ok),
+                        onPressed: () {
+                          Navigator.of(context).pop(_color);
+                          // final col = _pickedColor;
+                          // if (col != null) {
+                          //   _setColor(col, api);
+                          // }
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildColorPreview(Color color, {Widget? child}) {
@@ -317,132 +338,5 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
       ),
       child: child,
     );
-  }
-
-  OverlayEntry _buildOverlay(HtmlEditorApi api) {
-    RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final offset = renderBox.localToGlobal(Offset.zero);
-    final renderSize = renderBox.size;
-    final size = MediaQuery.of(context).size;
-    final left = 16.0;
-    var top = offset.dy + renderSize.height + 5.0;
-    if (top > 100) {
-      top = 100;
-    }
-    final width = size.width - 32;
-    final viewInsets = EdgeInsets.fromWindowPadding(
-        WidgetsBinding.instance!.window.viewInsets,
-        WidgetsBinding.instance!.window.devicePixelRatio);
-    // final height = viewInsets.bottom - top;
-    final themeColors = widget.themeColors;
-    print(
-        'color: buildOverlay at $left, $top, w=$width, bottom=${viewInsets.bottom}');
-    return OverlayEntry(
-      builder: (context) => GestureDetector(
-        onTap: () {
-          _removeOverlay();
-        },
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            Positioned(
-              left: left,
-              top: top,
-              width: width,
-              bottom: viewInsets.bottom,
-              child: SingleChildScrollView(
-                child: Material(
-                  elevation: 4.0,
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.access_time),
-                          for (final color in _lastColors) ...{
-                            DensePlatformIconButton(
-                              icon: _buildColorPreview(color),
-                              visualDensity: VisualDensity.compact,
-                              onPressed: () => _setColor(color, api),
-                            ),
-                          },
-                        ],
-                      ),
-                      if (themeColors != null) ...{
-                        SizedBox(
-                          width: width,
-                          height: 20,
-                          child: ListView(
-                            padding: EdgeInsets.zero,
-                            children: themeColors
-                                .map((c) => InkWell(
-                                      child: _buildColorPreview(c),
-                                      onTap: () => _setColor(c, api),
-                                    ))
-                                .toList(),
-                            scrollDirection: Axis.horizontal,
-                          ),
-                        ),
-                      },
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: ColorPicker(
-                              pickerColor: _currentColor,
-                              onColorChanged: (color) => _pickedColor = color,
-                              colorPickerWidth: width * 0.6,
-                              enableAlpha: false,
-                              paletteType: PaletteType.hsv,
-                              showLabel: false,
-                            ),
-                          ),
-                          Column(
-                            children: [
-                              DensePlatformIconButton(
-                                icon: Icon(Icons.close),
-                                onPressed: () {
-                                  _removeOverlay();
-                                },
-                              ),
-                              DensePlatformIconButton(
-                                icon: Icon(Icons.done),
-                                onPressed: () {
-                                  final col = _pickedColor;
-                                  if (col != null) {
-                                    _setColor(col, api);
-                                  }
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _setColor(Color color, HtmlEditorApi api) async {
-    _currentColor = color;
-    _lastColors.remove(color);
-    _lastColors.insert(0, color);
-    if (_lastColors.length >= 5) {
-      _lastColors.removeLast();
-    }
-    // _removeOverlay();
-    setState(() {});
-    await widget.setColor(color, api);
-    final themeColors = widget.themeColors;
-    if (themeColors != null) {
-      if (!themeColors.any((existing) => (existing.value == color.value))) {
-        themeColors.insert(0, color);
-      }
-    }
   }
 }
