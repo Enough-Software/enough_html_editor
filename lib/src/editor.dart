@@ -414,9 +414,9 @@ blockquote {
               source: 'document.body.scrollHeight');
           if ((scrollHeight != null) &&
               mounted &&
-              (scrollHeight + 15 > widget.minHeight)) {
+              (scrollHeight + 15.0 > widget.minHeight)) {
             setState(() {
-              _documentHeight = scrollHeight + 15.0;
+              _documentHeight = (scrollHeight + 15.0);
             });
           }
         }
@@ -677,7 +677,7 @@ blockquote {
           final height = double.tryParse(message.substring(1));
           if (height != null) {
             setState(() {
-              _documentHeight = height + 15;
+              _documentHeight = (height + 15.0);
             });
           }
         }
@@ -696,7 +696,7 @@ blockquote {
           source: 'document.body.scrollHeight');
       if (scrollHeight != null) {
         setState(() {
-          _documentHeight = scrollHeight + 15;
+          _documentHeight = (scrollHeight + 15.0);
         });
       }
     }
