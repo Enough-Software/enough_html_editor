@@ -268,17 +268,20 @@ class __ColorSelectorState extends State<_ColorSelector> {
               if (themeColors != null) ...{
                 SizedBox(
                   width: width,
-                  height: 20,
+                  height: 24,
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: themeColors
-                        .map((c) => InkWell(
-                              child: _buildColorPreview(c),
-                              onTap: () {
-                                setState(() {
-                                  _color = c;
-                                });
-                              },
+                        .map((c) => Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: InkWell(
+                                child: _buildColorPreview(c),
+                                onTap: () {
+                                  setState(() {
+                                    _color = c;
+                                  });
+                                },
+                              ),
                             ))
                         .toList(),
                     scrollDirection: Axis.horizontal,
