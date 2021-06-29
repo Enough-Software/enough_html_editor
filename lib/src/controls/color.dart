@@ -122,14 +122,13 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
     if (color == _currentColor ||
         (color == null && _currentColor == widget.color)) {
       // ignore
+      return;
     }
     final col = color ?? widget.color;
     final themeColors = widget.themeColors;
-    var isChanged = false;
     if (themeColors != null) {
       if (!themeColors.any((existing) => (existing.value == col.value))) {
         themeColors.insert(0, col);
-        isChanged = true;
       }
     }
     if (!_lastColors.any((c) => c.value == col.value)) {
@@ -137,13 +136,10 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
       if (_lastColors.length >= 5) {
         _lastColors.removeLast();
       }
-      isChanged = true;
     }
-    if (isChanged) {
-      setState(() {
-        _currentColor = col;
-      });
-    }
+    setState(() {
+      _currentColor = col;
+    });
   }
 
   @override
@@ -207,6 +203,8 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
         themeColors.insert(0, color);
       }
     }
+    // update current color display:
+    setState(() {});
   }
 }
 

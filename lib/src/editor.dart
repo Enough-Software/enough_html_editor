@@ -156,7 +156,7 @@ class HtmlEditorState extends State<HtmlEditor> {
         linkUrl = node.href;
         linkText = node.textContent;
       }
-      if (textAlign == undefined && node.style?.textAlign != undefined && node.style.textAlign != '') {
+      if (textAlign == undefined && node.style != undefined && node.style.textAlign != undefined && node.style.textAlign != '') {
         textAlign = node.style.textAlign;
       }
       node = node.parentNode;
@@ -264,7 +264,7 @@ class HtmlEditorState extends State<HtmlEditor> {
   }
 
   function onInput(inputEvent) {
-    isLineBreakInput = ((inputEvent.inputType == 'insertParagraph') || ((inputEvent.inputType == 'insertText') && (inputEvent.data == null)));
+    isLineBreakInput = ((inputEvent.inputType == 'insertLineBreak') || (inputEvent.inputType == 'insertParagraph') || ((inputEvent.inputType == 'insertText') && (inputEvent.data == null)));
     // if (isLineBreakInput) {
     //   document.execCommand('insertLineBreak');
     //   inputEvent.preventDefault();
@@ -382,7 +382,8 @@ blockquote {
       buffer.write(_templateBlockquote);
     }
     buffer.write(_templateContinuation.replaceFirst('==content==', content));
-    return buffer.toString();
+    final html = buffer.toString();
+    return html;
   }
 
   @override
