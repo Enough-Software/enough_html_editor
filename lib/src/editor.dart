@@ -431,6 +431,8 @@ blockquote {
         crossPlatform: InAppWebViewOptions(
           useShouldOverrideUrlLoading: true,
           verticalScrollBarEnabled: false,
+          disableVerticalScroll: widget.adjustHeight,
+          disableHorizontalScroll: widget.adjustHeight,
           transparentBackground: isDark,
           supportZoom: false,
         ),
@@ -451,6 +453,12 @@ blockquote {
           action.request.url?.host == ''
               ? NavigationActionPolicy.ALLOW
               : NavigationActionPolicy.CANCEL),
+      onScrollChanged: (controller, x, y) {
+        // print('onScrollChanged $x,$y');
+        if (widget.adjustHeight && y != 0) {
+          controller.scrollTo(x: 0, y: 0);
+        }
+      },
       onConsoleMessage: (controller, consoleMessage) {
         print(consoleMessage);
       },
