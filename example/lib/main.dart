@@ -80,7 +80,7 @@ class _EditorPageState extends State<EditorPage> {
         child: SafeArea(
           child: Column(
             children: [
-              TextButton(
+              PlatformTextButton(
                   onPressed: () => _editorApi?.unfocus(),
                   child: Text('Unfocus')),
               PackagedHtmlEditor(
