@@ -78,24 +78,31 @@ class _EditorPageState extends State<EditorPage> {
       ),
       body: SingleChildScrollView(
         child: SafeArea(
-          child: PackagedHtmlEditor(
-            onCreated: (api) {
-              _editorApi = api;
-            },
-            initialContent:
-                '''<p>Here is some text</p> with a <a href="https://github.com/Enough-Software/enough_html_editor">link</a>.
-            <p>Here is <b>bold</b> text</p>
-            <p>Here is <i>some italic sic</i> text</p>
-            <p>Here is <i><b>bold and italic</b></i> text</p>
-            <p style="text-align: center;">Here is <u><i><b>bold and italic and underline</b></i></u> text</p>
-            <ul><li>one list element</li><li>another point</li></ul>
-            <blockquote>Here is a quote<br/>
-              that spans several lines<br/>
-              <blockquote>
-                  Another second level blockqote 
+          child: Column(
+            children: [
+              TextButton(
+                  onPressed: () => _editorApi?.unfocus(),
+                  child: Text('Unfocus')),
+              PackagedHtmlEditor(
+                onCreated: (api) {
+                  _editorApi = api;
+                },
+                initialContent:
+                    '''<p>Here is some text</p> with a <a href="https://github.com/Enough-Software/enough_html_editor">link</a>.
+                <p>Here is <b>bold</b> text</p>
+                <p>Here is <i>some italic sic</i> text</p>
+                <p>Here is <i><b>bold and italic</b></i> text</p>
+                <p style="text-align: center;">Here is <u><i><b>bold and italic and underline</b></i></u> text</p>
+                <ul><li>one list element</li><li>another point</li></ul>
+                <blockquote>Here is a quote<br/>
+                  that spans several lines<br/>
+                  <blockquote>
+                      Another second level blockqote 
+                  </blockquote>
               </blockquote>
-          </blockquote>
-''',
+    ''',
+              ),
+            ],
           ),
         ),
       ),

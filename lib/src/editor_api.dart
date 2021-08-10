@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'editor.dart';
@@ -87,6 +88,12 @@ class HtmlEditorApi {
   }
 
   HtmlEditorApi(this._htmlEditorState);
+
+  Future unfocus() async {
+    await _webViewController.clearFocus();
+    // _htmlEditorState.unfocus();
+    // FocusScope.of(context).unfocus();
+  }
 
   /// Formats the current text to be bold
   Future formatBold() {
@@ -292,8 +299,7 @@ class HtmlEditorApi {
             : _documentBackgroundColor != null
                 ? ' style="background-color: $_documentBackgroundColor;"'
                 : '';
-    final styles = _htmlEditorState.styles
-        .replaceFirst('''#editor {
+    final styles = _htmlEditorState.styles.replaceFirst('''#editor {
   min-height: ==minHeight==px;
 }''', '');
     return '''<!DOCTYPE html>
