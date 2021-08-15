@@ -15,7 +15,7 @@ dependencies:
     git:
       url: https://github.com/robert-virkus/flutter_inappwebview.git
   image: ^3.0.2
-  flutter_colorpicker: ^0.5.0
+  flutter_colorpicker: 0.4.0
   enough_platform_widgets:
     git:
       url: https://github.com/Enough-Software/enough_platform_widgets.git
