@@ -8,7 +8,7 @@ import 'base.dart';
 /// A combination of controls and editor for a simpler usage.
 ///
 /// Like for the editor you can either use the `onCreated(EditorApi)` callback or a global key to get access to the state,
-/// in this case the [PackagedHtmlEditorState]. With either the state or the [EditorApi] you can access the edited text with
+/// in this case the [PackagedHtmlEditorState]. With either the state or the [HtmlEditorApi] you can access the edited text with
 /// ```dart
 /// String edited = await editorApi.getText();
 /// ```

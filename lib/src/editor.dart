@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import 'editor_api.dart';
@@ -19,7 +17,7 @@ class HtmlEditor extends StatefulWidget {
   /// Specify the [minHeight] to set a different height than the default `100` pixel.
   final int minHeight;
 
-  /// Define the `onCreated(EditorApi)` callback to get notified when the API is ready.
+  /// Define the `onCreated(HtmlEditorApi)` callback to get notified when the API is ready.
   final void Function(HtmlEditorApi)? onCreated;
 
   /// Defines if blockquotes should be split when the user adds a new line - defaults to `true`.
