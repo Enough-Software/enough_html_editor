@@ -8,14 +8,15 @@ import 'base.dart';
 ///
 /// This widget depends on a [HtmlEditorApiWidget] in the widget tree.
 class FontSizeDropdown extends StatefulWidget {
-  FontSizeDropdown({Key? key}) : super(key: key);
+  /// Creates a new font size selector
+  const FontSizeDropdown({Key? key}) : super(key: key);
 
   @override
   _FontSizeDropdownState createState() => _FontSizeDropdownState();
 }
 
 class _FontSizeDropdownState extends State<FontSizeDropdown> {
-  var currentSize = FontSize.medium;
+  FontSize currentSize = FontSize.medium;
 
   void _onFontSizeChanged(FontSize fontSize) {
     setState(() {
@@ -25,9 +26,9 @@ class _FontSizeDropdownState extends State<FontSizeDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final api = HtmlEditorApiWidget.of(context)!.editorApi;
-    api.onFontSizeChanged = _onFontSizeChanged;
-    final selectedTextStyle = TextStyle(fontSize: 12);
+    final api = HtmlEditorApiWidget.of(context)!.editorApi
+      ..onFontSizeChanged = _onFontSizeChanged;
+    const selectedTextStyle = TextStyle(fontSize: 12);
     return PlatformDropdownButton<FontSize>(
       value: currentSize,
       onChanged: (value) {
@@ -38,7 +39,7 @@ class _FontSizeDropdownState extends State<FontSizeDropdown> {
           api.setFontSize(value);
         }
       },
-      selectedItemBuilder: (context) => [
+      selectedItemBuilder: (context) => const [
         Center(child: Text('7', style: selectedTextStyle)),
         Center(child: Text('10', style: selectedTextStyle)),
         Center(child: Text('12', style: selectedTextStyle)),
@@ -47,7 +48,7 @@ class _FontSizeDropdownState extends State<FontSizeDropdown> {
         Center(child: Text('24', style: selectedTextStyle)),
         Center(child: Text('32', style: selectedTextStyle)),
       ],
-      items: [
+      items: const [
         DropdownMenuItem<FontSize>(
           child: Text('7', style: TextStyle(fontSize: 10)),
           value: FontSize.xSmall,

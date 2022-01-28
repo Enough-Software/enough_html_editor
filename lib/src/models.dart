@@ -4,65 +4,135 @@ import 'editor_api.dart';
 
 /// Standard format settings
 class FormatSettings {
-  final isBold;
-  final isItalic;
-  final isUnderline;
-  final isStrikeThrough;
-  FormatSettings(
-      this.isBold, this.isItalic, this.isUnderline, this.isStrikeThrough);
+  /// Creates new format settings
+  const FormatSettings({
+    this.isBold = false,
+    this.isItalic = false,
+    this.isUnderline = false,
+    this.isStrikeThrough = false,
+  });
+
+  /// is the current text bold?
+  final bool isBold;
+
+  /// is the current text italic?
+  final bool isItalic;
+
+  /// is the current text underlined?
+  final bool isUnderline;
+
+  /// is the current text striked through?
+  final bool isStrikeThrough;
 }
 
 /// Standard color settings
 class ColorSetting {
-  final Color? textForeground;
-  final Color? textBackground;
+  /// Creates new color settings
+  const ColorSetting(this.textForeground, this.textBackground);
 
-  ColorSetting(this.textForeground, this.textBackground);
+  /// The foreground color
+  final Color? textForeground;
+
+  /// The background hightlight color
+  final Color? textBackground;
 }
 
 /// Link settings
 class LinkSettings {
-  final String url;
-  final String text;
+  /// Creates new link settings
+  const LinkSettings(this.url, this.text);
 
-  LinkSettings(this.url, this.text);
+  /// The URL of the link
+  final String url;
+
+  /// The displayed text for the link
+  final String text;
 }
 
 /// Standard align settings
-enum ElementAlign { left, center, right, justify }
+enum ElementAlign {
+  /// left aligned
+  left,
+
+  /// centered
+  center,
+
+  /// right aligned
+  right,
+
+  /// justified text
+  justify,
+}
 
 /// Abstracts a text selection menu item.
 class TextSelectionMenuItem {
+  /// Creates a new selection menu item with the specified [label] and [action].
+  const TextSelectionMenuItem({required this.label, required this.action});
+
   /// The text label of the item
   final String label;
 
   /// The callback
   final dynamic Function(HtmlEditorApi api) action;
-
-  /// Creates a new selection menu item with the specified [label] and [action].
-  TextSelectionMenuItem({required this.label, required this.action});
 }
 
 /// Font-sizes
-enum FontSize { xSmall, small, medium, large, xLarge, xxLarge, xxxLarge }
+enum FontSize {
+  /// XS very small
+  xSmall,
+
+  /// S small
+  small,
+
+  /// M medium
+  medium,
+
+  /// L large
+  large,
+
+  /// XL very large
+  xLarge,
+
+  /// XXL very very large
+  xxLarge,
+
+  /// XXXL very very very large
+  xxxLarge,
+}
 
 /// Encapsulates the font size (for now)
 class FontSetting {
+  /// Creates new font settings
+  const FontSetting(this.fontSize);
+
+  /// The size of the current text
   final FontSize fontSize;
-  FontSetting(this.fontSize);
 }
 
 /// Contains safe font names that can be used across mobile, web and desktop
 enum SafeFont {
+  /// sans serif
   sansSerif,
+
+  /// serif
   serif,
+
+  /// monospace
   monospace,
+
+  /// cursive
   cursive,
+
+  /// courier
   courier,
+
+  /// times new roman
   timesNewRoman,
 }
 
+/// Extends SafeFont
 extension SafeFontNamesExtension on SafeFont {
+  /// Retrieves the name of this font
   String get name {
     switch (this) {
       case SafeFont.sansSerif:

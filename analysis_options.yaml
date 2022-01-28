@@ -7,7 +7,7 @@ linter:
   rules:
     - always_declare_return_types
     - always_put_control_body_on_new_line
-    # - always_put_required_named_parameters_first # not useful for widgets in which the option key is the first parameter by convention
+    # - always_put_required_named_parameters_first # not useful for Widgets
     - always_require_non_null_named_parameters
     #- always_specify_types # This would enforce to write types literally everywhere.
     - annotate_overrides

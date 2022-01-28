@@ -5,11 +5,12 @@ import 'package:flutter/material.dart';
 import '../models.dart';
 import 'base.dart';
 
-/// Controls the base format settings bold, italic, underlined and strike through
+/// Controls the base format settings bold, italic, underlined and strikethrough
 ///
 /// This widget depends on a [HtmlEditorApiWidget] in the widget tree.
 class BaseFormatButtons extends StatefulWidget {
-  BaseFormatButtons({Key? key}) : super(key: key);
+  /// Creates new base formatting controls
+  const BaseFormatButtons({Key? key}) : super(key: key);
 
   @override
   _BaseFormatButtonsState createState() => _BaseFormatButtonsState();
@@ -29,8 +30,8 @@ class _BaseFormatButtonsState extends State<BaseFormatButtons> {
 
   @override
   Widget build(BuildContext context) {
-    final api = HtmlEditorApiWidget.of(context)!.editorApi;
-    api.onFormatSettingsChanged = _onFormatSettingsChanged;
+    final api = HtmlEditorApiWidget.of(context)!.editorApi
+      ..onFormatSettingsChanged = _onFormatSettingsChanged;
 
     return PlatformToggleButtons(
       children: [
@@ -39,7 +40,7 @@ class _BaseFormatButtonsState extends State<BaseFormatButtons> {
         Icon(CommonPlatformIcons.underlined),
         Icon(CommonPlatformIcons.strikethrough),
       ],
-      onPressed: (int index) {
+      onPressed: (index) {
         switch (index) {
           case 0:
             api.formatBold();
@@ -59,7 +60,7 @@ class _BaseFormatButtonsState extends State<BaseFormatButtons> {
         });
       },
       isSelected: isSelected,
-      cupertinoPadding: EdgeInsets.symmetric(horizontal: 8.0),
+      cupertinoPadding: const EdgeInsets.symmetric(horizontal: 8.0),
     );
   }
 }

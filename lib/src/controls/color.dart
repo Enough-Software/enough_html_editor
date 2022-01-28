@@ -8,6 +8,13 @@ import 'base.dart';
 
 /// Combines color pickers for text foreground and text background colors
 class ColorControls extends StatelessWidget {
+  /// Creates new color controls
+  const ColorControls({
+    Key? key,
+    this.themeColors,
+    this.excludeDocumentLevelControls = false,
+  }) : super(key: key);
+
   static final List<Color> _defaultThemeColors = [
     Colors.black,
     Colors.white,
@@ -22,13 +29,12 @@ class ColorControls extends StatelessWidget {
     Colors.grey.shade900,
     ...Colors.accents,
   ];
+
+  /// The used theme colors
   final List<Color>? themeColors;
+
+  /// Set to `true` to not show document level color controls
   final bool excludeDocumentLevelControls;
-  ColorControls({
-    Key? key,
-    this.themeColors,
-    this.excludeDocumentLevelControls = false,
-  });
 
   @override
   Widget build(BuildContext context) {
@@ -41,16 +47,16 @@ class ColorControls extends StatelessWidget {
         ColorPickerControl(
           color: Colors.black,
           themeColors: colors,
-          icon: Icon(Icons.text_format),
-          getColor: (ColorSetting setting) => setting.textForeground,
+          icon: const Icon(Icons.text_format),
+          getColor: (setting) => setting.textForeground,
           setColor: (color, api) => api.setColorTextForeground(color),
         ),
         // text background:
         ColorPickerControl(
           color: Colors.white,
           themeColors: colors,
-          icon: Icon(Icons.brush),
-          getColor: (ColorSetting setting) => setting.textBackground,
+          icon: const Icon(Icons.brush),
+          getColor: (setting) => setting.textBackground,
           setColor: (color, api) => api.setColorTextBackground(color),
         ),
         if (!excludeDocumentLevelControls) ...{
@@ -58,7 +64,7 @@ class ColorControls extends StatelessWidget {
           ColorPickerControl(
             color: Colors.black,
             themeColors: colors,
-            icon: Icon(Icons.text_fields),
+            icon: const Icon(Icons.text_fields),
             setColor: (color, api) => api.setColorDocumentForeground(color),
           ),
           // document background:
@@ -83,14 +89,8 @@ class ColorControls extends StatelessWidget {
 
 /// Simple picker widget for a single color
 class ColorPickerControl extends StatefulWidget {
-  final Color color;
-  final Future Function(Color color, HtmlEditorApi api) setColor;
-  final List<Color>? themeColors;
-  final Widget Function(BuildContext context, Color selectecColor)? builder;
-  final Widget? icon;
-  final Color? Function(ColorSetting setting)? getColor;
-
-  ColorPickerControl({
+  /// Creates a new color picker
+  const ColorPickerControl({
     Key? key,
     required this.color,
     this.themeColors,
@@ -102,13 +102,31 @@ class ColorPickerControl extends StatefulWidget {
             'Please specify either an builder or an icon'),
         super(key: key);
 
+  /// The current color
+  final Color color;
+
+  /// The callback when a color has been selected
+  final Future Function(Color color, HtmlEditorApi api) setColor;
+
+  /// The available colors
+  final List<Color>? themeColors;
+
+  /// The optional builder for a given color
+  final Widget Function(BuildContext context, Color selectecColor)? builder;
+
+  /// The icon for this control when it is closed
+  final Widget? icon;
+
+  /// The callback to retrieve a color from the provided setting
+  final Color? Function(ColorSetting setting)? getColor;
+
   @override
   _ColorPickerControlState createState() => _ColorPickerControlState();
 }
 
 class _ColorPickerControlState extends State<ColorPickerControl> {
   late Color _currentColor;
-  List<Color> _lastColors = [];
+  final _lastColors = <Color>[];
 
   @override
   void initState() {
@@ -127,7 +145,7 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
     final col = color ?? widget.color;
     final themeColors = widget.themeColors;
     if (themeColors != null) {
-      if (!themeColors.any((existing) => (existing.value == col.value))) {
+      if (!themeColors.any((existing) => existing.value == col.value)) {
         themeColors.insert(0, col);
       }
     }
@@ -172,34 +190,33 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
     );
   }
 
-  void _showColorSelectionSheet(HtmlEditorApi api) async {
+  Future<void> _showColorSelectionSheet(HtmlEditorApi api) async {
     final color = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) {
-        return _ColorSelector(
-          color: _currentColor,
-          lastColors: _lastColors,
-          themeColors: widget.themeColors,
-        );
-      },
+      builder: (context) => _ColorSelector(
+        color: _currentColor,
+        lastColors: _lastColors,
+        themeColors: widget.themeColors,
+      ),
     );
     if (color != null) {
-      _setColor(color, api);
+      await _setColor(color, api);
     }
   }
 
-  void _setColor(Color color, HtmlEditorApi api) async {
+  Future<void> _setColor(Color color, HtmlEditorApi api) async {
     _currentColor = color;
-    _lastColors.removeWhere((c) => c.value == color.value);
-    _lastColors.insert(0, color);
+    _lastColors
+      ..removeWhere((c) => c.value == color.value)
+      ..insert(0, color);
     if (_lastColors.length >= 5) {
       _lastColors.removeLast();
     }
     await widget.setColor(color, api);
     final themeColors = widget.themeColors;
     if (themeColors != null) {
-      if (!themeColors.any((existing) => (existing.value == color.value))) {
+      if (!themeColors.any((existing) => existing.value == color.value)) {
         themeColors.insert(0, color);
       }
     }
@@ -209,15 +226,16 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
 }
 
 class _ColorSelector extends StatefulWidget {
-  final Color color;
-  final List<Color> lastColors;
-  final List<Color>? themeColors;
-  _ColorSelector({
+  const _ColorSelector({
     Key? key,
     required this.color,
     required this.lastColors,
     required this.themeColors,
   }) : super(key: key);
+
+  final Color color;
+  final List<Color> lastColors;
+  final List<Color>? themeColors;
 
   @override
   __ColorSelectorState createState() => __ColorSelectorState();
@@ -247,10 +265,10 @@ class __ColorSelectorState extends State<_ColorSelector> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
                   children: [
-                    Icon(Icons.access_time),
+                    const Icon(Icons.access_time),
                     for (final color in widget.lastColors) ...{
                       DensePlatformIconButton(
-                        padding: EdgeInsets.all(4.0),
+                        padding: const EdgeInsets.all(4.0),
                         icon: _buildColorPreview(color),
                         visualDensity: VisualDensity.compact,
                         onPressed: () {
@@ -296,7 +314,7 @@ class __ColorSelectorState extends State<_ColorSelector> {
                       colorPickerWidth: width * 0.6,
                       enableAlpha: false,
                       paletteType: PaletteType.hsv,
-                      showLabel: false,
+                      labelTypes: const [],
                     ),
                   ),
                   Column(
@@ -328,16 +346,14 @@ class __ColorSelectorState extends State<_ColorSelector> {
     );
   }
 
-  Widget _buildColorPreview(Color color, {Widget? child}) {
-    return Container(
-      width: 16,
-      height: 16,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        border: Border.all(),
-      ),
-      child: child,
-    );
-  }
+  Widget _buildColorPreview(Color color, {Widget? child}) => Container(
+        width: 16,
+        height: 16,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+          border: Border.all(),
+        ),
+        child: child,
+      );
 }

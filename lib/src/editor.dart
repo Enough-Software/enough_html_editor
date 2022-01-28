@@ -1,10 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-
-import 'editor_api.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'editor_api.dart';
 import 'models.dart';
 
 /// Slim HTML Editor with API
@@ -21,7 +20,7 @@ class HtmlEditor extends StatefulWidget {
   ///
   /// Define the [onCreated] `onCreated(EditorApi)` callback to get notified
   /// when the API is ready.
-  HtmlEditor({
+  const HtmlEditor({
     Key? key,
     this.initialContent = '',
     this.adjustHeight = true,
@@ -35,16 +34,20 @@ class HtmlEditor extends StatefulWidget {
   /// Set the [initialContent] to populate the editor with some existing text
   final String initialContent;
 
-  /// Set [adjustHeight] to let the editor set its height automatically - by default this is `true`.
+  /// Set [adjustHeight] to let the editor set its height automatically
+  ///  - by default this is `true`.
   final bool adjustHeight;
 
-  /// Specify the [minHeight] to set a different height than the default `100` pixel.
+  /// Specify the [minHeight] to set a different height
+  /// than the default `100` pixel.
   final int minHeight;
 
-  /// Define the `onCreated(HtmlEditorApi)` callback to get notified when the API is ready.
+  /// Define the `onCreated(HtmlEditorApi)` callback to get notified
+  /// when the API is ready.
   final void Function(HtmlEditorApi)? onCreated;
 
-  /// Defines if blockquotes should be split when the user adds a new line - defaults to `true`.
+  /// Defines if blockquotes should be split when the user adds a new line
+  /// - defaults to `true`.
   final bool splitBlockquotes;
 
   // /// Defines if the default text selection menu items `𝗕` (bold), `𝑰` (italic), `U̲` (underlined),`T̶` (strikethrough) should be added - defaults to `true`.
@@ -58,7 +61,9 @@ class HtmlEditor extends StatefulWidget {
 }
 
 /// You can access the API by accessing the HtmlEditor's state.
-/// The editor state can be accessed directly when using a GlobalKey<HtmlEditorState>.
+///
+/// The editor state can be accessed directly when using a
+/// [GlobalKey]<[HtmlEditorState]>.
 class HtmlEditorState extends State<HtmlEditor> {
   static const String _templateStart = '''
 <!DOCTYPE html>
@@ -364,7 +369,8 @@ blockquote {
 
   /// Access to the API of the editor.
   ///
-  /// Instead of accessing the API via the `HtmlEditorState` you can also directly get in in the `HtmlEditor.onCreated(...)` callback.
+  /// Instead of accessing the API via the [HtmlEditorState]
+  /// you can also directly get in in the [HtmlEditor.onCreated] callback.
   HtmlEditorApi get api => _api;
 
   @override
@@ -409,123 +415,129 @@ blockquote {
     }
   }
 
-  Widget _buildEditor() {
-    // final textSelectionMenuItems = widget.textSelectionMenuItems;
-
-    return WebView(
-      key: ValueKey(_initialPageContent),
-      initialUrl: _initialPageContent,
-      onWebViewCreated: _onWebViewCreated,
-      onPageFinished: (url) async {
-        if (widget.adjustHeight) {
-          final scrollHeightText = await _webViewController
-              .runJavascriptReturningResult('document.body.scrollHeight');
-          final scrollHeight = double.tryParse(scrollHeightText);
-          if (scrollHeight != null &&
-              mounted &&
-              (scrollHeight + 15.0 > widget.minHeight)) {
-            setState(() {
-              _documentHeight = (scrollHeight + 15.0);
-            });
+  Widget _buildEditor() => WebView(
+        key: ValueKey(_initialPageContent),
+        initialUrl: _initialPageContent,
+        onWebViewCreated: _onWebViewCreated,
+        onPageFinished: (url) async {
+          if (widget.adjustHeight) {
+            final scrollHeightText = await _webViewController
+                .runJavascriptReturningResult('document.body.scrollHeight');
+            final scrollHeight = double.tryParse(scrollHeightText);
+            if (scrollHeight != null &&
+                mounted &&
+                (scrollHeight + 15.0 > widget.minHeight)) {
+              setState(() {
+                _documentHeight = scrollHeight + 15.0;
+              });
+            }
           }
-        }
-      },
-      javascriptMode: JavascriptMode.unrestricted,
-      javascriptChannels: {
-        JavascriptChannel(
+        },
+        javascriptMode: JavascriptMode.unrestricted,
+        javascriptChannels: {
+          JavascriptChannel(
             name: 'FormatSettings',
-            onMessageReceived: _onFormatSettingsReceived),
-        JavascriptChannel(
+            onMessageReceived: _onFormatSettingsReceived,
+          ),
+          JavascriptChannel(
             name: 'FontSizeSettings',
-            onMessageReceived: _onFontSizeSettingsReceived),
-        JavascriptChannel(
+            onMessageReceived: _onFontSizeSettingsReceived,
+          ),
+          JavascriptChannel(
             name: 'FontFamilySettings',
-            onMessageReceived: _onFontFamilySettingsReceived),
-        JavascriptChannel(
-            name: 'AlignSettings', onMessageReceived: _onAlignSettingsReceived),
-        JavascriptChannel(
-            name: 'ColorSettings', onMessageReceived: _onColorSettingsReceived),
-        JavascriptChannel(
-            name: 'LinkSettings', onMessageReceived: _onLinkSettingsReceived),
-        JavascriptChannel(
+            onMessageReceived: _onFontFamilySettingsReceived,
+          ),
+          JavascriptChannel(
+            name: 'AlignSettings',
+            onMessageReceived: _onAlignSettingsReceived,
+          ),
+          JavascriptChannel(
+            name: 'ColorSettings',
+            onMessageReceived: _onColorSettingsReceived,
+          ),
+          JavascriptChannel(
+            name: 'LinkSettings',
+            onMessageReceived: _onLinkSettingsReceived,
+          ),
+          JavascriptChannel(
             name: 'InternalUpdate',
-            onMessageReceived: _onInternalUpdateReceived),
-      },
-      // initialOptions: InAppWebViewGroupOptions(
-      //   crossPlatform: InAppWebViewOptions(
-      //     useShouldOverrideUrlLoading: true,
-      //     verticalScrollBarEnabled: false,
-      //     disableVerticalScroll: widget.adjustHeight,
-      //     disableHorizontalScroll: widget.adjustHeight,
-      //     transparentBackground: isDark,
-      //     supportZoom: false,
-      //   ),
-      //   android: AndroidInAppWebViewOptions(
-      //     useWideViewPort: false,
-      //     loadWithOverviewMode: true,
-      //     useHybridComposition: true,
-      //     forceDark: isDark
-      //         ? AndroidForceDark.FORCE_DARK_ON
-      //         : AndroidForceDark.FORCE_DARK_OFF,
-      //   ),
-      //   ios: IOSInAppWebViewOptions(
-      //     enableViewportScale: false,
-      //   ),
-      // ),
-      // deny browsing while editing:
-      navigationDelegate: (navigation) => NavigationDecision.prevent,
-      zoomEnabled: false,
-      // onScrollChanged: (controller, x, y) {
-      //   // print('onScrollChanged $x,$y');
-      //   if (widget.adjustHeight && y != 0) {
-      //     controller.scrollTo(x: 0, y: 0);
-      //   }
-      // },
-      // onConsoleMessage: (controller, consoleMessage) {
-      //   print(consoleMessage);
-      // },
-      // contextMenu: ContextMenu(
-      //   menuItems: [
-      //     if (widget.addDefaultSelectionMenuItems) ...{
-      //       ContextMenuItem(
-      //         androidId: 1,
-      //         iosId: '1',
-      //         title: '𝗕',
-      //         action: () => _api.formatBold(),
-      //       ),
-      //       ContextMenuItem(
-      //         androidId: 2,
-      //         iosId: '2',
-      //         title: '𝑰',
-      //         action: () => _api.formatItalic(),
-      //       ),
-      //       ContextMenuItem(
-      //         androidId: 3,
-      //         iosId: '3',
-      //         title: 'U̲',
-      //         action: () => _api.formatUnderline(),
-      //       ),
-      //       ContextMenuItem(
-      //         androidId: 4,
-      //         iosId: '4',
-      //         title: '̶T̶',
-      //         action: () => _api.formatStrikeThrough(),
-      //       ),
-      //     },
-      //     if (textSelectionMenuItems != null) ...{
-      //       for (final item in textSelectionMenuItems) ...{
-      //         ContextMenuItem(
-      //           androidId: 100 + textSelectionMenuItems.indexOf(item),
-      //           iosId: item.label,
-      //           title: item.label,
-      //           action: () => item.action(_api),
-      //         ),
-      //       },
-      //     },
-      //   ],
-      // ),
-    );
-  }
+            onMessageReceived: _onInternalUpdateReceived,
+          ),
+        },
+        // initialOptions: InAppWebViewGroupOptions(
+        //   crossPlatform: InAppWebViewOptions(
+        //     useShouldOverrideUrlLoading: true,
+        //     verticalScrollBarEnabled: false,
+        //     disableVerticalScroll: widget.adjustHeight,
+        //     disableHorizontalScroll: widget.adjustHeight,
+        //     transparentBackground: isDark,
+        //     supportZoom: false,
+        //   ),
+        //   android: AndroidInAppWebViewOptions(
+        //     useWideViewPort: false,
+        //     loadWithOverviewMode: true,
+        //     useHybridComposition: true,
+        //     forceDark: isDark
+        //         ? AndroidForceDark.FORCE_DARK_ON
+        //         : AndroidForceDark.FORCE_DARK_OFF,
+        //   ),
+        //   ios: IOSInAppWebViewOptions(
+        //     enableViewportScale: false,
+        //   ),
+        // ),
+        // deny browsing while editing:
+        navigationDelegate: (navigation) => NavigationDecision.prevent,
+        zoomEnabled: false,
+        // onScrollChanged: (controller, x, y) {
+        //   // print('onScrollChanged $x,$y');
+        //   if (widget.adjustHeight && y != 0) {
+        //     controller.scrollTo(x: 0, y: 0);
+        //   }
+        // },
+        // onConsoleMessage: (controller, consoleMessage) {
+        //   print(consoleMessage);
+        // },
+        // contextMenu: ContextMenu(
+        //   menuItems: [
+        //     if (widget.addDefaultSelectionMenuItems) ...{
+        //       ContextMenuItem(
+        //         androidId: 1,
+        //         iosId: '1',
+        //         title: '𝗕',
+        //         action: () => _api.formatBold(),
+        //       ),
+        //       ContextMenuItem(
+        //         androidId: 2,
+        //         iosId: '2',
+        //         title: '𝑰',
+        //         action: () => _api.formatItalic(),
+        //       ),
+        //       ContextMenuItem(
+        //         androidId: 3,
+        //         iosId: '3',
+        //         title: 'U̲',
+        //         action: () => _api.formatUnderline(),
+        //       ),
+        //       ContextMenuItem(
+        //         androidId: 4,
+        //         iosId: '4',
+        //         title: '̶T̶',
+        //         action: () => _api.formatStrikeThrough(),
+        //       ),
+        //     },
+        //     if (textSelectionMenuItems != null) ...{
+        //       for (final item in textSelectionMenuItems) ...{
+        //         ContextMenuItem(
+        //           androidId: 100 + textSelectionMenuItems.indexOf(item),
+        //           iosId: item.label,
+        //           title: item.label,
+        //           action: () => item.action(_api),
+        //         ),
+        //       },
+        //     },
+        //   ],
+        // ),
+      );
 
   void _onWebViewCreated(WebViewController controller) {
     _webViewController = controller;
@@ -544,12 +556,14 @@ blockquote {
     if (callback != null && message.message.isNotEmpty) {
       final numericMessage = int.tryParse(message.message);
       if (numericMessage != null) {
-        final isBold = (numericMessage & 1) == 1;
-        final isItalic = (numericMessage & 2) == 2;
-        final isUnderline = (numericMessage & 4) == 4;
-        final isStrikeThrough = (numericMessage & 8) == 8;
         callback(
-            FormatSettings(isBold, isItalic, isUnderline, isStrikeThrough));
+          FormatSettings(
+            isBold: (numericMessage & 1) == 1,
+            isItalic: (numericMessage & 2) == 2,
+            isUnderline: (numericMessage & 4) == 4,
+            isStrikeThrough: (numericMessage & 8) == 8,
+          ),
+        );
       }
     }
   }
@@ -604,7 +618,7 @@ blockquote {
         }
         _fontsByName = map;
       }
-      SafeFont? font = map[message.message];
+      final font = map[message.message];
       callback(font);
     }
   }
@@ -676,8 +690,8 @@ blockquote {
     final parameters = message.message.split('<_>');
     if (callback != null) {
       if (parameters.length == 2) {
-        String url = parameters[0];
-        String text = parameters[1];
+        final url = parameters[0];
+        final text = parameters[1];
         callback(LinkSettings(url, text));
       } else {
         callback(null);
@@ -692,7 +706,7 @@ blockquote {
         final height = double.tryParse(message.message.substring(1));
         if (height != null) {
           setState(() {
-            _documentHeight = (height + 15.0);
+            _documentHeight = height + 15.0;
           });
         }
       }
@@ -701,9 +715,11 @@ blockquote {
     }
   }
 
-  /// Notifies the editor about a change of the document that can influence the height.
+  /// Notifies the editor about a change of the document
+  /// that can influence the height.
   ///
-  /// The height will be measured and applied if [HtmlEditor.adjustHeight] is set to true.
+  /// The height will be measured and applied if [HtmlEditor.adjustHeight]
+  /// is set to true.
   Future<void> onDocumentChanged() async {
     if (widget.adjustHeight) {
       final scrollHeightText = await _webViewController
@@ -713,7 +729,7 @@ blockquote {
           mounted &&
           (scrollHeight + 15.0 > widget.minHeight)) {
         setState(() {
-          _documentHeight = (scrollHeight + 15.0);
+          _documentHeight = scrollHeight + 15.0;
         });
       }
     }

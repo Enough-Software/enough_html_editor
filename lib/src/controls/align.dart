@@ -8,7 +8,8 @@ import 'base.dart';
 ///
 /// This widget depends on a [HtmlEditorApiWidget] in the widget tree.
 class AlignDropdown extends StatefulWidget {
-  AlignDropdown({Key? key}) : super(key: key);
+  /// Creates a text alignment dropdown
+  const AlignDropdown({Key? key}) : super(key: key);
 
   @override
   _AlignDropdownState createState() => _AlignDropdownState();
@@ -19,11 +20,11 @@ class _AlignDropdownState extends State<AlignDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final api = HtmlEditorApiWidget.of(context)!.editorApi;
-    api.onAlignSettingsChanged = _onAlignSettingsChanged;
+    final api = HtmlEditorApiWidget.of(context)!.editorApi
+      ..onAlignSettingsChanged = _onAlignSettingsChanged;
 
     return PlatformDropdownButton<ElementAlign>(
-      items: [
+      items: const [
         DropdownMenuItem<ElementAlign>(
             child: Icon(Icons.format_align_left), value: ElementAlign.left),
         DropdownMenuItem<ElementAlign>(
@@ -54,7 +55,7 @@ class _AlignDropdownState extends State<AlignDropdown> {
             break;
         }
       },
-      selectedItemBuilder: (context) => [
+      selectedItemBuilder: (context) => const [
         Icon(Icons.format_align_left),
         Icon(Icons.format_align_center),
         Icon(Icons.format_align_right),

@@ -8,19 +8,24 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
+  enough_platform_widgets: ^0.3.0
   flutter:
     sdk: flutter
-  webview_flutter: ^3.0.0
-  image: ^3.1.1
   flutter_colorpicker: ^1.0.3
-  enough_platform_widgets: #^0.2.0
+  image: ^3.1.1
+  webview_flutter: ^3.0.0
+
+dependency_overrides:
+  # uncomment path for local development
+  enough_platform_widgets:
     git:
       url: https://github.com/Enough-Software/enough_platform_widgets.git
-    # path: ../enough_platform_widgets
+  #   path: ../enough_platform_widgets
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  lints: ^1.0.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

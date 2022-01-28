@@ -8,7 +8,8 @@ import 'base.dart';
 ///
 /// This widget depends on a [HtmlEditorApiWidget] in the widget tree.
 class FontFamilyDropdown extends StatefulWidget {
-  FontFamilyDropdown({Key? key}) : super(key: key);
+  /// Creates a new font family selector
+  const FontFamilyDropdown({Key? key}) : super(key: key);
 
   @override
   _FontFamilyDropdownState createState() => _FontFamilyDropdownState();
@@ -25,9 +26,9 @@ class _FontFamilyDropdownState extends State<FontFamilyDropdown> {
 
   @override
   Widget build(BuildContext context) {
-    final api = HtmlEditorApiWidget.of(context)!.editorApi;
-    api.onFontFamilyChanged = _onFontNameChanged;
-    final selectedTextStyle = TextStyle(fontSize: 12);
+    final api = HtmlEditorApiWidget.of(context)!.editorApi
+      ..onFontFamilyChanged = _onFontNameChanged;
+    const selectedTextStyle = TextStyle(fontSize: 12);
     return PlatformDropdownButton<SafeFont>(
       value: currentFont,
       onChanged: (value) {

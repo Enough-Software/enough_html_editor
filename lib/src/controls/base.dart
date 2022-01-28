@@ -5,7 +5,8 @@ import '../editor.dart';
 import '../editor_api.dart';
 import 'controls.dart';
 
-/// Use the `HtmlEditorApiWidget` to provide the `HtmlEditorApi` to widgets further down the widget tree.
+/// Use the `HtmlEditorApiWidget` to provide the `HtmlEditorApi` to widgets
+/// further down the widget tree.
 ///
 /// Example:
 /// ```dart
@@ -22,43 +23,43 @@ import 'controls.dart';
 ///  final api = HtmlEditorApiWidget.of(context)!.editorApi;
 /// ```
 class HtmlEditorApiWidget extends InheritedWidget {
-  final HtmlEditorApi editorApi;
-
-  /// Creates a new HtmlEditorApiWidget with the specified [editorApi] and [child]
-  HtmlEditorApiWidget(
+  /// Creates a new HtmlEditorApiWidget
+  /// with the specified [editorApi] and [child]
+  const HtmlEditorApiWidget(
       {Key? key, required this.editorApi, required Widget child})
       : super(key: key, child: child);
 
+  /// The editor API
+  final HtmlEditorApi editorApi;
+
   /// Retrieves the widget instance from the given [context].
-  static HtmlEditorApiWidget? of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<HtmlEditorApiWidget>();
-  }
+  static HtmlEditorApiWidget? of(BuildContext context) =>
+      context.dependOnInheritedWidgetOfExactType<HtmlEditorApiWidget>();
 
   @override
-  bool updateShouldNotify(HtmlEditorApiWidget oldWidget) {
-    return true;
-  }
+  bool updateShouldNotify(HtmlEditorApiWidget oldWidget) => true;
 }
 
 /// Predefined editor controls.
 ///
 /// With `enough_html_editor` you can create your very own editor controls.
 class HtmlEditorControls extends StatefulWidget {
-  final GlobalKey<HtmlEditorState>? editorKey;
-  final HtmlEditorApi? editorApi;
-  final Widget? prefix;
-  final Widget? suffix;
-  final List<Color>? themeColors;
-  final bool excludeDocumentLevelControls;
-
   /// Creates a new `HtmlEditorControls`.
   ///
   /// You have to specify either the [editorApi] or the [editorKey].
-  /// Optionally specify your own [prefix] and [suffix] widgets. These widgets can access the `HtmlEditorApi` by calling `HtmlEditorApiWidget.of(context)`, e.g. `final api = HtmlEditorApiWidget.of(context)!.editorApi;`
-  /// Optionally specify the [textForegroundColors], [textBackgroundColors], [documentForegroundColors] and [documentBackgroundColors]. By default these are deducted from the material accent colors + black & white.
-  /// Set [excludeDocumentLevelControls] to `true` in case controls that affect the whole document like the page background color should be excluded.
-  /// Optionally specify the list of [themeColors], by default grayscales and accent colors will be used.
-  HtmlEditorControls({
+  ///
+  /// Optionally specify your own [prefix] and [suffix] widgets.
+  /// These widgets can access the `HtmlEditorApi` by calling
+  /// `HtmlEditorApiWidget.of(context)`, e.g.
+  /// `final api = HtmlEditorApiWidget.of(context)!.editorApi;`
+  ///
+  /// Set [excludeDocumentLevelControls] to `true` in case controls that
+  /// affect the whole document like the page background color
+  /// should be excluded.
+  ///
+  /// Optionally specify the list of [themeColors], by default grayscales
+  /// and accent colors will be used.
+  const HtmlEditorControls({
     Key? key,
     this.editorApi,
     this.editorKey,
@@ -69,6 +70,27 @@ class HtmlEditorControls extends StatefulWidget {
   })  : assert(editorApi != null || editorKey != null,
             'Please define either the editorApi or editorKey pararameter.'),
         super(key: key);
+
+  /// The key for the editor state
+  final GlobalKey<HtmlEditorState>? editorKey;
+
+  /// The editor API
+  final HtmlEditorApi? editorApi;
+
+  /// A widget that is placed in front of other editor controls
+  final Widget? prefix;
+
+  /// A widgets that is planced after the other editor controls
+  final Widget? suffix;
+
+  /// Available colors, by default grayscales
+  /// and accent colors will be used.
+  final List<Color>? themeColors;
+
+  /// Set [excludeDocumentLevelControls] to `true` in case controls that
+  /// affect the whole document like the page background color
+  /// should be excluded.
+  final bool excludeDocumentLevelControls;
 
   @override
   _HtmlEditorControlsState createState() => _HtmlEditorControlsState();
@@ -87,7 +109,7 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized) {
-      return CircularProgressIndicator();
+      return const PlatformProgressIndicator();
     }
     final prefix = widget.prefix;
     final suffix = widget.suffix;
@@ -104,24 +126,24 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
               if (prefix != null) ...{
                 prefix,
               },
-              BaseFormatButtons(),
+              const BaseFormatButtons(),
               DensePlatformIconButton(
-                icon: Icon(Icons.format_list_bulleted),
+                icon: const Icon(Icons.format_list_bulleted),
                 onPressed: () => _editorApi.insertUnorderedList(),
               ),
               DensePlatformIconButton(
-                icon: Icon(Icons.format_list_numbered),
+                icon: const Icon(Icons.format_list_numbered),
                 onPressed: () => _editorApi.insertOrderedList(),
               ),
-              FontSizeDropdown(),
-              FontFamilyDropdown(),
-              AlignDropdown(),
+              const FontSizeDropdown(),
+              const FontFamilyDropdown(),
+              const AlignDropdown(),
               ColorControls(
                 themeColors: widget.themeColors,
                 excludeDocumentLevelControls:
                     widget.excludeDocumentLevelControls,
               ),
-              LinkButton(),
+              const LinkButton(),
               if (suffix != null) ...{
                 suffix,
               },

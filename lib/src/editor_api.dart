@@ -1,9 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
-import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/widgets.dart';
 import 'package:image/image.dart' as img;
 import 'package:webview_flutter/webview_flutter.dart';
 import 'editor.dart';
@@ -11,9 +10,14 @@ import 'models.dart';
 
 /// API to control the `HtmlEditor`.
 ///
-/// Get access to this API either by waiting for the `HtmlEditor.onCreated()` callback or by accessing
-/// the `HtmlEditorState` with a `GlobalKey<HtmlEditorState>`.
+/// Get access to this API either by waiting for the `HtmlEditor.onCreated()`
+/// callback or by accessing the `HtmlEditorState` with a
+/// `GlobalKey<HtmlEditorState>`.
 class HtmlEditorApi {
+  /// Creates a new HTLML editor api
+  HtmlEditorApi(HtmlEditorState htmlEditorState)
+      : _htmlEditorState = htmlEditorState;
+
   late WebViewController _webViewController;
   final HtmlEditorState _htmlEditorState;
 
@@ -23,6 +27,9 @@ class HtmlEditorApi {
   /// The document's foreground color, defaults to `null`
   String? _documentForegroundColor;
 
+  /// The web view controller allows direct interactions
+  // ignore: unnecessary_getters_setters
+  WebViewController get webViewController => _webViewController;
   set webViewController(WebViewController value) {
     _webViewController = value;
     //TODO wait for InAppWebView project to approve this
@@ -37,11 +44,14 @@ class HtmlEditorApi {
   /// Define any custom CSS styles, replacing the existing styles.
   ///
   /// Also compare [customStyles].
+  String get styles => _htmlEditorState.styles;
   set styles(String value) => _htmlEditorState.styles = value;
 
   /// Define any custom CSS styles, ammending the default styles
   ///
   /// Also compare [styles].
+  String get customStyles => _htmlEditorState.styles;
+  //TODO if called several times, this will change the custom styles each time
   set customStyles(String value) => _htmlEditorState.styles += value;
 
   /// Callback to be informed when the API can be used fully.
@@ -78,7 +88,8 @@ class HtmlEditorApi {
 
   /// Callback to be informed when the link settings have been changed.
   ///
-  /// Getting a `null` value as the current link settings means that no link is currently selected
+  /// Getting a `null` value as the current link settings means that
+  /// no link is currently selected
   void Function(LinkSettings?)? onLinkSettingsChanged;
 
   void _callOnColorChanged(ColorSetting colorSetting) {
@@ -87,89 +98,65 @@ class HtmlEditorApi {
     }
   }
 
-  HtmlEditorApi(this._htmlEditorState);
-
-  Future unfocus() async {
+  /// Removes the focus from the editor
+  Future unfocus(BuildContext context) async {
     //TODO consider to re-implement or check if focus node works with
     // webview 3.0
     //await _webViewController.clearFocus();
     // _htmlEditorState.unfocus();
-    // FocusScope.of(context).unfocus();
+    FocusScope.of(context).unfocus();
   }
 
   /// Formats the current text to be bold
-  Future formatBold() {
-    return _execCommand('"bold"');
-  }
+  Future formatBold() => _execCommand('"bold"');
 
   /// Formats the current text to be italic
-  Future formatItalic() {
-    return _execCommand('"italic"');
-  }
+  Future formatItalic() => _execCommand('"italic"');
 
   /// Formats the current text to be underlined
-  Future formatUnderline() {
-    return _execCommand('"underline"');
-  }
+  Future formatUnderline() => _execCommand('"underline"');
 
   /// Formats the current text to be striked through
-  Future formatStrikeThrough() {
-    return _execCommand('"strikeThrough"');
-  }
+  Future formatStrikeThrough() => _execCommand('"strikeThrough"');
 
   /// Inserts an ordered list at the current position
-  Future insertOrderedList() {
-    return _execCommand('"insertOrderedList"');
-  }
+  Future insertOrderedList() => _execCommand('"insertOrderedList"');
 
   /// Inserts an unordered list at the current position
-  Future insertUnorderedList() {
-    return _execCommand('"insertUnorderedList"');
-  }
+  Future insertUnorderedList() => _execCommand('"insertUnorderedList"');
 
   /// Formats the current paragraph to align left
-  Future formatAlignLeft() {
-    return _execCommand('"justifyLeft"');
-  }
+  Future formatAlignLeft() => _execCommand('"justifyLeft"');
 
   /// Formats the current paragraph to align right
-  Future formatAlignRight() {
-    return _execCommand('"justifyRight"');
-  }
+  Future formatAlignRight() => _execCommand('"justifyRight"');
 
   /// Formats the current paragraph to center
-  Future formatAlignCenter() {
-    return _execCommand('"justifyCenter"');
-  }
+  Future formatAlignCenter() => _execCommand('"justifyCenter"');
 
   /// Formats the current paragraph to justify
-  Future formatAlignJustify() {
-    return _execCommand('"justifyFull"');
-  }
+  Future formatAlignJustify() => _execCommand('"justifyFull"');
 
   /// Sets the [size] of the selected text
-  Future setFontSize(FontSize size) {
-    return _execCommand('"fontSize", false, ${size.index + 1}');
-  }
+  Future setFontSize(FontSize size) =>
+      _execCommand('"fontSize", false, ${size.index + 1}');
 
   /// Sets the [font] of the selected text
-  Future setFont(SafeFont font) {
-    return setFontFamily(font.name);
-  }
+  Future setFont(SafeFont font) => setFontFamily(font.name);
 
   /// Sets the [fontFamilyName] of the selected text
-  Future setFontFamily(String fontFamilyName) {
-    return _execCommand('"fontName", false, "$fontFamilyName"');
-  }
+  Future setFontFamily(String fontFamilyName) =>
+      _execCommand('"fontName", false, "$fontFamilyName"');
 
   /// Inserts the  [html] code at the insertion point (replaces selection).
   Future insertHtml(String html) async {
-    html = html.replaceAll('"', r'\"');
-    await _execCommand('"insertHTML", false, "$html"');
+    final insertHtml = html.replaceAll('"', r'\"');
+    await _execCommand('"insertHTML", false, "$insertHtml"');
     return _htmlEditorState.onDocumentChanged();
   }
 
-  /// Inserts the given plain [text] at the insertion point (replaces selection).
+  /// Inserts the given plain [text] at the insertion point
+  /// (replaces selection).
   Future insertText(String text) async {
     await _execCommand('"insertText", false, "$text"');
     return _htmlEditorState.onDocumentChanged();
@@ -177,8 +164,11 @@ class HtmlEditorApi {
 
   /// Inserts a link to [href] at the current position (replaces selection).
   ///
-  /// Optionally specify the user-visible [text], by default the [href] will be user visible.
-  /// You can define a link [target] such as `'_blank'`, by default no target will be defined.
+  /// Optionally specify the user-visible [text], by default the [href]
+  /// will be user visible.
+  ///
+  /// You can define a link [target] such as `'_blank'`,
+  /// by default no target will be defined.
   Future insertLink(String href, {String? text, String? target}) {
     final buffer = StringBuffer()
       ..write('<a href="')
@@ -198,7 +188,8 @@ class HtmlEditorApi {
     return insertHtml(html);
   }
 
-  /// Converts the given [file] with the specifid [mimeType] into image data and inserts it into the editor.
+  /// Converts the given [file] with the specifid [mimeType] into
+  /// image data and inserts it into the editor.
   ///
   /// Optionally set the given [maxWidth] for the decoded image.
   Future insertImageFile(File file, String mimeType, {int? maxWidth}) async {
@@ -206,7 +197,8 @@ class HtmlEditorApi {
     return insertImageData(data, mimeType, maxWidth: maxWidth);
   }
 
-  /// Inserts the given image [data] with the specifid [mimeType] into the editor.
+  /// Inserts the given image [data] with the specifid [mimeType]
+  /// into the editor.
   ///
   /// Optionally set the given [maxWidth] for the decoded image.
   Future insertImageData(Uint8List data, String mimeType,
@@ -218,7 +210,9 @@ class HtmlEditorApi {
       }
       if (image.width > maxWidth) {
         final copy = img.copyResize(image, width: maxWidth);
+        // ignore: parameter_assignments
         data = img.encodePng(copy) as Uint8List;
+        // ignore: parameter_assignments
         mimeType = 'image/png';
       }
     }
@@ -252,7 +246,8 @@ class HtmlEditorApi {
 
   /// Sets the given [color] as the current foreground / text color.
   ///
-  /// Optionally specify the [opacity] being between `1.0` (fully opaque) and `0.0` (fully transparent).
+  /// Optionally specify the [opacity] being between `1.0` (fully opaque)
+  /// and `0.0` (fully transparent).
   Future setColorTextForeground(Color color, {double opacity = 1.0}) async {
     final colorText = _getColor(color, opacity);
     return _execCommand('"foreColor", false, "$colorText"');
@@ -260,7 +255,8 @@ class HtmlEditorApi {
 
   /// Sets the given [color] as the current text background color.
   ///
-  /// Optionally specify the [opacity] being between `1.0` (fully opaque) and `0.0` (fully transparent).
+  /// Optionally specify the [opacity] being between `1.0` (fully opaque) and
+  /// `0.0` (fully transparent).
   Future setColorTextBackground(Color color, {double opacity = 1.0}) async {
     final colorText = _getColor(color, opacity);
     return _execCommand('"backColor", false, "$colorText"');
@@ -297,18 +293,21 @@ class HtmlEditorApi {
 
   /// Retrieves the edited text within a complete HTML document.
   ///
-  /// Optionally specify the [content] if you have previously called [getText()] for other reasons.
-  /// Compare [getText()] to retrieve only the edited HTML text.
+  /// Optionally specify the [content] if you have previously called [getText]
+  /// for other reasons.
+  ///
+  /// Compare [getText] to retrieve only the edited HTML text.
   Future<String> getFullHtml({String? content}) async {
     content ??= await getText();
-    final bodyStyle = (_documentBackgroundColor != null &&
-            _documentForegroundColor != null)
-        ? ' style="color: $_documentForegroundColor;background-color: $_documentBackgroundColor;"'
-        : _documentForegroundColor != null
-            ? ' style="color: $_documentForegroundColor;"'
-            : _documentBackgroundColor != null
-                ? ' style="background-color: $_documentBackgroundColor;"'
-                : '';
+    final bodyStyle =
+        (_documentBackgroundColor != null && _documentForegroundColor != null)
+            ? ' style="color: $_documentForegroundColor;'
+                'background-color: $_documentBackgroundColor;"'
+            : _documentForegroundColor != null
+                ? ' style="color: $_documentForegroundColor;"'
+                : _documentBackgroundColor != null
+                    ? ' style="background-color: $_documentBackgroundColor;"'
+                    : '';
     final styles = _htmlEditorState.styles.replaceFirst('''#editor {
   min-height: ==minHeight==px;
 }''', '');
@@ -325,13 +324,9 @@ class HtmlEditorApi {
 
   /// Retrieves the currently selected text.
   Future<String?> getSelectedText() async {
-    final text = await _webViewController
-        .runJavascriptReturningResult('''if (window.getSelection) {
-    return window.getSelection().toString();
-} else if (document.selection && document.selection.type != "Control") {
-    return document.selection.createRange().text;
-}''');
-    if (text.isEmpty || text == '""') {
+    final text = await _webViewController.runJavascriptReturningResult(
+        '''document.getSelection().getRangeAt(0).toString();''');
+    if (text.isEmpty || text == 'null') {
       return null;
     }
     return _removeQuotes(text);
@@ -356,14 +351,14 @@ class HtmlEditorApi {
   /// Restores the previously stored selection range
   ///
   /// Compare [storeSelectionRange]
-  Future restoreSelectionRange() {
-    return _webViewController.runJavascript('restoreSelectionRange();');
-  }
+  Future restoreSelectionRange() =>
+      _webViewController.runJavascript('restoreSelectionRange();');
 
-  /// Replaces all text parts [from] with the replacement [replace] and returns the updated text.
+  /// Replaces all text parts [from] with the replacement [replace]
+  /// and returns the updated text.
   Future<String> replaceAll(String from, String replace) async {
     final text = (await getText()).replaceAll(from, replace);
-    setText(text);
+    await setText(text);
     return text;
   }
 
@@ -374,11 +369,10 @@ class HtmlEditorApi {
   }
 
   /// Selects the HTML DOM node at the current position fully.
-  Future<void> selectCurrentNode() {
-    return _webViewController.runJavascript('selectNode();');
-  }
+  Future<void> selectCurrentNode() =>
+      _webViewController.runJavascript('selectNode();');
 
-  Future<void> editCurrentLink(String href, String text) {
-    return _webViewController.runJavascript('''editLink('$href', '$text');''');
-  }
+  /// Updates the currently selected link with the url [href] and [text].
+  Future<void> editCurrentLink(String href, String text) =>
+      _webViewController.runJavascript('''editLink('$href', '$text');''');
 }

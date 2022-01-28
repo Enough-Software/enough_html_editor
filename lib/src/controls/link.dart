@@ -9,7 +9,8 @@ import 'base.dart';
 ///
 /// This widget depends on a [HtmlEditorApiWidget] in the widget tree.
 class LinkButton extends StatefulWidget {
-  LinkButton({Key? key}) : super(key: key);
+  /// Creates a new link editor button
+  const LinkButton({Key? key}) : super(key: key);
 
   @override
   _LinkButtonState createState() => _LinkButtonState();
@@ -30,10 +31,11 @@ class _LinkButtonState extends State<LinkButton> {
   @override
   Widget build(BuildContext context) {
     final api = HtmlEditorApiWidget.of(context)!.editorApi;
-    final buttonColor = _isInLink ? Theme.of(context).accentColor : null;
+    final buttonColor =
+        _isInLink ? Theme.of(context).colorScheme.secondary : null;
     api.onLinkSettingsChanged = _onLinkSettingsChanged;
     return DensePlatformIconButton(
-      icon: Icon(Icons.link),
+      icon: const Icon(Icons.link),
       onPressed: () => _editLink(api),
       color: buttonColor,
     );
@@ -45,7 +47,7 @@ class _LinkButtonState extends State<LinkButton> {
       _textController.text = linkSettings.text;
     }
     setState(() {
-      _isInLink = (linkSettings != null);
+      _isInLink = linkSettings != null;
     });
   }
 
@@ -70,30 +72,38 @@ class _LinkButtonState extends State<LinkButton> {
       // check link validity?
       var url = _urlController.text.trim();
       if (!url.contains(':')) {
-        url = 'https://' + url;
+        url = 'https://$url';
       }
       var text = _textController.text.trim();
       if (text.isEmpty) {
         text = url;
       }
       if (_isInLink) {
-        api.editCurrentLink(url, text);
+        await api.editCurrentLink(url, text);
       } else {
         if (restoreSelectionRange) {
           await api.restoreSelectionRange();
         }
-        api.insertLink(url, text: text);
+        await api.insertLink(url, text: text);
       }
     }
   }
 }
 
+/// A dialog to enter or edit links
 class LinkEditor extends StatefulWidget {
+  /// Creates a new link editor
+  const LinkEditor({
+    Key? key,
+    required this.urlController,
+    required this.textController,
+  }) : super(key: key);
+
+  /// The URL controller
   final TextEditingController urlController;
+
+  /// The text / link name controller
   final TextEditingController textController;
-  LinkEditor(
-      {Key? key, required this.urlController, required this.textController})
-      : super(key: key);
 
   @override
   _LinkEditorState createState() => _LinkEditorState();
@@ -111,52 +121,50 @@ class _LinkEditorState extends State<LinkEditor> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        DecoratedPlatformTextField(
-          controller: widget.urlController,
-          decoration: InputDecoration(
-            icon: Icon(Icons.link),
-            suffix: IconButton(
-              icon: Icon(CommonPlatformIcons.clear),
-              onPressed: () => widget.urlController.text = '',
+  Widget build(BuildContext context) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          DecoratedPlatformTextField(
+            controller: widget.urlController,
+            decoration: InputDecoration(
+              icon: const Icon(Icons.link),
+              suffix: IconButton(
+                icon: Icon(CommonPlatformIcons.clear),
+                onPressed: () => widget.urlController.text = '',
+              ),
             ),
+            autofocus: true,
+            keyboardType: TextInputType.url,
+            onChanged: (text) => _updatePreview(),
           ),
-          autofocus: true,
-          keyboardType: TextInputType.url,
-          onChanged: (text) => _updatePreview(),
-        ),
-        DecoratedPlatformTextField(
-          controller: widget.textController,
-          decoration: InputDecoration(
-            icon: Icon(Icons.text_fields),
-            suffix: DensePlatformIconButton(
-              icon: Icon(CommonPlatformIcons.clear),
-              onPressed: () => widget.textController.text = '',
+          DecoratedPlatformTextField(
+            controller: widget.textController,
+            decoration: InputDecoration(
+              icon: const Icon(Icons.text_fields),
+              suffix: DensePlatformIconButton(
+                icon: Icon(CommonPlatformIcons.clear),
+                onPressed: () => widget.textController.text = '',
+              ),
             ),
+            autofocus: true,
+            keyboardType: TextInputType.text,
+            onChanged: (text) => _updatePreview(),
           ),
-          autofocus: true,
-          keyboardType: TextInputType.text,
-          onChanged: (text) => _updatePreview(),
-        ),
-        Divider(),
-        PlatformTextButton(
-          child: Text(_previewText),
-          onPressed: () {
-            ScaffoldMessenger.of(context)
-                .showSnackBar(SnackBar(content: Text(url)));
-          },
-        ),
-      ],
-    );
-  }
+          const Divider(),
+          PlatformTextButton(
+            child: Text(_previewText),
+            onPressed: () {
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text(url)));
+            },
+          ),
+        ],
+      );
 
   String get url {
     var text = widget.urlController.text;
     if (!text.contains(':')) {
-      text = 'https://' + text;
+      text = 'https://$text';
     }
     return text;
   }
