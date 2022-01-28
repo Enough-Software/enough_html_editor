@@ -52,7 +52,7 @@ class _LinkButtonState extends State<LinkButton> {
   Future _editLink(HtmlEditorApi api) async {
     var restoreSelectionRange = false;
     if (!_isInLink) {
-      final selectedText = await api.storeSelectionRange() ?? '';
+      final selectedText = await api.storeSelectionRange();
       restoreSelectionRange = selectedText.isNotEmpty;
       _textController.text = selectedText;
       final urlText = selectedText.contains('://') ? selectedText : '';

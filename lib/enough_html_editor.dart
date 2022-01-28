@@ -6,6 +6,6 @@ export 'src/editor_controls.dart';
 export 'src/editor_api.dart';
 export 'src/models.dart';
 // ensure that dependent package do not need to declare dependencies:
-export 'package:flutter_inappwebview/flutter_inappwebview.dart';
+export 'package:webview_flutter/webview_flutter.dart';
 export 'package:flutter_colorpicker/flutter_colorpicker.dart';
 export 'package:image/image.dart';

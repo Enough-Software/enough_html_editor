@@ -5,7 +5,7 @@ import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:image/image.dart' as img;
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 import 'editor.dart';
 import 'models.dart';
 
@@ -14,7 +14,7 @@ import 'models.dart';
 /// Get access to this API either by waiting for the `HtmlEditor.onCreated()` callback or by accessing
 /// the `HtmlEditorState` with a `GlobalKey<HtmlEditorState>`.
 class HtmlEditorApi {
-  late InAppWebViewController _webViewController;
+  late WebViewController _webViewController;
   final HtmlEditorState _htmlEditorState;
 
   /// The document's background color, defaults to `null`
@@ -23,7 +23,7 @@ class HtmlEditorApi {
   /// The document's foreground color, defaults to `null`
   String? _documentForegroundColor;
 
-  set webViewController(InAppWebViewController value) {
+  set webViewController(WebViewController value) {
     _webViewController = value;
     //TODO wait for InAppWebView project to approve this
     //value.onImeCommitContent = _onImeCommitContent;
@@ -90,7 +90,9 @@ class HtmlEditorApi {
   HtmlEditorApi(this._htmlEditorState);
 
   Future unfocus() async {
-    await _webViewController.clearFocus();
+    //TODO consider to re-implement or check if focus node works with
+    // webview 3.0
+    //await _webViewController.clearFocus();
     // _htmlEditorState.unfocus();
     // FocusScope.of(context).unfocus();
   }
@@ -178,11 +180,20 @@ class HtmlEditorApi {
   /// Optionally specify the user-visible [text], by default the [href] will be user visible.
   /// You can define a link [target] such as `'_blank'`, by default no target will be defined.
   Future insertLink(String href, {String? text, String? target}) {
-    final buffer = StringBuffer()..write('<a href="')..write(href)..write('"');
+    final buffer = StringBuffer()
+      ..write('<a href="')
+      ..write(href)
+      ..write('"');
     if (target != null) {
-      buffer..write(' target="')..write(target)..write('"');
+      buffer
+        ..write(' target="')
+        ..write(target)
+        ..write('"');
     }
-    buffer..write('>')..write(text ?? href)..write('</a>');
+    buffer
+      ..write('>')
+      ..write(text ?? href)
+      ..write('</a>');
     final html = buffer.toString();
     return insertHtml(html);
   }
@@ -259,30 +270,29 @@ class HtmlEditorApi {
   Future setColorDocumentBackground(Color color) async {
     final colorText = _getColor(color, 1.0);
     _documentBackgroundColor = colorText;
-    return _webViewController.evaluateJavascript(
-        source: 'document.body.style.backgroundColor="$colorText";');
+    return _webViewController
+        .runJavascript('document.body.style.backgroundColor="$colorText";');
   }
 
   /// Sets the document's foreground color
   Future setColorDocumentForeground(Color color) async {
     final colorText = _getColor(color, 1.0);
     _documentForegroundColor = colorText;
-    return _webViewController.evaluateJavascript(
-        source: 'document.body.style.color="$colorText";');
+    return _webViewController
+        .runJavascript('document.body.style.color="$colorText";');
   }
 
   Future _execCommand(String command) async {
-    await _webViewController.evaluateJavascript(
-        source: 'document.execCommand($command);');
+    await _webViewController.runJavascript('document.execCommand($command);');
   }
 
   /// Retrieves the edited text as HTML
   ///
   /// Compare [getFullHtml()] to the complete HTML document's text.
   Future<String> getText() async {
-    final innerHtml = await _webViewController.evaluateJavascript(
-        source: 'document.getElementById("editor").innerHTML;') as String?;
-    return innerHtml ?? '';
+    final innerHtml = await _webViewController.runJavascriptReturningResult(
+        'document.getElementById("editor").innerHTML;');
+    return innerHtml;
   }
 
   /// Retrieves the edited text within a complete HTML document.
@@ -314,18 +324,40 @@ class HtmlEditorApi {
   }
 
   /// Retrieves the currently selected text.
-  Future<String?> getSelectedText() {
-    return _webViewController.getSelectedText();
+  Future<String?> getSelectedText() async {
+    final text = await _webViewController
+        .runJavascriptReturningResult('''if (window.getSelection) {
+    return window.getSelection().toString();
+} else if (document.selection && document.selection.type != "Control") {
+    return document.selection.createRange().text;
+}''');
+    if (text.isEmpty || text == '""') {
+      return null;
+    }
+    return _removeQuotes(text);
   }
 
-  Future storeSelectionRange() {
-    return _webViewController.evaluateJavascript(
-        source: 'storeSelectionRange();');
+  String _removeQuotes(String text) {
+    if (text.length > 1 && text.startsWith('"') && text.endsWith('"')) {
+      return text.substring(1, text.length - 1);
+    }
+    return text;
   }
 
+  /// Stores the current selection and retrieves the selected text.
+  ///
+  /// Compare [restoreSelectionRange]
+  Future<String> storeSelectionRange() async {
+    final text = await _webViewController
+        .runJavascriptReturningResult('storeSelectionRange();');
+    return _removeQuotes(text);
+  }
+
+  /// Restores the previously stored selection range
+  ///
+  /// Compare [storeSelectionRange]
   Future restoreSelectionRange() {
-    return _webViewController.evaluateJavascript(
-        source: 'restoreSelectionRange();');
+    return _webViewController.runJavascript('restoreSelectionRange();');
   }
 
   /// Replaces all text parts [from] with the replacement [replace] and returns the updated text.
@@ -338,16 +370,15 @@ class HtmlEditorApi {
   /// Sets the given text, replacing the previous text completely
   Future<void> setText(String text) {
     final html = _htmlEditorState.generateHtmlDocument(text);
-    return _webViewController.loadData(data: html);
+    return _webViewController.loadHtmlString(html);
   }
 
   /// Selects the HTML DOM node at the current position fully.
   Future<void> selectCurrentNode() {
-    return _webViewController.evaluateJavascript(source: 'selectNode();');
+    return _webViewController.runJavascript('selectNode();');
   }
 
   Future<void> editCurrentLink(String href, String text) {
-    return _webViewController
-        .evaluateJavascript(source: '''editLink('$href', '$text');''');
+    return _webViewController.runJavascript('''editLink('$href', '$text');''');
   }
 }

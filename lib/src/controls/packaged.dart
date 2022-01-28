@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../editor.dart';
 import '../editor_api.dart';
-import '../models.dart';
 import 'base.dart';
 
 /// A combination of controls and editor for a simpler usage.
@@ -20,11 +19,11 @@ class PackagedHtmlEditor extends StatefulWidget {
   /// Defines if blockquotes should be split when the user adds a new line - defaults to `true`.
   final bool splitBlockquotes;
 
-  /// Defines if the default text selection menu items `𝗕` (bold), `𝑰` (italic), `U̲` (underlined),`T̶` (strikethrough) should be added - defaults to `true`.
-  final bool addDefaultSelectionMenuItems;
+  // /// Defines if the default text selection menu items `𝗕` (bold), `𝑰` (italic), `U̲` (underlined),`T̶` (strikethrough) should be added - defaults to `true`.
+  // final bool addDefaultSelectionMenuItems;
 
-  /// List of custom text selection / context menu items.
-  final List<TextSelectionMenuItem>? textSelectionMenuItems;
+  // /// List of custom text selection / context menu items.
+  // final List<TextSelectionMenuItem>? textSelectionMenuItems;
 
   /// Set [adjustHeight] to let the editor set its height automatically - by default this is `true`.
   final bool adjustHeight;
@@ -55,8 +54,8 @@ class PackagedHtmlEditor extends StatefulWidget {
     this.minHeight = 100,
     this.onCreated,
     this.splitBlockquotes = true,
-    this.addDefaultSelectionMenuItems = true,
-    this.textSelectionMenuItems,
+    // this.addDefaultSelectionMenuItems = true,
+    // this.textSelectionMenuItems,
     this.excludeDocumentLevelControls = false,
   }) : super(key: key);
 
@@ -97,10 +96,10 @@ class PackagedHtmlEditorState extends State<PackagedHtmlEditor> {
         HtmlEditor(
           initialContent: widget.initialContent,
           minHeight: widget.minHeight,
-          addDefaultSelectionMenuItems: widget.addDefaultSelectionMenuItems,
+          // addDefaultSelectionMenuItems: widget.addDefaultSelectionMenuItems,
           adjustHeight: widget.adjustHeight,
           splitBlockquotes: widget.splitBlockquotes,
-          textSelectionMenuItems: widget.textSelectionMenuItems,
+          // textSelectionMenuItems: widget.textSelectionMenuItems,
           onCreated: _onCreated,
         ),
       ],
