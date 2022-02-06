@@ -393,12 +393,13 @@ blockquote {
     buffer.write(_templateContinuation.replaceFirst('==content==', content));
     final html = buffer.toString();
 
-    return Uri.dataFromString(
-      html,
-      mimeType: 'text/html',
-      encoding: utf8,
-      base64: true,
-    ).toString();
+    // return Uri.dataFromString(
+    //   html,
+    //   mimeType: 'text/html',
+    //   encoding: utf8,
+    //   base64: true,
+    // ).toString();
+    return html;
   }
 
   @override
@@ -417,7 +418,6 @@ blockquote {
 
   Widget _buildEditor() => WebView(
         key: ValueKey(_initialPageContent),
-        initialUrl: _initialPageContent,
         onWebViewCreated: _onWebViewCreated,
         onPageFinished: (url) async {
           if (widget.adjustHeight) {
@@ -486,7 +486,10 @@ blockquote {
         //   ),
         // ),
         // deny browsing while editing:
-        navigationDelegate: (navigation) => NavigationDecision.prevent,
+        navigationDelegate: (navigation) =>
+            navigation.isForMainFrame && navigation.url == 'about:blank'
+                ? NavigationDecision.navigate
+                : NavigationDecision.prevent,
         zoomEnabled: false,
         // onScrollChanged: (controller, x, y) {
         //   // print('onScrollChanged $x,$y');
@@ -541,12 +544,15 @@ blockquote {
 
   void _onWebViewCreated(WebViewController controller) {
     _webViewController = controller;
+    controller.loadHtmlString(_initialPageContent);
     _api.webViewController = controller;
-    if (widget.onCreated != null) {
-      widget.onCreated!(_api);
+    final onCreated = widget.onCreated;
+    if (onCreated != null) {
+      onCreated(_api);
     }
-    if (_api.onReady != null) {
-      _api.onReady!();
+    final onReady = _api.onReady;
+    if (onReady != null) {
+      onReady();
     }
   }
 
