@@ -90,6 +90,7 @@ class HtmlEditorState extends State<HtmlEditor> {
   var isLineBreakInput = false;
   var documentHeight;
   var selectionRange = undefined;
+  var isInList = false;
 
   function onSelectionChange() {
     //console.log|("onSelectionChange");
@@ -109,6 +110,7 @@ class HtmlEditorState extends State<HtmlEditor> {
     var linkText = undefined;
     var fontSize = undefined;
     var fontFamily = undefined;
+    var isChildOfList = false;
 
     while (node.parentNode != null && node.id != 'editor') {
       if (node.nodeName == 'B') {
@@ -122,6 +124,8 @@ class HtmlEditorState extends State<HtmlEditor> {
       } else if (node.nodeName === 'BLOCKQUOTE') {
           nestedBlockqotes++;
           rootBlockquote = node;
+      } else if (node.nodeName === 'UL' || node.nodeName === 'OL') {
+        isChildOfList = true;
       } else if (node.nodeName === 'SPAN' && node.style != undefined) {
         // check for color, bold, etc in style:
         if (node.style.fontWeight === 'bold') {
@@ -169,6 +173,7 @@ class HtmlEditorState extends State<HtmlEditor> {
       }
       node = node.parentNode;
     }
+  isInList = isChildOfList;
     if (isBold != isSelectionBold || isItalic != isSelectionItalic || isUnderline != isSelectionUnderline || isStrikeThrough != isSelectionStrikeThrough) {
       isSelectionBold = isBold;
       isSelectionItalic = isItalic;
@@ -272,11 +277,6 @@ class HtmlEditorState extends State<HtmlEditor> {
   }
 
   function onInput(inputEvent) {
-    isLineBreakInput = ((inputEvent.inputType == 'insertLineBreak') || (inputEvent.inputType == 'insertParagraph') || ((inputEvent.inputType == 'insertText') && (inputEvent.data == null)));
-    // if (isLineBreakInput) {
-    //   document.execCommand('insertLineBreak');
-    //   inputEvent.preventDefault();
-    // }
     var height = document.body.scrollHeight;
     if (height != documentHeight) {
       documentHeight = height;
@@ -290,7 +290,7 @@ class HtmlEditorState extends State<HtmlEditor> {
 
   function onKeyDown(event) {
     //console.log('keydown', event.key, event);
-    if (event.keyCode === 13 || event.key === 'Enter') {
+    if (!isInList && (event.keyCode === 13 || event.key === 'Enter')) {
       document.execCommand('insertLineBreak');
       event.preventDefault();
     }
@@ -393,12 +393,6 @@ blockquote {
     buffer.write(_templateContinuation.replaceFirst('==content==', content));
     final html = buffer.toString();
 
-    // return Uri.dataFromString(
-    //   html,
-    //   mimeType: 'text/html',
-    //   encoding: utf8,
-    //   base64: true,
-    // ).toString();
     return html;
   }
 
@@ -464,42 +458,16 @@ blockquote {
             onMessageReceived: _onInternalUpdateReceived,
           ),
         },
-        // initialOptions: InAppWebViewGroupOptions(
-        //   crossPlatform: InAppWebViewOptions(
-        //     useShouldOverrideUrlLoading: true,
-        //     verticalScrollBarEnabled: false,
-        //     disableVerticalScroll: widget.adjustHeight,
-        //     disableHorizontalScroll: widget.adjustHeight,
-        //     transparentBackground: isDark,
-        //     supportZoom: false,
-        //   ),
-        //   android: AndroidInAppWebViewOptions(
-        //     useWideViewPort: false,
-        //     loadWithOverviewMode: true,
-        //     useHybridComposition: true,
-        //     forceDark: isDark
-        //         ? AndroidForceDark.FORCE_DARK_ON
-        //         : AndroidForceDark.FORCE_DARK_OFF,
-        //   ),
-        //   ios: IOSInAppWebViewOptions(
-        //     enableViewportScale: false,
-        //   ),
-        // ),
+
         // deny browsing while editing:
         navigationDelegate: (navigation) =>
+            // this is required for iOS / WKWebKit:
             navigation.isForMainFrame && navigation.url == 'about:blank'
                 ? NavigationDecision.navigate
+                // for all other requests: block
                 : NavigationDecision.prevent,
         zoomEnabled: false,
-        // onScrollChanged: (controller, x, y) {
-        //   // print('onScrollChanged $x,$y');
-        //   if (widget.adjustHeight && y != 0) {
-        //     controller.scrollTo(x: 0, y: 0);
-        //   }
-        // },
-        // onConsoleMessage: (controller, consoleMessage) {
-        //   print(consoleMessage);
-        // },
+
         // contextMenu: ContextMenu(
         //   menuItems: [
         //     if (widget.addDefaultSelectionMenuItems) ...{
