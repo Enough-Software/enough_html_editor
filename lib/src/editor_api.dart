@@ -288,7 +288,10 @@ class HtmlEditorApi {
   Future<String> getText() async {
     final innerHtml = await _webViewController.runJavascriptReturningResult(
         'document.getElementById("editor").innerHTML;');
-    return innerHtml;
+    return innerHtml
+        .replaceAll(r'\u003C', '<')
+        .replaceAll(r'\n', '\n')
+        .replaceAll(r'\"', '&quot;');
   }
 
   /// Retrieves the edited text within a complete HTML document.
