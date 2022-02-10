@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:image/image.dart' as img;
 import 'package:webview_flutter/webview_flutter.dart';
@@ -288,10 +289,20 @@ class HtmlEditorApi {
   Future<String> getText() async {
     final innerHtml = await _webViewController.runJavascriptReturningResult(
         'document.getElementById("editor").innerHTML;');
-    return innerHtml
-        .replaceAll(r'\u003C', '<')
-        .replaceAll(r'\n', '\n')
-        .replaceAll(r'\"', '&quot;');
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      // compare https://github.com/flutter/flutter/issues/80328
+      final cleanedHtml = innerHtml
+          .replaceAll(r'\u003C', '<')
+          .replaceAll(r'\n', '\n')
+          .replaceAll(r'\"', '&quot;');
+      if (cleanedHtml.startsWith('"') && cleanedHtml.endsWith('"')) {
+        final stripped =
+            cleanedHtml.substring(1, cleanedHtml.length - 1).trim();
+        return stripped;
+      }
+      return cleanedHtml;
+    }
+    return innerHtml;
   }
 
   /// Retrieves the edited text within a complete HTML document.
