@@ -1,5 +1,5 @@
-import 'dart:convert';
-
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -467,7 +467,9 @@ blockquote {
                 // for all other requests: block
                 : NavigationDecision.prevent,
         zoomEnabled: false,
-
+        gestureRecognizers: {
+          Factory<LongPressGestureRecognizer>(() => LongPressGestureRecognizer()),
+        },
         // contextMenu: ContextMenu(
         //   menuItems: [
         //     if (widget.addDefaultSelectionMenuItems) ...{
