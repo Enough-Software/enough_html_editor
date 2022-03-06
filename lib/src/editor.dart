@@ -111,8 +111,17 @@ class HtmlEditorState extends State<HtmlEditor> {
     var fontSize = undefined;
     var fontFamily = undefined;
     var isChildOfList = false;
+    // var boundingRectFound = false;
 
     while (node.parentNode != null && node.id != 'editor') {
+      // if (!boundingRectFound && node.getBoundingClientRect) {
+      //   var boundingRect = node.getBoundingClientRect();
+      //   if (boundingRect) {
+      //     console.log('bounding rect found for', node, boundingRect);
+      //     boundingRectFound = true;
+      //     window.OffsetTracker.postMessage(JSON.stringify(boundingRect));
+      //   }
+      // }
       if (node.nodeName == 'B') {
           isBold = true;
       } else if (node.nodeName === 'I') {
@@ -173,7 +182,7 @@ class HtmlEditorState extends State<HtmlEditor> {
       }
       node = node.parentNode;
     }
-  isInList = isChildOfList;
+    isInList = isChildOfList;
     if (isBold != isSelectionBold || isItalic != isSelectionItalic || isUnderline != isSelectionUnderline || isStrikeThrough != isSelectionStrikeThrough) {
       isSelectionBold = isBold;
       isSelectionItalic = isItalic;
@@ -457,6 +466,12 @@ blockquote {
             name: 'InternalUpdate',
             onMessageReceived: _onInternalUpdateReceived,
           ),
+          // JavascriptChannel(
+          //   name: 'OffsetTracker',
+          //   onMessageReceived: (msg) {
+          //     print('OffsetTracker: [${msg.message}]');
+          //   },
+          // ),
         },
 
         // deny browsing while editing:
