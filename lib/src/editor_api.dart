@@ -294,6 +294,7 @@ class HtmlEditorApi {
       final cleanedHtml = innerHtml
           .replaceAll(r'\u003C', '<')
           .replaceAll(r'\n', '\n')
+          .replaceAll(r'\t', '\t')
           .replaceAll(r'\"', '&quot;');
       if (cleanedHtml.startsWith('"') && cleanedHtml.endsWith('"')) {
         final stripped =
