@@ -1,3 +1,11 @@
+## [0.0.5] - 2022-05-18
+- New feature: edit / add links
+- New feature: color document foreground and background
+- New feature: replace text (parts) using the `HtmlEditorApi`.
+- Use cupertino look and feel on iOS
+- Improve code style and documentation
+- Ensure compatibility with Flutter 3.0
+
 ## [0.0.4] - 2021-04-28
 - Support dark theme
 - Simpler usage with `PackagedHtmlEditor` #2
