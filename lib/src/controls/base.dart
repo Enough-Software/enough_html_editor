@@ -160,7 +160,7 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
     if (key != null) {
       // in init state, the editorKey.currentState is still null,
       // so wait for after the first run
-      WidgetsBinding.instance!.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         final stateApi = key.currentState!.api;
         _editorApi = stateApi;
         _isInitialized = true;

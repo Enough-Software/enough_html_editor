@@ -31,12 +31,14 @@ class _FontFamilyDropdownState extends State<FontFamilyDropdown> {
     const selectedTextStyle = TextStyle(fontSize: 12);
     return PlatformDropdownButton<SafeFont>(
       value: currentFont,
-      onChanged: (value) {
+      onTap: api.storeSelectionRange,
+      onChanged: (value) async {
+        await api.restoreSelectionRange();
         if (value != null) {
           setState(() {
             currentFont = value;
           });
-          api.setFont(value);
+          await api.setFont(value);
         }
       },
       selectedItemBuilder: (context) => SafeFont.values

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import 'editor_api.dart';
 import 'models.dart';
@@ -27,8 +27,9 @@ class HtmlEditor extends StatefulWidget {
     this.minHeight = 100,
     this.onCreated,
     this.splitBlockquotes = true,
-    // this.addDefaultSelectionMenuItems = true,
-    // this.textSelectionMenuItems,
+    this.addDefaultSelectionMenuItems = true,
+    this.textSelectionMenuItems,
+    this.enableDarkMode = false,
   }) : super(key: key);
 
   /// Set the [initialContent] to populate the editor with some existing text
@@ -50,11 +51,19 @@ class HtmlEditor extends StatefulWidget {
   /// - defaults to `true`.
   final bool splitBlockquotes;
 
-  // /// Defines if the default text selection menu items `𝗕` (bold), `𝑰` (italic), `U̲` (underlined),`T̶` (strikethrough) should be added - defaults to `true`.
-  // final bool addDefaultSelectionMenuItems;
+  /// Defines if the default text selection menu items should be added -
+  ///  defaults to `true`.
+  ///
+  ///  Default text selection menu items are:
+  /// `𝗕` (bold), `𝑰` (italic), `U̲` (underlined),
+  /// `T̶` (strikethrough).
+  final bool addDefaultSelectionMenuItems;
 
-  // /// List of custom text selection / context menu items.
-  // final List<TextSelectionMenuItem>? textSelectionMenuItems;
+  /// List of custom text selection / context menu items.
+  final List<TextSelectionMenuItem>? textSelectionMenuItems;
+
+  /// Should the editor run in dark mode?
+  final bool enableDarkMode;
 
   @override
   HtmlEditorState createState() => HtmlEditorState();
@@ -65,7 +74,8 @@ class HtmlEditor extends StatefulWidget {
 /// The editor state can be accessed directly when using a
 /// [GlobalKey]<[HtmlEditorState]>.
 class HtmlEditorState extends State<HtmlEditor> {
-  static const String _templateStart = '''
+  static const String _templateStart =
+      '''
 <!DOCTYPE html>
 <html>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
@@ -119,7 +129,7 @@ class HtmlEditorState extends State<HtmlEditor> {
       //   if (boundingRect) {
       //     console.log('bounding rect found for', node, boundingRect);
       //     boundingRectFound = true;
-      //     window.OffsetTracker.postMessage(JSON.stringify(boundingRect));
+      //     window.flutter_inappwebview.callHandler('OffsetTracker', JSON.stringify(boundingRect));
       //   }
       // }
       if (node.nodeName == 'B') {
@@ -201,36 +211,37 @@ class HtmlEditorState extends State<HtmlEditor> {
       if (isStrikeThrough) {
         message += 8;
       }
-      window.FormatSettings.postMessage(message);
+      window.flutter_inappwebview.callHandler('FormatSettings', message);
     }
     if (textAlign != selectionTextAlign) {
       selectionTextAlign = textAlign;
-      window.AlignSettings.postMessage(textAlign);
+      window.flutter_inappwebview.callHandler('AlignSettings', textAlign);
     }
     if (foregroundColor != selectionForegroundColor || backgroundColor != selectionBackgroundColor) {
       selectionForegroundColor = foregroundColor;
       selectionBackgroundColor = backgroundColor;
-      window.ColorSettings.postMessage(foregroundColor + 'x' + backgroundColor);
+      window.flutter_inappwebview.callHandler('ColorSettings', foregroundColor + 'x' + backgroundColor);
     }
     if (linkUrl != undefined || isSelectionInLink === true) {
         if (linkUrl != undefined) {
           isSelectionInLink = true;
-          window.LinkSettings.postMessage(linkUrl + '<_>' + linkText);
+          window.flutter_inappwebview.callHandler('LinkSettings', linkUrl + '<_>' + linkText);
         } else {
           isSelectionInLink = false;
-          window.LinkSettings.postMessage('');
+          window.flutter_inappwebview.callHandler('LinkSettings', '');
         }
     }
     if (fontSize != selectionFontSize) {
       selectionFontSize = fontSize;
-      window.FontSizeSettings.postMessage(fontSize);
+      window.flutter_inappwebview.callHandler('FontSizeSettings', fontSize);
     }
     if (fontFamily != selectionFontFamily) {
       selectionFontFamily = fontFamily;
-      window.FontFamilySettings.postMessage(fontFamily);
+      window.flutter_inappwebview.callHandler('FontFamilySettings', fontFamily);
     }
 ''';
-  static const String _templateBlockquote = '''
+  static const String _templateBlockquote =
+      '''
     if (isLineBreakInput && nestedBlockqotes > 0 && anchorOffset == focusOffset) {
       let rootNode = rootBlockquote.parentNode;
       var cloneNode = null;
@@ -281,7 +292,8 @@ class HtmlEditorState extends State<HtmlEditor> {
       selection.addRange(range);
     } 
 ''';
-  static const String _templateContinuation = '''
+  static const String _templateContinuation =
+      '''
     isLineBreakInput = false;
   }
 
@@ -289,12 +301,12 @@ class HtmlEditorState extends State<HtmlEditor> {
     var height = document.body.scrollHeight;
     if (height != documentHeight) {
       documentHeight = height;
-      window.InternalUpdate.postMessage('h' + height);
+      window.flutter_inappwebview.callHandler('InternalUpdate', 'h' + height);
     }
   }
 
   function onFocus() {
-    window.InternalUpdate.postMessage('onfocus');
+    window.flutter_inappwebview.callHandler('InternalUpdate', 'onfocus');
   }
 
   function onKeyDown(event) {
@@ -357,12 +369,13 @@ class HtmlEditorState extends State<HtmlEditor> {
 </html>
 ''';
   late String _initialPageContent;
-  late WebViewController _webViewController;
+  late InAppWebViewController _webViewController;
   double? _documentHeight;
   late HtmlEditorApi _api;
 
   /// Allows to replace the existing styles.
-  String styles = '''
+  String styles =
+      '''
 blockquote {
   font: normal helvetica, sans-serif;
   margin-top: 10px;
@@ -419,118 +432,126 @@ blockquote {
     }
   }
 
-  Widget _buildEditor() => WebView(
+  Widget _buildEditor() => InAppWebView(
         key: ValueKey(_initialPageContent),
         onWebViewCreated: _onWebViewCreated,
-        onPageFinished: (url) async {
+        onLoadStop: (controller, uri) async {
           if (widget.adjustHeight) {
-            final scrollHeightText = await _webViewController
-                .runJavascriptReturningResult('document.body.scrollHeight');
-            final scrollHeight = double.tryParse(scrollHeightText);
-            if (scrollHeight != null &&
-                mounted &&
-                (scrollHeight + 15.0 > widget.minHeight)) {
+            final scrollHeight = await controller.evaluateJavascript(
+                source: 'document.body.scrollHeight');
+            if (mounted && (scrollHeight + 15.0 > widget.minHeight)) {
               setState(() {
                 _documentHeight = scrollHeight + 15.0;
               });
             }
           }
         },
-        javascriptMode: JavascriptMode.unrestricted,
-        javascriptChannels: {
-          JavascriptChannel(
-            name: 'FormatSettings',
-            onMessageReceived: _onFormatSettingsReceived,
-          ),
-          JavascriptChannel(
-            name: 'FontSizeSettings',
-            onMessageReceived: _onFontSizeSettingsReceived,
-          ),
-          JavascriptChannel(
-            name: 'FontFamilySettings',
-            onMessageReceived: _onFontFamilySettingsReceived,
-          ),
-          JavascriptChannel(
-            name: 'AlignSettings',
-            onMessageReceived: _onAlignSettingsReceived,
-          ),
-          JavascriptChannel(
-            name: 'ColorSettings',
-            onMessageReceived: _onColorSettingsReceived,
-          ),
-          JavascriptChannel(
-            name: 'LinkSettings',
-            onMessageReceived: _onLinkSettingsReceived,
-          ),
-          JavascriptChannel(
-            name: 'InternalUpdate',
-            onMessageReceived: _onInternalUpdateReceived,
-          ),
-          // JavascriptChannel(
-          //   name: 'OffsetTracker',
-          //   onMessageReceived: (msg) {
-          //     print('OffsetTracker: [${msg.message}]');
-          //   },
-          // ),
-        },
+
+        initialOptions: InAppWebViewGroupOptions(
+            crossPlatform: InAppWebViewOptions(
+              supportZoom: false,
+              transparentBackground: true,
+              useShouldOverrideUrlLoading: true,
+            ),
+            android: AndroidInAppWebViewOptions(
+              forceDark: widget.enableDarkMode
+                  ? AndroidForceDark.FORCE_DARK_ON
+                  : AndroidForceDark.FORCE_DARK_AUTO,
+            )),
 
         // deny browsing while editing:
-        navigationDelegate: (navigation) =>
+        shouldOverrideUrlLoading: (controller, navigation) =>
             // this is required for iOS / WKWebKit:
-            navigation.isForMainFrame && navigation.url == 'about:blank'
-                ? NavigationDecision.navigate
+            navigation.isForMainFrame &&
+                    navigation.request.url?.toString() == 'about:blank'
+                ? Future.value(NavigationActionPolicy.ALLOW)
                 // for all other requests: block
-                : NavigationDecision.prevent,
-        zoomEnabled: false,
+                : Future.value(NavigationActionPolicy.CANCEL),
         gestureRecognizers: {
-          Factory<LongPressGestureRecognizer>(() => LongPressGestureRecognizer()),
+          Factory<LongPressGestureRecognizer>(
+              () => LongPressGestureRecognizer()),
         },
-        // contextMenu: ContextMenu(
-        //   menuItems: [
-        //     if (widget.addDefaultSelectionMenuItems) ...{
-        //       ContextMenuItem(
-        //         androidId: 1,
-        //         iosId: '1',
-        //         title: '𝗕',
-        //         action: () => _api.formatBold(),
-        //       ),
-        //       ContextMenuItem(
-        //         androidId: 2,
-        //         iosId: '2',
-        //         title: '𝑰',
-        //         action: () => _api.formatItalic(),
-        //       ),
-        //       ContextMenuItem(
-        //         androidId: 3,
-        //         iosId: '3',
-        //         title: 'U̲',
-        //         action: () => _api.formatUnderline(),
-        //       ),
-        //       ContextMenuItem(
-        //         androidId: 4,
-        //         iosId: '4',
-        //         title: '̶T̶',
-        //         action: () => _api.formatStrikeThrough(),
-        //       ),
-        //     },
-        //     if (textSelectionMenuItems != null) ...{
-        //       for (final item in textSelectionMenuItems) ...{
-        //         ContextMenuItem(
-        //           androidId: 100 + textSelectionMenuItems.indexOf(item),
-        //           iosId: item.label,
-        //           title: item.label,
-        //           action: () => item.action(_api),
-        //         ),
-        //       },
-        //     },
-        //   ],
-        // ),
+        contextMenu: ContextMenu(
+          menuItems: [
+            if (widget.addDefaultSelectionMenuItems) ...{
+              ContextMenuItem(
+                androidId: 1,
+                iosId: '1',
+                title: '𝗕',
+                action: () => _api.formatBold(),
+              ),
+              ContextMenuItem(
+                androidId: 2,
+                iosId: '2',
+                title: '𝑰',
+                action: () => _api.formatItalic(),
+              ),
+              ContextMenuItem(
+                androidId: 3,
+                iosId: '3',
+                title: 'U̲',
+                action: () => _api.formatUnderline(),
+              ),
+              ContextMenuItem(
+                androidId: 4,
+                iosId: '4',
+                title: '̶T̶',
+                action: () => _api.formatStrikeThrough(),
+              ),
+            },
+            if (widget.textSelectionMenuItems != null) ...{
+              for (final item in widget.textSelectionMenuItems!) ...{
+                ContextMenuItem(
+                  androidId: 100 + widget.textSelectionMenuItems!.indexOf(item),
+                  iosId: item.label,
+                  title: item.label,
+                  action: () => item.action(_api),
+                ),
+              },
+            },
+          ],
+        ),
       );
 
-  void _onWebViewCreated(WebViewController controller) {
+  void _onWebViewCreated(InAppWebViewController controller) {
     _webViewController = controller;
-    controller.loadHtmlString(_initialPageContent);
+    controller.loadData(data: _initialPageContent);
     _api.webViewController = controller;
+    controller
+      ..addJavaScriptHandler(
+        handlerName: 'FormatSettings',
+        callback: _onFormatSettingsReceived,
+      )
+      ..addJavaScriptHandler(
+        handlerName: 'FontSizeSettings',
+        callback: _onFontSizeSettingsReceived,
+      )
+      ..addJavaScriptHandler(
+        handlerName: 'FontFamilySettings',
+        callback: _onFontFamilySettingsReceived,
+      )
+      ..addJavaScriptHandler(
+        handlerName: 'AlignSettings',
+        callback: _onAlignSettingsReceived,
+      )
+      ..addJavaScriptHandler(
+        handlerName: 'ColorSettings',
+        callback: _onColorSettingsReceived,
+      )
+      ..addJavaScriptHandler(
+        handlerName: 'LinkSettings',
+        callback: _onLinkSettingsReceived,
+      )
+      ..addJavaScriptHandler(
+        handlerName: 'InternalUpdate',
+        callback: _onInternalUpdateReceived,
+      );
+    // JavascriptChannel(
+    //   name: 'OffsetTracker',
+    //   onMessageReceived: (msg) {
+    //     print('OffsetTracker: [${msg.message}]');
+    //   },
+    // ),
     final onCreated = widget.onCreated;
     if (onCreated != null) {
       onCreated(_api);
@@ -541,30 +562,32 @@ blockquote {
     }
   }
 
-  void _onFormatSettingsReceived(JavascriptMessage message) {
-    // print('got format ${message.message}');
+  void _onFormatSettingsReceived(List<dynamic> parameters) {
+    print('got format $parameters');
+    final int numericMessage = parameters.first;
     final callback = _api.onFormatSettingsChanged;
-    if (callback != null && message.message.isNotEmpty) {
-      final numericMessage = int.tryParse(message.message);
-      if (numericMessage != null) {
-        callback(
-          FormatSettings(
-            isBold: (numericMessage & 1) == 1,
-            isItalic: (numericMessage & 2) == 2,
-            isUnderline: (numericMessage & 4) == 4,
-            isStrikeThrough: (numericMessage & 8) == 8,
-          ),
-        );
-      }
+    if (callback != null) {
+      callback(
+        FormatSettings(
+          isBold: (numericMessage & 1) == 1,
+          isItalic: (numericMessage & 2) == 2,
+          isUnderline: (numericMessage & 4) == 4,
+          isStrikeThrough: (numericMessage & 8) == 8,
+        ),
+      );
     }
   }
 
-  void _onFontSizeSettingsReceived(JavascriptMessage message) {
-    // print('got size ${message.message}');
+  void _onFontSizeSettingsReceived(List<dynamic> parameters) {
+    print('got size $parameters');
+    if (parameters.isEmpty) {
+      return;
+    }
+    final String? message = parameters.first;
     final callback = _api.onFontSizeChanged;
     if (callback != null) {
       FontSize? size;
-      switch (message.message) {
+      switch (message) {
         case 'x-small':
           size = FontSize.xSmall;
           break;
@@ -586,21 +609,20 @@ blockquote {
         case 'xxx-large':
           size = FontSize.xxxLarge;
           break;
-        case 'undefined':
+        default:
           size = FontSize.medium;
           break;
       }
-      if (size != null) {
-        callback(size);
-      }
+      callback(size);
     }
   }
 
   static Map<String, SafeFont>? _fontsByName;
-  void _onFontFamilySettingsReceived(JavascriptMessage message) {
-    // print('got size ${message.message}');
+  void _onFontFamilySettingsReceived(List<dynamic> parameters) {
+    print('got font family $parameters');
+    final String? message = parameters.first;
     final callback = _api.onFontFamilyChanged;
-    if (callback != null && message.message.isNotEmpty) {
+    if (callback != null) {
       var map = _fontsByName;
       if (map == null) {
         map = <String, SafeFont>{};
@@ -609,17 +631,18 @@ blockquote {
         }
         _fontsByName = map;
       }
-      final font = map[message.message];
+      final font = map[message];
       callback(font);
     }
   }
 
-  void _onAlignSettingsReceived(JavascriptMessage message) {
-    // print('got align ${message.message}');
+  void _onAlignSettingsReceived(List<dynamic> parameters) {
+    print('got align $parameters');
+    final String? message = parameters.isNotEmpty ? parameters.first : null;
     final callback = _api.onAlignSettingsChanged;
-    if (callback != null && message.message.isNotEmpty) {
+    if (callback != null) {
       ElementAlign align;
-      switch (message.message) {
+      switch (message) {
         case 'left':
           align = ElementAlign.left;
           break;
@@ -640,13 +663,14 @@ blockquote {
     }
   }
 
-  void _onColorSettingsReceived(JavascriptMessage message) {
-    // print('got colors  ${message.message}');
+  void _onColorSettingsReceived(List<dynamic> parameters) {
+    print('got colors  $parameters');
+    final String message = parameters.first;
     final callback = _api.onColorChanged;
-    final parameters = message.message.split('x');
-    if (callback != null && parameters.length == 2) {
-      final foreground = _parseColor(parameters[0]);
-      final background = _parseColor(parameters[1]);
+    final parts = message.split('x');
+    if (callback != null && parts.length == 2 && message.length > 1) {
+      final foreground = _parseColor(parts[0]);
+      final background = _parseColor(parts[1]);
       callback(ColorSetting(foreground, background));
     }
   }
@@ -675,14 +699,15 @@ blockquote {
     return color;
   }
 
-  void _onLinkSettingsReceived(JavascriptMessage message) {
-    // print('got link ${message.message}');
+  void _onLinkSettingsReceived(List<dynamic> parameters) {
+    final String message = parameters.first;
+    // print('got link $message');
     final callback = _api.onLinkSettingsChanged;
-    final parameters = message.message.split('<_>');
+    final parts = message.split('<_>');
     if (callback != null) {
-      if (parameters.length == 2) {
-        final url = parameters[0];
-        final text = parameters[1];
+      if (parts.length == 2) {
+        final url = parts[0];
+        final text = parts[1];
         callback(LinkSettings(url, text));
       } else {
         callback(null);
@@ -690,19 +715,18 @@ blockquote {
     }
   }
 
-  void _onInternalUpdateReceived(JavascriptMessage message) {
-    // print('InternalUpdate got update: ${message.message}');
-    if (message.message.startsWith('h')) {
+  void _onInternalUpdateReceived(List<dynamic> parameters) {
+    final String message = parameters.first;
+    // print('InternalUpdate got update: $message');
+    if (message.startsWith('h')) {
       if (widget.adjustHeight) {
-        final height = double.tryParse(message.message.substring(1));
+        final height = double.tryParse(message.substring(1));
         if (height != null) {
           setState(() {
             _documentHeight = height + 15.0;
           });
         }
       }
-    } else if (message.message == 'onfocus') {
-      FocusScope.of(context).unfocus();
     }
   }
 
@@ -713,9 +737,8 @@ blockquote {
   /// is set to true.
   Future<void> onDocumentChanged() async {
     if (widget.adjustHeight) {
-      final scrollHeightText = await _webViewController
-          .runJavascriptReturningResult('document.body.scrollHeight');
-      final scrollHeight = double.tryParse(scrollHeightText);
+      final scrollHeight = await _webViewController.evaluateJavascript(
+          source: 'document.body.scrollHeight');
       if (scrollHeight != null &&
           mounted &&
           (scrollHeight + 15.0 > widget.minHeight)) {

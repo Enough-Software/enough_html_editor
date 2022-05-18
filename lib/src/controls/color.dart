@@ -136,7 +136,7 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
   }
 
   void _onColorChanged(ColorSetting colorSetting) {
-    final color = widget.getColor!(colorSetting);
+    final color = widget.getColor?.call(colorSetting);
     if (color == _currentColor ||
         (color == null && _currentColor == widget.color)) {
       // ignore
@@ -191,6 +191,7 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
   }
 
   Future<void> _showColorSelectionSheet(HtmlEditorApi api) async {
+    await api.storeSelectionRange();
     final color = await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -200,6 +201,7 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
         themeColors: widget.themeColors,
       ),
     );
+    await api.restoreSelectionRange();
     if (color != null) {
       await _setColor(color, api);
     }

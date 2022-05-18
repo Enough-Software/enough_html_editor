@@ -3,8 +3,8 @@ library enough_html_editor;
 
 // ensure that dependent package do not need to declare dependencies:
 export 'package:flutter_colorpicker/flutter_colorpicker.dart';
+export 'package:flutter_inappwebview/flutter_inappwebview.dart';
 export 'package:image/image.dart';
-export 'package:webview_flutter/webview_flutter.dart';
 
 export 'src/editor.dart';
 export 'src/editor_api.dart';

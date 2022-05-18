@@ -4,8 +4,8 @@ import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:image/image.dart' as img;
-import 'package:webview_flutter/webview_flutter.dart';
 import 'editor.dart';
 import 'models.dart';
 
@@ -19,7 +19,7 @@ class HtmlEditorApi {
   HtmlEditorApi(HtmlEditorState htmlEditorState)
       : _htmlEditorState = htmlEditorState;
 
-  late WebViewController _webViewController;
+  late InAppWebViewController _webViewController;
   final HtmlEditorState _htmlEditorState;
 
   /// The document's background color, defaults to `null`
@@ -30,8 +30,8 @@ class HtmlEditorApi {
 
   /// The web view controller allows direct interactions
   // ignore: unnecessary_getters_setters
-  WebViewController get webViewController => _webViewController;
-  set webViewController(WebViewController value) {
+  InAppWebViewController get webViewController => _webViewController;
+  set webViewController(InAppWebViewController value) {
     _webViewController = value;
     //TODO wait for InAppWebView project to approve this
     //value.onImeCommitContent = _onImeCommitContent;
@@ -267,42 +267,29 @@ class HtmlEditorApi {
   Future setColorDocumentBackground(Color color) async {
     final colorText = _getColor(color, 1.0);
     _documentBackgroundColor = colorText;
-    return _webViewController
-        .runJavascript('document.body.style.backgroundColor="$colorText";');
+    return _webViewController.evaluateJavascript(
+        source: 'document.body.style.backgroundColor="$colorText";');
   }
 
   /// Sets the document's foreground color
   Future setColorDocumentForeground(Color color) async {
     final colorText = _getColor(color, 1.0);
     _documentForegroundColor = colorText;
-    return _webViewController
-        .runJavascript('document.body.style.color="$colorText";');
+    return _webViewController.evaluateJavascript(
+        source: 'document.body.style.color="$colorText";');
   }
 
   Future _execCommand(String command) async {
-    await _webViewController.runJavascript('document.execCommand($command);');
+    await _webViewController.evaluateJavascript(
+        source: 'document.execCommand($command);');
   }
 
   /// Retrieves the edited text as HTML
   ///
   /// Compare [getFullHtml()] to the complete HTML document's text.
   Future<String> getText() async {
-    final innerHtml = await _webViewController.runJavascriptReturningResult(
-        'document.getElementById("editor").innerHTML;');
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      // compare https://github.com/flutter/flutter/issues/80328
-      final cleanedHtml = innerHtml
-          .replaceAll(r'\u003C', '<')
-          .replaceAll(r'\n', '\n')
-          .replaceAll(r'\t', '\t')
-          .replaceAll(r'\"', '&quot;');
-      if (cleanedHtml.startsWith('"') && cleanedHtml.endsWith('"')) {
-        final stripped =
-            cleanedHtml.substring(1, cleanedHtml.length - 1).trim();
-        return stripped;
-      }
-      return cleanedHtml;
-    }
+    final innerHtml = await _webViewController.evaluateJavascript(
+        source: 'document.getElementById("editor").innerHTML;');
     return innerHtml;
   }
 
@@ -323,7 +310,8 @@ class HtmlEditorApi {
                 : _documentBackgroundColor != null
                     ? ' style="background-color: $_documentBackgroundColor;"'
                     : '';
-    final styles = _htmlEditorState.styles.replaceFirst('''#editor {
+    final styles = _htmlEditorState.styles
+        .replaceFirst('''#editor {
   min-height: ==minHeight==px;
 }''', '');
     return '''<!DOCTYPE html>
@@ -339,8 +327,8 @@ class HtmlEditorApi {
 
   /// Retrieves the currently selected text.
   Future<String?> getSelectedText() async {
-    final text = await _webViewController.runJavascriptReturningResult(
-        '''document.getSelection().getRangeAt(0).toString();''');
+    final text = await _webViewController.evaluateJavascript(
+        source: '''document.getSelection().getRangeAt(0).toString();''');
     if (text.isEmpty || text == 'null') {
       return null;
     }
@@ -358,8 +346,8 @@ class HtmlEditorApi {
   ///
   /// Compare [restoreSelectionRange]
   Future<String> storeSelectionRange() async {
-    final text = await _webViewController
-        .runJavascriptReturningResult('storeSelectionRange();');
+    final text = await _webViewController.evaluateJavascript(
+        source: 'storeSelectionRange();');
     return _removeQuotes(text);
   }
 
@@ -367,7 +355,7 @@ class HtmlEditorApi {
   ///
   /// Compare [storeSelectionRange]
   Future restoreSelectionRange() =>
-      _webViewController.runJavascript('restoreSelectionRange();');
+      _webViewController.evaluateJavascript(source: 'restoreSelectionRange();');
 
   /// Replaces all text parts [from] with the replacement [replace]
   /// and returns the updated text.
@@ -380,14 +368,14 @@ class HtmlEditorApi {
   /// Sets the given text, replacing the previous text completely
   Future<void> setText(String text) {
     final html = _htmlEditorState.generateHtmlDocument(text);
-    return _webViewController.loadHtmlString(html);
+    return _webViewController.evaluateJavascript(source: html);
   }
 
   /// Selects the HTML DOM node at the current position fully.
   Future<void> selectCurrentNode() =>
-      _webViewController.runJavascript('selectNode();');
+      _webViewController.evaluateJavascript(source: 'selectNode();');
 
   /// Updates the currently selected link with the url [href] and [text].
-  Future<void> editCurrentLink(String href, String text) =>
-      _webViewController.runJavascript('''editLink('$href', '$text');''');
+  Future<void> editCurrentLink(String href, String text) => _webViewController
+      .evaluateJavascript(source: "editLink('$href', '$text');");
 }

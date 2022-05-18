@@ -31,12 +31,14 @@ class _FontSizeDropdownState extends State<FontSizeDropdown> {
     const selectedTextStyle = TextStyle(fontSize: 12);
     return PlatformDropdownButton<FontSize>(
       value: currentSize,
-      onChanged: (value) {
+      onTap: api.storeSelectionRange,
+      onChanged: (value) async {
+        await api.restoreSelectionRange();
         if (value != null) {
           setState(() {
             currentSize = value;
           });
-          api.setFontSize(value);
+          await api.setFontSize(value);
         }
       },
       selectedItemBuilder: (context) => const [
