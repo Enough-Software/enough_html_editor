@@ -563,7 +563,7 @@ blockquote {
   }
 
   void _onFormatSettingsReceived(List<dynamic> parameters) {
-    print('got format $parameters');
+    // print('got format $parameters');
     final int numericMessage = parameters.first;
     final callback = _api.onFormatSettingsChanged;
     if (callback != null) {
@@ -579,7 +579,7 @@ blockquote {
   }
 
   void _onFontSizeSettingsReceived(List<dynamic> parameters) {
-    print('got size $parameters');
+    // print('got size $parameters');
     if (parameters.isEmpty) {
       return;
     }
@@ -619,7 +619,7 @@ blockquote {
 
   static Map<String, SafeFont>? _fontsByName;
   void _onFontFamilySettingsReceived(List<dynamic> parameters) {
-    print('got font family $parameters');
+    // print('got font family $parameters');
     final String? message = parameters.first;
     final callback = _api.onFontFamilyChanged;
     if (callback != null) {
@@ -637,7 +637,7 @@ blockquote {
   }
 
   void _onAlignSettingsReceived(List<dynamic> parameters) {
-    print('got align $parameters');
+    // print('got align $parameters');
     final String? message = parameters.isNotEmpty ? parameters.first : null;
     final callback = _api.onAlignSettingsChanged;
     if (callback != null) {
@@ -664,7 +664,7 @@ blockquote {
   }
 
   void _onColorSettingsReceived(List<dynamic> parameters) {
-    print('got colors  $parameters');
+    // print('got colors  $parameters');
     final String message = parameters.first;
     final callback = _api.onColorChanged;
     final parts = message.split('x');
