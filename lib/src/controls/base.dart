@@ -68,7 +68,7 @@ class HtmlEditorControls extends StatefulWidget {
     this.themeColors,
     this.excludeDocumentLevelControls = false,
   })  : assert(editorApi != null || editorKey != null,
-            'Please define either the editorApi or editorKey pararameter.'),
+            'Please define either the editorApi or editorKey parameter.'),
         super(key: key);
 
   /// The key for the editor state
@@ -80,7 +80,7 @@ class HtmlEditorControls extends StatefulWidget {
   /// A widget that is placed in front of other editor controls
   final Widget? prefix;
 
-  /// A widgets that is planced after the other editor controls
+  /// A widgets that is placed after the other editor controls
   final Widget? suffix;
 
   /// Available colors, by default grayscales

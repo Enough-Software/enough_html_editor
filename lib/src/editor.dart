@@ -74,8 +74,7 @@ class HtmlEditor extends StatefulWidget {
 /// The editor state can be accessed directly when using a
 /// [GlobalKey]<[HtmlEditorState]>.
 class HtmlEditorState extends State<HtmlEditor> {
-  static const String _templateStart =
-      '''
+  static const String _templateStart = '''
 <!DOCTYPE html>
 <html>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
@@ -240,8 +239,7 @@ class HtmlEditorState extends State<HtmlEditor> {
       window.flutter_inappwebview.callHandler('FontFamilySettings', fontFamily);
     }
 ''';
-  static const String _templateBlockquote =
-      '''
+  static const String _templateBlockquote = '''
     if (isLineBreakInput && nestedBlockqotes > 0 && anchorOffset == focusOffset) {
       let rootNode = rootBlockquote.parentNode;
       var cloneNode = null;
@@ -292,8 +290,7 @@ class HtmlEditorState extends State<HtmlEditor> {
       selection.addRange(range);
     } 
 ''';
-  static const String _templateContinuation =
-      '''
+  static const String _templateContinuation = '''
     isLineBreakInput = false;
   }
 
@@ -374,8 +371,7 @@ class HtmlEditorState extends State<HtmlEditor> {
   late HtmlEditorApi _api;
 
   /// Allows to replace the existing styles.
-  String styles =
-      '''
+  String styles = '''
 blockquote {
   font: normal helvetica, sans-serif;
   margin-top: 10px;
@@ -511,6 +507,7 @@ blockquote {
             },
           ],
         ),
+        onScrollChanged: (controller, x, y) => controller.scrollTo(x: 0, y: 0),
       );
 
   void _onWebViewCreated(InAppWebViewController controller) {
