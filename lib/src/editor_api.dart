@@ -221,6 +221,15 @@ class HtmlEditorApi {
         '<img src="data:$mimeType;base64,$base64Data" style="max-width: 100%" />');
   }
 
+  /// Covert a link to [src] at the current position (replaces selection) into
+  /// image data and inserts it into the editor.
+  ///
+  /// You can define a link [alt] such as `'_blank'`,
+  /// by default no target will be defined.
+  Future insertImageLink(String src, {String alt = 'image body'}) =>
+      insertHtml('<img src="$src" alt="$alt" style="max-width: 100%" />');
+
+
   String _toHex(Color color) {
     final buffer = StringBuffer();
     _appendHex(color.red, buffer);
