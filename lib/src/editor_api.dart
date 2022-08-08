@@ -137,6 +137,12 @@ class HtmlEditorApi {
   /// Formats the current paragraph to justify
   Future formatAlignJustify() => _execCommand('"justifyFull"');
 
+  /// Formats the current paragraph to indent
+  Future formatIndent() => _execCommand('"indent"');
+
+  /// Formats the current paragraph to outdent
+  Future formatOutent() => _execCommand('"outdent"');
+
   /// Sets the [size] of the selected text
   Future setFontSize(FontSize size) =>
       _execCommand('"fontSize", false, ${size.index + 1}');
@@ -233,7 +239,6 @@ class HtmlEditorApi {
   /// by default no target will be defined.
   Future insertImageLink(String src, {String alt = 'image body'}) =>
       insertHtml('<img src="$src" alt="$alt" style="max-width: 100%" />');
-
 
   String _toHex(Color color) {
     final buffer = StringBuffer();
