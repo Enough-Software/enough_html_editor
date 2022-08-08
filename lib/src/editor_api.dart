@@ -148,6 +148,11 @@ class HtmlEditorApi {
   Future setFontFamily(String fontFamilyName) =>
       _execCommand('"fontName", false, "$fontFamilyName"');
 
+  /// Formats the current text to be header style select
+  Future formatHeader(String headerStyle) async {
+    await _execCommand('"formatBlock", false, "$headerStyle"');
+  }
+
   /// Inserts the  [html] code at the insertion point (replaces selection).
   Future insertHtml(String html) async {
     final insertHtml = html.replaceAll('"', r'\"');
