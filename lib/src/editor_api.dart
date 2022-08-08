@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:image/image.dart' as img;
@@ -378,4 +377,12 @@ class HtmlEditorApi {
   /// Updates the currently selected link with the url [href] and [text].
   Future<void> editCurrentLink(String href, String text) => _webViewController
       .evaluateJavascript(source: "editLink('$href', '$text');");
+
+  /// Insert signature
+  Future<void> insertSignature(String signature) => _webViewController
+      .evaluateJavascript(source: "insertSignature('$signature');");
+
+  /// Remove signature
+  Future<void> removeSignature() => _webViewController
+      .evaluateJavascript(source: 'removeSignature();');
 }

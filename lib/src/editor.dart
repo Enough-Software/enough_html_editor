@@ -5,6 +5,7 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 import 'editor_api.dart';
 import 'models.dart';
+import 'signature/email_signature_utils.dart';
 
 /// Slim HTML Editor with API
 class HtmlEditor extends StatefulWidget {
@@ -356,6 +357,8 @@ class HtmlEditorState extends State<HtmlEditor> {
     editor.onkeydown = onKeyDown;
     document.execCommand("styleWithCSS", false, true);
   }
+  
+  ${EmailSigantureUtils.jsFunctionHandleSignature}
 </script>
 </head>
 <body onload="onLoaded();">
