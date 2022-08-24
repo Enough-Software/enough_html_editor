@@ -150,3 +150,27 @@ extension SafeFontNamesExtension on SafeFont {
     }
   }
 }
+
+/// The position relative to the element
+enum PositionRelative {
+
+  /// Before the element. Only valid if the element is in the DOM tree and has
+  /// a parent element.
+  beforeBegin('beforebegin'),
+
+  /// Just inside the element, before its first child.
+  afterBegin('afterbegin'),
+
+  /// Just inside the element, after its last child.
+  beforeEnd('beforeend'),
+
+  /// After the element. Only valid if the element is in the DOM tree and has a
+  /// parent element.
+  afterEnd('afterend');
+
+  /// Constructor
+  const PositionRelative(this.value);
+
+  /// Value
+  final String value;
+}

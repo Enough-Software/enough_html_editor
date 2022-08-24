@@ -348,6 +348,11 @@ class HtmlEditorState extends State<HtmlEditor> {
       selection.addRange(selectionRange);
     }
   }
+  
+  function insertAdjacentHTML(idPositionInsert, position, text) {
+    const subject = document.querySelector(idPositionInsert);
+    subject.insertAdjacentHTML(position, text)
+  }
 
   function onLoaded() {
     documentHeight = document.body.scrollHeight;

@@ -404,4 +404,10 @@ class HtmlEditorApi {
   /// Remove signature
   Future<void> removeSignature() => _webViewController
       .evaluateJavascript(source: 'removeSignature();');
+
+  /// InsertAdjacentHTML
+  Future<void> insertAdjacentHTML(
+    PositionRelative positionRelative,
+    String content,
+  ) => _webViewController.evaluateJavascript(source: "insertAdjacentHTML('#editor', '${positionRelative.value}', '$content')");
 }
