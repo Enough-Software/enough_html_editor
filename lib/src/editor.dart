@@ -349,9 +349,24 @@ class HtmlEditorState extends State<HtmlEditor> {
     }
   }
   
-  function insertAdjacentHTML(idPositionInsert, position, text) {
-    const subject = document.querySelector(idPositionInsert);
-    subject.insertAdjacentHTML(position, text)
+  function moveCursorAtLastNode() {
+    var nodeSignature = document.getElementsByClassName('tmail-signature');
+    var editor = document.getElementById('editor');
+    var lastChild; 
+    if (nodeSignature.length <= 0) {
+      lastChild = editor.lastChild;
+    } else {
+      var position = editor.childNodes.length - 1;
+      lastChild = editor.childNodes[position];
+    }
+    
+    var range = document.createRange();
+    var sel = window.getSelection();
+    range.setStart(lastChild, 0);
+    range.collapse(true);
+
+    sel.removeAllRanges();
+    sel.addRange(range);
   }
 
   function onLoaded() {
