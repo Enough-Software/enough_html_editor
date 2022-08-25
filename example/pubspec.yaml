@@ -32,9 +32,9 @@ dependencies:
 
 
 
-dependency_overrides:
-  enough_platform_widgets: 
-    path: ../../enough_platform_widgets
+#dependency_overrides:
+#  enough_platform_widgets:
+#    path: ../../enough_platform_widgets
 
 dev_dependencies:
   flutter_test:
