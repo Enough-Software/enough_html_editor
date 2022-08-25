@@ -83,6 +83,12 @@ class HtmlEditorState extends State<HtmlEditor> {
 <style>
   #editor {
       outline: 0px solid transparent;
+      overflow: auto;
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+  }
+  #editor::-webkit-scrollbar {
+      display: none;
   }
 ==styles==
 </style>
