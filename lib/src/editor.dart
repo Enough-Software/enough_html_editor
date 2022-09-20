@@ -753,6 +753,12 @@ blockquote {
           });
         }
       }
+    } else if (message == 'onfocus') {
+      FocusScope.of(context).unfocus();
+      final onFocus = _api.onFocus;
+      if (onFocus != null) {
+        onFocus();
+      }
     }
   }
 

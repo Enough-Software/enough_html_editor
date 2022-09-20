@@ -57,6 +57,9 @@ class HtmlEditorApi {
   /// Callback to be informed when the API can be used fully.
   void Function()? onReady;
 
+  /// Callback when focus editor
+  void Function()? onFocus;
+
   /// Callback to be informed when the format settings have been changed
   void Function(FormatSettings)? onFormatSettingsChanged;
 
