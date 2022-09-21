@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -359,10 +361,25 @@ class HtmlEditorState extends State<HtmlEditor> {
     }
   }
   
+  function hideKeyboard() {
+    var editor = document.getElementById('editor');
+    editor.readOnly = true;
+    editor.focus();
+  }
+  
+  function showKeyboard() {
+    var editor = document.getElementById('editor');
+    editor.readOnly = false;
+    editor.focus();
+  }
+  
   function moveCursorAtLastNode() {
     var nodeSignature = document.getElementsByClassName('tmail-signature');
     var editor = document.getElementById('editor');
+    const textnode = document.createTextNode('');
+    editor.appendChild(textnode);
     var lastChild; 
+    editor.focus();
     if (nodeSignature.length <= 0) {
       lastChild = editor.lastChild;
     } else {
@@ -392,7 +409,7 @@ class HtmlEditorState extends State<HtmlEditor> {
 </script>
 </head>
 <body onload="onLoaded();">
-<div id="editor" contenteditable="true" onfocus="onFocus();" onfocusout="onFocusOut();">
+<div id="editor" contenteditable="true" onfocus="onFocus();" onfocusout="onFocusOut();" inputmode="">
 ==content==
 </div>
 </body>
@@ -415,6 +432,7 @@ blockquote {
 }
 #editor {
   min-height: ==minHeight==px;
+  display: inline-block;
 }
   ''';
 
@@ -475,12 +493,14 @@ blockquote {
             }
           }
         },
-
         initialOptions: InAppWebViewGroupOptions(
             crossPlatform: InAppWebViewOptions(
               supportZoom: false,
               transparentBackground: true,
               useShouldOverrideUrlLoading: true,
+            ),
+            ios: IOSInAppWebViewOptions(
+              disableInputAccessoryView: true,
             ),
             android: AndroidInAppWebViewOptions(
               forceDark: widget.enableDarkMode
@@ -758,7 +778,9 @@ blockquote {
         }
       }
     } else if (message == 'onfocus') {
-      FocusScope.of(context).unfocus();
+      if(!Platform.isAndroid) {
+        FocusScope.of(context).unfocus();
+      }
       final onFocus = _api.onFocus;
       if (onFocus != null) {
         onFocus();

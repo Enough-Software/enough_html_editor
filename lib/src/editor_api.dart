@@ -105,12 +105,13 @@ class HtmlEditorApi {
   }
 
   /// Removes the focus from the editor
-  Future unfocus(BuildContext context) async {
+  Future unfocus() async {
     //TODO consider to re-implement or check if focus node works with
     // webview 3.0
-    //await _webViewController.clearFocus();
-    // _htmlEditorState.unfocus();
-    FocusScope.of(context).unfocus();
+    if((await _hasFocus()) == true) {
+      await _webViewController.clearFocus();
+      onFocusOut?.call();
+    }
   }
 
   /// Formats the current text to be bold
@@ -413,5 +414,17 @@ class HtmlEditorApi {
 
   /// MoveCursorAtLastNode
   Future<void> moveCursorAtLastNode() => _webViewController
-      .evaluateJavascript(source: 'moveCursorAtLastNode()');
+      .evaluateJavascript(source: 'moveCursorAtLastNode();');
+
+  /// checkHasFocus
+  Future<bool?> _hasFocus() async {
+    final check = await _webViewController.evaluateJavascript(source: 'document.hasFocus()');
+    return check;
+  }
+
+  /// removeVirtualKeyboard
+  Future<void> removeVirtualKeyboard() => _webViewController.evaluateJavascript(source: 'hideKeyboard();');
+
+  /// ableVirtualKeyboard
+  Future<void> ableVirtualKeyboard() => _webViewController.evaluateJavascript(source: 'showKeyboard();');
 }

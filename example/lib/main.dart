@@ -96,7 +96,7 @@ class _EditorPageState extends State<EditorPage> {
             child: Column(
               children: [
                 PlatformTextButton(
-                  onPressed: () => _editorApi?.unfocus(context),
+                  onPressed: () => _editorApi?.unfocus(),
                   child: const Text('Unfocus'),
                 ),
                 PackagedHtmlEditor(
