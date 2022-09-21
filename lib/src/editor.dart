@@ -313,6 +313,10 @@ class HtmlEditorState extends State<HtmlEditor> {
     window.flutter_inappwebview.callHandler('InternalUpdate', 'onfocus');
   }
 
+  function onFocusOut() {
+    window.flutter_inappwebview.callHandler('InternalUpdate', 'onfocusout');
+  }
+  
   function onKeyDown(event) {
     //console.log('keydown', event.key, event);
     if (!isInList && (event.keyCode === 13 || event.key === 'Enter')) {
@@ -388,7 +392,7 @@ class HtmlEditorState extends State<HtmlEditor> {
 </script>
 </head>
 <body onload="onLoaded();">
-<div id="editor" contenteditable="true" onfocus="onFocus();">
+<div id="editor" contenteditable="true" onfocus="onFocus();" onfocusout="onFocusOut();">
 ==content==
 </div>
 </body>
@@ -758,6 +762,11 @@ blockquote {
       final onFocus = _api.onFocus;
       if (onFocus != null) {
         onFocus();
+      }
+    } else if (message == 'onfocusout') {
+      final onFocusOut = _api.onFocusOut;
+      if (onFocusOut != null) {
+        onFocusOut();
       }
     }
   }

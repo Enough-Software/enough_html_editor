@@ -60,6 +60,9 @@ class HtmlEditorApi {
   /// Callback when focus editor
   void Function()? onFocus;
 
+  /// Callback when unFocus editor
+  void Function()? onFocusOut;
+
   /// Callback to be informed when the format settings have been changed
   void Function(FormatSettings)? onFormatSettingsChanged;
 
