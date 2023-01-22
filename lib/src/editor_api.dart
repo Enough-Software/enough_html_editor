@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:image/image.dart' as img;
@@ -100,13 +101,8 @@ class HtmlEditorApi {
   }
 
   /// Removes the focus from the editor
-  Future unfocus(BuildContext context) async {
-    //TODO consider to re-implement or check if focus node works with
-    // webview 3.0
-    //await _webViewController.clearFocus();
-    // _htmlEditorState.unfocus();
-    FocusScope.of(context).unfocus();
-  }
+  Future unfocus(BuildContext context) =>
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
 
   /// Formats the current text to be bold
   Future formatBold() => _execCommand('"bold"');
@@ -310,8 +306,7 @@ class HtmlEditorApi {
                 : _documentBackgroundColor != null
                     ? ' style="background-color: $_documentBackgroundColor;"'
                     : '';
-    final styles = _htmlEditorState.styles
-        .replaceFirst('''#editor {
+    final styles = _htmlEditorState.styles.replaceFirst('''#editor {
   min-height: ==minHeight==px;
 }''', '');
     return '''<!DOCTYPE html>
