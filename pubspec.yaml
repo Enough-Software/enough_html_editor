@@ -4,11 +4,11 @@ version: 0.0.5
 homepage: https://github.com/Enough-Software/enough_html_editor
 
 environment:
-  sdk: '>=2.12.0 <3.0.0'
-  flutter: ">=1.17.0"
+  sdk: '>=2.18.0 <3.0.0'
+  flutter: ">=3.0.0"
 
 dependencies:
-  enough_platform_widgets: ^0.5.0
+  enough_platform_widgets: ^0.7.0
   flutter:
     sdk: flutter
   flutter_colorpicker: ^1.0.3
