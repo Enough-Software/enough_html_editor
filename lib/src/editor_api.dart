@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:image/image.dart' as img;
+
 import 'editor.dart';
 import 'models.dart';
 
@@ -16,7 +15,7 @@ import 'models.dart';
 /// callback or by accessing the `HtmlEditorState` with a
 /// `GlobalKey<HtmlEditorState>`.
 class HtmlEditorApi {
-  /// Creates a new HTLML editor api
+  /// Creates a new HTML editor api
   HtmlEditorApi(HtmlEditorState htmlEditorState)
       : _htmlEditorState = htmlEditorState;
 
@@ -49,7 +48,7 @@ class HtmlEditorApi {
   String get styles => _htmlEditorState.styles;
   set styles(String value) => _htmlEditorState.styles = value;
 
-  /// Define any custom CSS styles, ammending the default styles
+  /// Define any custom CSS styles, amending the default styles
   ///
   /// Also compare [styles].
   String get customStyles => _htmlEditorState.styles;
@@ -101,52 +100,55 @@ class HtmlEditorApi {
   }
 
   /// Removes the focus from the editor
-  Future unfocus(BuildContext context) =>
-      SystemChannels.textInput.invokeMethod('TextInput.hide');
+  Future<void> unfocus(BuildContext context) async {
+    await _webViewController.clearFocus();
+    FocusScope.of(context).unfocus();
+    return SystemChannels.textInput.invokeMethod('TextInput.hide');
+  }
 
   /// Formats the current text to be bold
-  Future formatBold() => _execCommand('"bold"');
+  Future<void> formatBold() => _execCommand('"bold"');
 
   /// Formats the current text to be italic
-  Future formatItalic() => _execCommand('"italic"');
+  Future<void> formatItalic() => _execCommand('"italic"');
 
   /// Formats the current text to be underlined
-  Future formatUnderline() => _execCommand('"underline"');
+  Future<void> formatUnderline() => _execCommand('"underline"');
 
-  /// Formats the current text to be striked through
-  Future formatStrikeThrough() => _execCommand('"strikeThrough"');
+  /// Formats the current text to be strike through
+  Future<void> formatStrikeThrough() => _execCommand('"strikeThrough"');
 
   /// Inserts an ordered list at the current position
-  Future insertOrderedList() => _execCommand('"insertOrderedList"');
+  Future<void> insertOrderedList() => _execCommand('"insertOrderedList"');
 
   /// Inserts an unordered list at the current position
-  Future insertUnorderedList() => _execCommand('"insertUnorderedList"');
+  Future<void> insertUnorderedList() => _execCommand('"insertUnorderedList"');
 
   /// Formats the current paragraph to align left
-  Future formatAlignLeft() => _execCommand('"justifyLeft"');
+  Future<void> formatAlignLeft() => _execCommand('"justifyLeft"');
 
   /// Formats the current paragraph to align right
-  Future formatAlignRight() => _execCommand('"justifyRight"');
+  Future<void> formatAlignRight() => _execCommand('"justifyRight"');
 
   /// Formats the current paragraph to center
-  Future formatAlignCenter() => _execCommand('"justifyCenter"');
+  Future<void> formatAlignCenter() => _execCommand('"justifyCenter"');
 
   /// Formats the current paragraph to justify
-  Future formatAlignJustify() => _execCommand('"justifyFull"');
+  Future<void> formatAlignJustify() => _execCommand('"justifyFull"');
 
   /// Sets the [size] of the selected text
-  Future setFontSize(FontSize size) =>
+  Future<void> setFontSize(FontSize size) =>
       _execCommand('"fontSize", false, ${size.index + 1}');
 
   /// Sets the [font] of the selected text
-  Future setFont(SafeFont font) => setFontFamily(font.name);
+  Future<void> setFont(SafeFont font) => setFontFamily(font.name);
 
   /// Sets the [fontFamilyName] of the selected text
-  Future setFontFamily(String fontFamilyName) =>
+  Future<void> setFontFamily(String fontFamilyName) =>
       _execCommand('"fontName", false, "$fontFamilyName"');
 
   /// Inserts the  [html] code at the insertion point (replaces selection).
-  Future insertHtml(String html) async {
+  Future<void> insertHtml(String html) async {
     final insertHtml = html.replaceAll('"', r'\"');
     await _execCommand('"insertHTML", false, "$insertHtml"');
     return _htmlEditorState.onDocumentChanged();
@@ -154,7 +156,7 @@ class HtmlEditorApi {
 
   /// Inserts the given plain [text] at the insertion point
   /// (replaces selection).
-  Future insertText(String text) async {
+  Future<void> insertText(String text) async {
     await _execCommand('"insertText", false, "$text"');
     return _htmlEditorState.onDocumentChanged();
   }
@@ -166,7 +168,7 @@ class HtmlEditorApi {
   ///
   /// You can define a link [target] such as `'_blank'`,
   /// by default no target will be defined.
-  Future insertLink(String href, {String? text, String? target}) {
+  Future<void> insertLink(String href, {String? text, String? target}) {
     final buffer = StringBuffer()
       ..write('<a href="')
       ..write(href)
@@ -185,20 +187,21 @@ class HtmlEditorApi {
     return insertHtml(html);
   }
 
-  /// Converts the given [file] with the specifid [mimeType] into
+  /// Converts the given [file] with the specified [mimeType] into
   /// image data and inserts it into the editor.
   ///
   /// Optionally set the given [maxWidth] for the decoded image.
-  Future insertImageFile(File file, String mimeType, {int? maxWidth}) async {
+  Future<void> insertImageFile(File file, String mimeType,
+      {int? maxWidth}) async {
     final data = await file.readAsBytes();
     return insertImageData(data, mimeType, maxWidth: maxWidth);
   }
 
-  /// Inserts the given image [data] with the specifid [mimeType]
+  /// Inserts the given image [data] with the specified [mimeType]
   /// into the editor.
   ///
   /// Optionally set the given [maxWidth] for the decoded image.
-  Future insertImageData(Uint8List data, String mimeType,
+  Future<void> insertImageData(Uint8List data, String mimeType,
       {int? maxWidth}) async {
     if (maxWidth != null) {
       final image = img.decodeImage(data);
@@ -208,7 +211,7 @@ class HtmlEditorApi {
       if (image.width > maxWidth) {
         final copy = img.copyResize(image, width: maxWidth);
         // ignore: parameter_assignments
-        data = img.encodePng(copy) as Uint8List;
+        data = img.encodePng(copy);
         // ignore: parameter_assignments
         mimeType = 'image/png';
       }
@@ -245,7 +248,8 @@ class HtmlEditorApi {
   ///
   /// Optionally specify the [opacity] being between `1.0` (fully opaque)
   /// and `0.0` (fully transparent).
-  Future setColorTextForeground(Color color, {double opacity = 1.0}) async {
+  Future<void> setColorTextForeground(Color color,
+      {double opacity = 1.0}) async {
     final colorText = _getColor(color, opacity);
     return _execCommand('"foreColor", false, "$colorText"');
   }
@@ -254,13 +258,14 @@ class HtmlEditorApi {
   ///
   /// Optionally specify the [opacity] being between `1.0` (fully opaque) and
   /// `0.0` (fully transparent).
-  Future setColorTextBackground(Color color, {double opacity = 1.0}) async {
+  Future<void> setColorTextBackground(Color color,
+      {double opacity = 1.0}) async {
     final colorText = _getColor(color, opacity);
     return _execCommand('"backColor", false, "$colorText"');
   }
 
   /// Sets the document's background color
-  Future setColorDocumentBackground(Color color) async {
+  Future<void> setColorDocumentBackground(Color color) async {
     final colorText = _getColor(color, 1.0);
     _documentBackgroundColor = colorText;
     return _webViewController.evaluateJavascript(
@@ -268,14 +273,14 @@ class HtmlEditorApi {
   }
 
   /// Sets the document's foreground color
-  Future setColorDocumentForeground(Color color) async {
+  Future<void> setColorDocumentForeground(Color color) async {
     final colorText = _getColor(color, 1.0);
     _documentForegroundColor = colorText;
     return _webViewController.evaluateJavascript(
         source: 'document.body.style.color="$colorText";');
   }
 
-  Future _execCommand(String command) async {
+  Future<void> _execCommand(String command) async {
     await _webViewController.evaluateJavascript(
         source: 'document.execCommand($command);');
   }
@@ -349,7 +354,7 @@ class HtmlEditorApi {
   /// Restores the previously stored selection range
   ///
   /// Compare [storeSelectionRange]
-  Future restoreSelectionRange() =>
+  Future<void> restoreSelectionRange() =>
       _webViewController.evaluateJavascript(source: 'restoreSelectionRange();');
 
   /// Replaces all text parts [from] with the replacement [replace]

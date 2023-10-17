@@ -74,297 +74,6 @@ class HtmlEditor extends StatefulWidget {
 /// The editor state can be accessed directly when using a
 /// [GlobalKey]<[HtmlEditorState]>.
 class HtmlEditorState extends State<HtmlEditor> {
-  static const String _templateStart = '''
-<!DOCTYPE html>
-<html>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
-<head>
-<style>
-  #editor {
-      outline: 0px solid transparent;
-  }
-==styles==
-</style>
-<script>
-  var isSelectionBold = false;
-  var isSelectionItalic = false;
-  var isSelectionUnderline = false;
-  var isSelectionStrikeThrough = false;
-  var selectionTextAlign = undefined;
-  var selectionForegroundColor = undefined;
-  var selectionBackgroundColor = undefined;
-  var selectionFontSize = undefined;
-  var selectionFontFamily = undefined;
-  var isSelectionInLink = false;
-  var isLineBreakInput = false;
-  var documentHeight;
-  var selectionRange = undefined;
-  var isInList = false;
-
-  function onSelectionChange() {
-    //console.log|("onSelectionChange");
-    let {anchorNode, anchorOffset, focusNode, focusOffset} = document.getSelection();
-    // traverse all parents to find <b>, <i> or <u> elements:
-    var isBold = false;
-    var isItalic = false;
-    var isUnderline = false;
-    var isStrikeThrough = false;
-    var node = anchorNode;
-    var textAlign = undefined;
-    var nestedBlockqotes = 0;
-    var rootBlockquote;
-    var foregroundColor = undefined;
-    var backgroundColor = undefined;
-    var linkUrl = undefined;
-    var linkText = undefined;
-    var fontSize = undefined;
-    var fontFamily = undefined;
-    var isChildOfList = false;
-    // var boundingRectFound = false;
-
-    while (node.parentNode != null && node.id != 'editor') {
-      // if (!boundingRectFound && node.getBoundingClientRect) {
-      //   var boundingRect = node.getBoundingClientRect();
-      //   if (boundingRect) {
-      //     console.log('bounding rect found for', node, boundingRect);
-      //     boundingRectFound = true;
-      //     window.flutter_inappwebview.callHandler('OffsetTracker', JSON.stringify(boundingRect));
-      //   }
-      // }
-      if (node.nodeName == 'B') {
-          isBold = true;
-      } else if (node.nodeName === 'I') {
-          isItalic = true;
-      } else if (node.nodeName === 'U') {
-          isUnderline = true;
-      } else if (node.nodeName === 'STRIKE') {
-          isStrikeThrough = true;
-      } else if (node.nodeName === 'BLOCKQUOTE') {
-          nestedBlockqotes++;
-          rootBlockquote = node;
-      } else if (node.nodeName === 'UL' || node.nodeName === 'OL') {
-        isChildOfList = true;
-      } else if (node.nodeName === 'SPAN' && node.style != undefined) {
-        // check for color, bold, etc in style:
-        if (node.style.fontWeight === 'bold') {
-          isBold = true;
-        }
-        if (node.style.fontStyle === 'italic') {
-          isItalic = true;
-        }
-        if (fontSize == undefined && node.style.fontSize != undefined) {
-          fontSize = node.style.fontSize;
-        }
-        if (fontFamily == undefined && node.style.fontFamily != undefined) {
-          fontFamily = node.style.fontFamily;
-        }
-        var textDecorationLine = node.style.textDecorationLine;
-        if (textDecorationLine === '') {
-          textDecorationLine = node.style.textDecoration;
-        }
-        if (textDecorationLine != undefined) {
-          if (textDecorationLine === 'underline') {
-            isUnderline = true;
-          } else if (textDecorationLine === 'line-through') {
-            isStrikeThrough = true;
-          } else {
-            if (!isUnderline) {
-              isUnderline = textDecorationLine.includes('underline');
-            }
-            if (!isStrikeThrough) {
-              isStrikeThrough = textDecorationLine.includes('line-through');
-            }
-          }
-        }
-        if (foregroundColor == undefined && node.style.color != undefined) {
-          foregroundColor = node.style.color;
-        }
-        if (backgroundColor == undefined && node.style.backgroundColor != undefined) {
-          backgroundColor = node.style.backgroundColor;
-        }
-      } else if (node.nodeName === 'A' && linkUrl == undefined) {
-        linkUrl = node.href;
-        linkText = node.textContent;
-      }
-      if (textAlign == undefined && node.style != undefined && node.style.textAlign != undefined && node.style.textAlign != '') {
-        textAlign = node.style.textAlign;
-      }
-      node = node.parentNode;
-    }
-    isInList = isChildOfList;
-    if (isBold != isSelectionBold || isItalic != isSelectionItalic || isUnderline != isSelectionUnderline || isStrikeThrough != isSelectionStrikeThrough) {
-      isSelectionBold = isBold;
-      isSelectionItalic = isItalic;
-      isSelectionUnderline = isUnderline;
-      isSelectionStrikeThrough = isStrikeThrough;
-      var message = 0;
-      if (isBold) {
-          message += 1;
-      }
-      if (isItalic) {
-          message += 2;
-      }
-      if (isUnderline) {
-          message += 4;
-      }
-      if (isStrikeThrough) {
-        message += 8;
-      }
-      window.flutter_inappwebview.callHandler('FormatSettings', message);
-    }
-    if (textAlign != selectionTextAlign) {
-      selectionTextAlign = textAlign;
-      window.flutter_inappwebview.callHandler('AlignSettings', textAlign);
-    }
-    if (foregroundColor != selectionForegroundColor || backgroundColor != selectionBackgroundColor) {
-      selectionForegroundColor = foregroundColor;
-      selectionBackgroundColor = backgroundColor;
-      window.flutter_inappwebview.callHandler('ColorSettings', foregroundColor + 'x' + backgroundColor);
-    }
-    if (linkUrl != undefined || isSelectionInLink === true) {
-        if (linkUrl != undefined) {
-          isSelectionInLink = true;
-          window.flutter_inappwebview.callHandler('LinkSettings', linkUrl + '<_>' + linkText);
-        } else {
-          isSelectionInLink = false;
-          window.flutter_inappwebview.callHandler('LinkSettings', '');
-        }
-    }
-    if (fontSize != selectionFontSize) {
-      selectionFontSize = fontSize;
-      window.flutter_inappwebview.callHandler('FontSizeSettings', fontSize);
-    }
-    if (fontFamily != selectionFontFamily) {
-      selectionFontFamily = fontFamily;
-      window.flutter_inappwebview.callHandler('FontFamilySettings', fontFamily);
-    }
-''';
-  static const String _templateBlockquote = '''
-    if (isLineBreakInput && nestedBlockqotes > 0 && anchorOffset == focusOffset) {
-      let rootNode = rootBlockquote.parentNode;
-      var cloneNode = null;
-      var requiresCloning = false;
-      var node = anchorNode;
-      while (node != rootBlockquote) {
-        let sibling = node.previousSibling;
-        if (sibling != null) {
-          var parentNode = node.parentNode;
-          var currentSibling = sibling;
-          while (currentSibling.previousSibling != null) {
-            currentSibling = currentSibling.previousSibling;
-          }
-          var cloneParentNode = document.createElement(parentNode.nodeName);
-          do {
-            var nextSibling = currentSibling.nextSibling;
-            parentNode.removeChild(currentSibling);
-            cloneParentNode.appendChild(currentSibling);
-            if (currentSibling == sibling) {
-                break;
-            }
-            currentSibling = nextSibling;
-          } while (true);
-          if (cloneNode != null) {
-            cloneParentNode.appendChild(cloneNode);
-          }
-          requiresCloning = true;
-          cloneNode = cloneParentNode;
-        } else if (requiresCloning) {
-          var cloneParentNode = document.createElement(node.nodeName);
-          cloneParentNode.appendChild(cloneNode);
-          cloneNode = cloneParentNode;
-        }
-        node = node.parentNode;
-      }
-      if (cloneNode != null) {
-        rootNode.insertBefore(cloneNode, rootBlockquote);
-      }
-      let textNode = document.createElement("P");
-      let textNodeContent = document.createTextNode('_');
-      textNode.appendChild(textNodeContent);
-      rootNode.insertBefore(textNode, rootBlockquote);
-      let range = new Range();
-      range.setStart(textNodeContent, 0);
-      range.setEnd(textNodeContent, 1);
-      let selection = getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-    } 
-''';
-  static const String _templateContinuation = '''
-    isLineBreakInput = false;
-  }
-
-  function onInput(inputEvent) {
-    var height = document.body.scrollHeight;
-    if (height != documentHeight) {
-      documentHeight = height;
-      window.flutter_inappwebview.callHandler('InternalUpdate', 'h' + height);
-    }
-  }
-
-  function onFocus() {
-    window.flutter_inappwebview.callHandler('InternalUpdate', 'onfocus');
-  }
-
-  function onKeyDown(event) {
-    //console.log('keydown', event.key, event);
-    if (!isInList && (event.keyCode === 13 || event.key === 'Enter')) {
-      document.execCommand('insertLineBreak');
-      event.preventDefault();
-    }
-  }
-
-  function editLink(href, text) {
-    let selection = document.getSelection();
-    var node = selection.anchorNode;
-    while (node != undefined && node.nodeName != 'A') {
-      node = node.parentNode;
-    }
-    if (node != undefined && node.nodeName === 'A') {
-      node.href = href;
-      node.textContent = text;
-    }
-  }
-
-  function selectNode() {
-    let selection = document.getSelection();
-    let range = new Range();
-    range.setStartBefore(selection.anchorNode);
-    range.setEndAfter(selection.anchorNode);
-    selection.removeAllRanges();
-    selection.addRange(range);
-  }
-
-  function storeSelectionRange() {
-    selectionRange = document.getSelection().getRangeAt(0);
-    return selectionRange.toString();
-  }
-
-  function restoreSelectionRange() {
-    if (selectionRange != undefined) {
-      let selection = document.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(selectionRange);
-    }
-  }
-
-  function onLoaded() {
-    documentHeight = document.body.scrollHeight;
-    document.onselectionchange = onSelectionChange;
-    var editor = document.getElementById('editor');
-    editor.oninput = onInput;
-    editor.onkeydown = onKeyDown;
-    document.execCommand("styleWithCSS", false, true);
-  }
-</script>
-</head>
-<body onload="onLoaded();">
-<div id="editor" contenteditable="true" onfocus="onFocus();">
-==content==
-</div>
-</body>
-</html>
-''';
   late String _initialPageContent;
   late InAppWebViewController _webViewController;
   double? _documentHeight;
@@ -390,12 +99,20 @@ blockquote {
   /// Instead of accessing the API via the [HtmlEditorState]
   /// you can also directly get in in the [HtmlEditor.onCreated] callback.
   HtmlEditorApi get api => _api;
+  late FocusNode _focusNode;
 
   @override
   void initState() {
     super.initState();
+    _focusNode = FocusNode();
     _api = HtmlEditorApi(this);
     _initialPageContent = generateHtmlDocument(widget.initialContent);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
   }
 
   /// Generates the editor document html from the specified [content].
@@ -428,86 +145,99 @@ blockquote {
     }
   }
 
-  Widget _buildEditor() => InAppWebView(
-        key: ValueKey(_initialPageContent),
-        onWebViewCreated: _onWebViewCreated,
-        onLoadStop: (controller, uri) async {
-          if (widget.adjustHeight) {
-            final scrollHeight = await controller.evaluateJavascript(
-                source: 'document.body.scrollHeight');
-            if (mounted && (scrollHeight + 15.0 > widget.minHeight)) {
-              setState(() {
-                _documentHeight = scrollHeight + 15.0;
-              });
+  Widget _buildEditor() => Focus(
+        focusNode: _focusNode,
+        child: InAppWebView(
+          key: ValueKey(_initialPageContent),
+          onWebViewCreated: _onWebViewCreated,
+          onLoadStop: (controller, uri) async {
+            if (widget.adjustHeight) {
+              final scrollHeight = await controller.evaluateJavascript(
+                  source: 'document.body.scrollHeight');
+              if (mounted && (scrollHeight + 15.0 > widget.minHeight)) {
+                setState(() {
+                  _documentHeight = scrollHeight + 15.0;
+                });
+              }
             }
-          }
-        },
+          },
+          initialSettings: InAppWebViewSettings(
+            supportZoom: false,
+            transparentBackground: true,
+            useShouldOverrideUrlLoading: true,
+            forceDark: widget.enableDarkMode ? ForceDark.ON : ForceDark.AUTO,
+            forceDarkStrategy:
+                ForceDarkStrategy.PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING,
+          ),
 
-        initialOptions: InAppWebViewGroupOptions(
-            crossPlatform: InAppWebViewOptions(
-              supportZoom: false,
-              transparentBackground: true,
-              useShouldOverrideUrlLoading: true,
-            ),
-            android: AndroidInAppWebViewOptions(
-              forceDark: widget.enableDarkMode
-                  ? AndroidForceDark.FORCE_DARK_ON
-                  : AndroidForceDark.FORCE_DARK_AUTO,
-            )),
+          // initialOptions: InAppWebViewGroupOptions(
+          //   crossPlatform: InAppWebViewOptions(
+          //     supportZoom: false,
+          //     transparentBackground: true,
+          //     useShouldOverrideUrlLoading: true,
+          //   ),
+          //   android: AndroidInAppWebViewOptions(
+          //     forceDark: widget.enableDarkMode
+          //         ? AndroidForceDark.FORCE_DARK_ON
+          //         : AndroidForceDark.FORCE_DARK_AUTO,
+          //   ),
+          // ),
 
-        // deny browsing while editing:
-        shouldOverrideUrlLoading: (controller, navigation) =>
-            // this is required for iOS / WKWebKit:
-            navigation.isForMainFrame &&
-                    navigation.request.url?.toString() == 'about:blank'
-                ? Future.value(NavigationActionPolicy.ALLOW)
-                // for all other requests: block
-                : Future.value(NavigationActionPolicy.CANCEL),
-        gestureRecognizers: {
-          Factory<LongPressGestureRecognizer>(
-              () => LongPressGestureRecognizer()),
-        },
-        contextMenu: ContextMenu(
-          menuItems: [
-            if (widget.addDefaultSelectionMenuItems) ...{
-              ContextMenuItem(
-                androidId: 1,
-                iosId: '1',
-                title: '𝗕',
-                action: () => _api.formatBold(),
-              ),
-              ContextMenuItem(
-                androidId: 2,
-                iosId: '2',
-                title: '𝑰',
-                action: () => _api.formatItalic(),
-              ),
-              ContextMenuItem(
-                androidId: 3,
-                iosId: '3',
-                title: 'U̲',
-                action: () => _api.formatUnderline(),
-              ),
-              ContextMenuItem(
-                androidId: 4,
-                iosId: '4',
-                title: '̶T̶',
-                action: () => _api.formatStrikeThrough(),
-              ),
-            },
-            if (widget.textSelectionMenuItems != null) ...{
-              for (final item in widget.textSelectionMenuItems!) ...{
+          // deny browsing while editing:
+          shouldOverrideUrlLoading: (controller, navigation) =>
+              // this is required for iOS / WKWebKit:
+              navigation.isForMainFrame &&
+                      navigation.request.url?.toString() == 'about:blank'
+                  ? Future.value(NavigationActionPolicy.ALLOW)
+                  // for all other requests: block
+                  : Future.value(NavigationActionPolicy.CANCEL),
+          gestureRecognizers: const {
+            Factory<LongPressGestureRecognizer>(LongPressGestureRecognizer.new),
+          },
+          contextMenu: ContextMenu(
+            menuItems: [
+              if (widget.addDefaultSelectionMenuItems) ...{
                 ContextMenuItem(
-                  androidId: 100 + widget.textSelectionMenuItems!.indexOf(item),
-                  iosId: item.label,
-                  title: item.label,
-                  action: () => item.action(_api),
+                  androidId: 1,
+                  iosId: '1',
+                  title: '𝗕',
+                  action: () => _api.formatBold(),
+                ),
+                ContextMenuItem(
+                  androidId: 2,
+                  iosId: '2',
+                  title: '𝑰',
+                  action: () => _api.formatItalic(),
+                ),
+                ContextMenuItem(
+                  androidId: 3,
+                  iosId: '3',
+                  title: 'U̲',
+                  action: () => _api.formatUnderline(),
+                ),
+                ContextMenuItem(
+                  androidId: 4,
+                  iosId: '4',
+                  title: '̶T̶',
+                  action: () => _api.formatStrikeThrough(),
                 ),
               },
-            },
-          ],
+              if (widget.textSelectionMenuItems != null) ...{
+                for (final item in widget.textSelectionMenuItems!) ...{
+                  ContextMenuItem(
+                    androidId:
+                        100 + widget.textSelectionMenuItems!.indexOf(item),
+                    iosId: item.label,
+                    title: item.label,
+                    action: () => item.action(_api),
+                  ),
+                },
+              },
+            ],
+          ),
+          onScrollChanged: (controller, x, y) =>
+              controller.scrollTo(x: 0, y: 0),
         ),
-        onScrollChanged: (controller, x, y) => controller.scrollTo(x: 0, y: 0),
       );
 
   void _onWebViewCreated(InAppWebViewController controller) {
@@ -724,6 +454,8 @@ blockquote {
           });
         }
       }
+    } else if (message == 'onfocus') {
+      FocusScope.of(context).requestFocus(_focusNode);
     }
   }
 
@@ -746,3 +478,295 @@ blockquote {
     }
   }
 }
+
+const String _templateStart = '''
+<!DOCTYPE html>
+<html>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1">
+<head>
+<style>
+  #editor {
+      outline: 0px solid transparent;
+  }
+==styles==
+</style>
+<script>
+  var isSelectionBold = false;
+  var isSelectionItalic = false;
+  var isSelectionUnderline = false;
+  var isSelectionStrikeThrough = false;
+  var selectionTextAlign = undefined;
+  var selectionForegroundColor = undefined;
+  var selectionBackgroundColor = undefined;
+  var selectionFontSize = undefined;
+  var selectionFontFamily = undefined;
+  var isSelectionInLink = false;
+  var isLineBreakInput = false;
+  var documentHeight;
+  var selectionRange = undefined;
+  var isInList = false;
+
+  function onSelectionChange() {
+    //console.log|("onSelectionChange");
+    let {anchorNode, anchorOffset, focusNode, focusOffset} = document.getSelection();
+    // traverse all parents to find <b>, <i> or <u> elements:
+    var isBold = false;
+    var isItalic = false;
+    var isUnderline = false;
+    var isStrikeThrough = false;
+    var node = anchorNode;
+    var textAlign = undefined;
+    var nestedBlockqotes = 0;
+    var rootBlockquote;
+    var foregroundColor = undefined;
+    var backgroundColor = undefined;
+    var linkUrl = undefined;
+    var linkText = undefined;
+    var fontSize = undefined;
+    var fontFamily = undefined;
+    var isChildOfList = false;
+    // var boundingRectFound = false;
+
+    while (node.parentNode != null && node.id != 'editor') {
+      // if (!boundingRectFound && node.getBoundingClientRect) {
+      //   var boundingRect = node.getBoundingClientRect();
+      //   if (boundingRect) {
+      //     console.log('bounding rect found for', node, boundingRect);
+      //     boundingRectFound = true;
+      //     window.flutter_inappwebview.callHandler('OffsetTracker', JSON.stringify(boundingRect));
+      //   }
+      // }
+      if (node.nodeName == 'B') {
+          isBold = true;
+      } else if (node.nodeName === 'I') {
+          isItalic = true;
+      } else if (node.nodeName === 'U') {
+          isUnderline = true;
+      } else if (node.nodeName === 'STRIKE') {
+          isStrikeThrough = true;
+      } else if (node.nodeName === 'BLOCKQUOTE') {
+          nestedBlockqotes++;
+          rootBlockquote = node;
+      } else if (node.nodeName === 'UL' || node.nodeName === 'OL') {
+        isChildOfList = true;
+      } else if (node.nodeName === 'SPAN' && node.style != undefined) {
+        // check for color, bold, etc in style:
+        if (node.style.fontWeight === 'bold') {
+          isBold = true;
+        }
+        if (node.style.fontStyle === 'italic') {
+          isItalic = true;
+        }
+        if (fontSize == undefined && node.style.fontSize != undefined) {
+          fontSize = node.style.fontSize;
+        }
+        if (fontFamily == undefined && node.style.fontFamily != undefined) {
+          fontFamily = node.style.fontFamily;
+        }
+        var textDecorationLine = node.style.textDecorationLine;
+        if (textDecorationLine === '') {
+          textDecorationLine = node.style.textDecoration;
+        }
+        if (textDecorationLine != undefined) {
+          if (textDecorationLine === 'underline') {
+            isUnderline = true;
+          } else if (textDecorationLine === 'line-through') {
+            isStrikeThrough = true;
+          } else {
+            if (!isUnderline) {
+              isUnderline = textDecorationLine.includes('underline');
+            }
+            if (!isStrikeThrough) {
+              isStrikeThrough = textDecorationLine.includes('line-through');
+            }
+          }
+        }
+        if (foregroundColor == undefined && node.style.color != undefined) {
+          foregroundColor = node.style.color;
+        }
+        if (backgroundColor == undefined && node.style.backgroundColor != undefined) {
+          backgroundColor = node.style.backgroundColor;
+        }
+      } else if (node.nodeName === 'A' && linkUrl == undefined) {
+        linkUrl = node.href;
+        linkText = node.textContent;
+      }
+      if (textAlign == undefined && node.style != undefined && node.style.textAlign != undefined && node.style.textAlign != '') {
+        textAlign = node.style.textAlign;
+      }
+      node = node.parentNode;
+    }
+    isInList = isChildOfList;
+    if (isBold != isSelectionBold || isItalic != isSelectionItalic || isUnderline != isSelectionUnderline || isStrikeThrough != isSelectionStrikeThrough) {
+      isSelectionBold = isBold;
+      isSelectionItalic = isItalic;
+      isSelectionUnderline = isUnderline;
+      isSelectionStrikeThrough = isStrikeThrough;
+      var message = 0;
+      if (isBold) {
+          message += 1;
+      }
+      if (isItalic) {
+          message += 2;
+      }
+      if (isUnderline) {
+          message += 4;
+      }
+      if (isStrikeThrough) {
+        message += 8;
+      }
+      window.flutter_inappwebview.callHandler('FormatSettings', message);
+    }
+    if (textAlign != selectionTextAlign) {
+      selectionTextAlign = textAlign;
+      window.flutter_inappwebview.callHandler('AlignSettings', textAlign);
+    }
+    if (foregroundColor != selectionForegroundColor || backgroundColor != selectionBackgroundColor) {
+      selectionForegroundColor = foregroundColor;
+      selectionBackgroundColor = backgroundColor;
+      window.flutter_inappwebview.callHandler('ColorSettings', foregroundColor + 'x' + backgroundColor);
+    }
+    if (linkUrl != undefined || isSelectionInLink === true) {
+        if (linkUrl != undefined) {
+          isSelectionInLink = true;
+          window.flutter_inappwebview.callHandler('LinkSettings', linkUrl + '<_>' + linkText);
+        } else {
+          isSelectionInLink = false;
+          window.flutter_inappwebview.callHandler('LinkSettings', '');
+        }
+    }
+    if (fontSize != selectionFontSize) {
+      selectionFontSize = fontSize;
+      window.flutter_inappwebview.callHandler('FontSizeSettings', fontSize);
+    }
+    if (fontFamily != selectionFontFamily) {
+      selectionFontFamily = fontFamily;
+      window.flutter_inappwebview.callHandler('FontFamilySettings', fontFamily);
+    }
+''';
+const String _templateBlockquote = '''
+    if (isLineBreakInput && nestedBlockqotes > 0 && anchorOffset == focusOffset) {
+      let rootNode = rootBlockquote.parentNode;
+      var cloneNode = null;
+      var requiresCloning = false;
+      var node = anchorNode;
+      while (node != rootBlockquote) {
+        let sibling = node.previousSibling;
+        if (sibling != null) {
+          var parentNode = node.parentNode;
+          var currentSibling = sibling;
+          while (currentSibling.previousSibling != null) {
+            currentSibling = currentSibling.previousSibling;
+          }
+          var cloneParentNode = document.createElement(parentNode.nodeName);
+          do {
+            var nextSibling = currentSibling.nextSibling;
+            parentNode.removeChild(currentSibling);
+            cloneParentNode.appendChild(currentSibling);
+            if (currentSibling == sibling) {
+                break;
+            }
+            currentSibling = nextSibling;
+          } while (true);
+          if (cloneNode != null) {
+            cloneParentNode.appendChild(cloneNode);
+          }
+          requiresCloning = true;
+          cloneNode = cloneParentNode;
+        } else if (requiresCloning) {
+          var cloneParentNode = document.createElement(node.nodeName);
+          cloneParentNode.appendChild(cloneNode);
+          cloneNode = cloneParentNode;
+        }
+        node = node.parentNode;
+      }
+      if (cloneNode != null) {
+        rootNode.insertBefore(cloneNode, rootBlockquote);
+      }
+      let textNode = document.createElement("P");
+      let textNodeContent = document.createTextNode('_');
+      textNode.appendChild(textNodeContent);
+      rootNode.insertBefore(textNode, rootBlockquote);
+      let range = new Range();
+      range.setStart(textNodeContent, 0);
+      range.setEnd(textNodeContent, 1);
+      let selection = getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+    } 
+''';
+const String _templateContinuation = '''
+    isLineBreakInput = false;
+  }
+
+  function onInput(inputEvent) {
+    var height = document.body.scrollHeight;
+    if (height != documentHeight) {
+      documentHeight = height;
+      window.flutter_inappwebview.callHandler('InternalUpdate', 'h' + height);
+    }
+  }
+
+  function onFocus() {
+    window.flutter_inappwebview.callHandler('InternalUpdate', 'onfocus');
+  }
+
+  function onKeyDown(event) {
+    //console.log('keydown', event.key, event);
+    if (!isInList && (event.keyCode === 13 || event.key === 'Enter')) {
+      document.execCommand('insertLineBreak');
+      event.preventDefault();
+    }
+  }
+
+  function editLink(href, text) {
+    let selection = document.getSelection();
+    var node = selection.anchorNode;
+    while (node != undefined && node.nodeName != 'A') {
+      node = node.parentNode;
+    }
+    if (node != undefined && node.nodeName === 'A') {
+      node.href = href;
+      node.textContent = text;
+    }
+  }
+
+  function selectNode() {
+    let selection = document.getSelection();
+    let range = new Range();
+    range.setStartBefore(selection.anchorNode);
+    range.setEndAfter(selection.anchorNode);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+
+  function storeSelectionRange() {
+    selectionRange = document.getSelection().getRangeAt(0);
+    return selectionRange.toString();
+  }
+
+  function restoreSelectionRange() {
+    if (selectionRange != undefined) {
+      let selection = document.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(selectionRange);
+    }
+  }
+
+  function onLoaded() {
+    documentHeight = document.body.scrollHeight;
+    document.onselectionchange = onSelectionChange;
+    var editor = document.getElementById('editor');
+    editor.oninput = onInput;
+    editor.onkeydown = onKeyDown;
+    document.execCommand("styleWithCSS", false, true);
+  }
+</script>
+</head>
+<body onload="onLoaded();">
+<div id="editor" contenteditable="true" onfocus="onFocus();">
+==content==
+</div>
+</body>
+</html>
+''';
