@@ -1,8 +1,7 @@
 analyzer:
   errors:
     todo: ignore
-  plugins:
-    - dart_code_metrics # https://github.com/dart-code-checker/dart-code-metrics
+
 linter:
   rules:
     - always_declare_return_types
@@ -30,8 +29,6 @@ linter:
     - avoid_renaming_method_parameters
     - avoid_relative_lib_imports
     - avoid_return_types_on_setters
-    - avoid_returning_null
-    - avoid_returning_null_for_future
     - avoid_returning_null_for_void
     - avoid_returning_this
     - avoid_setters_without_getters
@@ -76,7 +73,6 @@ linter:
     - one_member_abstracts
     - only_throw_errors
     - overridden_fields
-    - package_api_docs
     - package_names
     - package_prefixed_library_names
     - parameter_assignments
@@ -146,15 +142,3 @@ linter:
     - use_to_and_as_if_applicable
     - valid_regexps
     - void_checks
-dart_code_metrics:
-  metrics:
-    # disable metrics
-    cyclomatic-complexity: 50
-    maximum-nesting-level: 50
-    number-of-parameters: 50
-    source-lines-of-code: 500
-    number-of-methods: 100
-  metrics-exclude:
-    - test/**
-  rules:
-    - avoid-non-null-assertion # comply to engineering standards and avoid !

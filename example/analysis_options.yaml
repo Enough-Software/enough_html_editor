@@ -1,14 +1,12 @@
 analyzer:
   errors:
     todo: ignore
-  plugins:
-    - dart_code_metrics # https://github.com/dart-code-checker/dart-code-metrics
+
 linter:
   rules:
     - always_declare_return_types
     - always_put_control_body_on_new_line
     # - always_put_required_named_parameters_first # not useful for widgets in which the option key is the first parameter by convention
-    - always_require_non_null_named_parameters
     #- always_specify_types # This would enforce to write types literally everywhere.
     - annotate_overrides
     #- avoid_annotating_with_dynamic # Explicit annotation of dynamic as type is preferable. Also exclusive with type_annotate_public_apis
@@ -30,8 +28,6 @@ linter:
     - avoid_renaming_method_parameters
     - avoid_relative_lib_imports
     - avoid_return_types_on_setters
-    - avoid_returning_null
-    - avoid_returning_null_for_future
     - avoid_returning_null_for_void
     - avoid_returning_this
     - avoid_setters_without_getters
@@ -62,13 +58,10 @@ linter:
     #- flutter_style_todos # Flutter todos are to verbose for our requirements.
     - hash_and_equals
     - implementation_imports
-    - invariant_booleans
-    - iterable_contains_unrelated_type
     # - join_return_with_assignment # leads to less readable code IMHO
     - library_names
     - library_prefixes
     - lines_longer_than_80_chars
-    - list_remove_unrelated_type
     - literal_only_boolean_expressions
     - no_adjacent_strings_in_list
     - no_duplicate_case_values
@@ -78,7 +71,6 @@ linter:
     - one_member_abstracts
     - only_throw_errors
     - overridden_fields
-    - package_api_docs
     - package_names
     - package_prefixed_library_names
     - parameter_assignments
@@ -149,15 +141,3 @@ linter:
     - use_to_and_as_if_applicable
     - valid_regexps
     - void_checks
-dart_code_metrics:
-  metrics:
-    # disable metrics
-    cyclomatic-complexity: 50
-    maximum-nesting-level: 50
-    number-of-parameters: 50
-    source-lines-of-code: 500
-    number-of-methods: 100
-  metrics-exclude:
-    - test/**
-  rules:
-    - avoid-non-null-assertion # comply to engineering standards and avoid !
