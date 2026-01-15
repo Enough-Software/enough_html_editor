@@ -368,7 +368,7 @@ class HtmlEditorApi {
   /// Sets the given text, replacing the previous text completely
   Future<void> setText(String text) {
     final html = _htmlEditorState.generateHtmlDocument(text);
-    return _webViewController.evaluateJavascript(source: html);
+    return _webViewController.loadData(data: html);
   }
 
   /// Selects the HTML DOM node at the current position fully.
