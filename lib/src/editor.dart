@@ -198,26 +198,22 @@ blockquote {
             menuItems: [
               if (widget.addDefaultSelectionMenuItems) ...{
                 ContextMenuItem(
-                  androidId: 1,
-                  iosId: '1',
+                  id: '1',
                   title: '𝗕',
                   action: () => _api.formatBold(),
                 ),
                 ContextMenuItem(
-                  androidId: 2,
-                  iosId: '2',
+                  id: '2',
                   title: '𝑰',
                   action: () => _api.formatItalic(),
                 ),
                 ContextMenuItem(
-                  androidId: 3,
-                  iosId: '3',
+                  id: '3',
                   title: 'U̲',
                   action: () => _api.formatUnderline(),
                 ),
                 ContextMenuItem(
-                  androidId: 4,
-                  iosId: '4',
+                  id: '4',
                   title: '̶T̶',
                   action: () => _api.formatStrikeThrough(),
                 ),
@@ -225,9 +221,7 @@ blockquote {
               if (widget.textSelectionMenuItems != null) ...{
                 for (final item in widget.textSelectionMenuItems!) ...{
                   ContextMenuItem(
-                    androidId:
-                        100 + widget.textSelectionMenuItems!.indexOf(item),
-                    iosId: item.label,
+                    id: 100 + widget.textSelectionMenuItems!.indexOf(item),
                     title: item.label,
                     action: () => item.action(_api),
                   ),
