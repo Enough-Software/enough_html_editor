@@ -43,6 +43,9 @@ class SliverHeaderHtmlEditorControls extends StatelessWidget {
           editorApi: editorApi,
           prefix: prefix,
           suffix: suffix,
+          height: excludeDocumentLevelControls
+              ? 40
+              : 80, // TODO make this more dynamic
         ),
         pinned: true,
       );
@@ -51,11 +54,11 @@ class SliverHeaderHtmlEditorControls extends StatelessWidget {
 class _SliverHeaderHtmlEditorControlsDelegate
     extends SliverPersistentHeaderDelegate {
   _SliverHeaderHtmlEditorControlsDelegate({
+    required this.height,
     this.editorKey,
     this.editorApi,
     this.prefix,
     this.suffix,
-    this.height = 48,
   });
   final double height;
   final GlobalKey<HtmlEditorState>? editorKey;

@@ -223,9 +223,9 @@ class HtmlEditorApi {
 
   String _toHex(Color color) {
     final buffer = StringBuffer();
-    _appendHex(color.red, buffer);
-    _appendHex(color.green, buffer);
-    _appendHex(color.blue, buffer);
+    _appendHex((color.r * 255.0).round().clamp(0, 255), buffer);
+    _appendHex((color.g * 255.0).round().clamp(0, 255), buffer);
+    _appendHex((color.b * 255.0).round().clamp(0, 255), buffer);
     return buffer.toString();
   }
 
@@ -239,7 +239,10 @@ class HtmlEditorApi {
 
   String _getColor(Color color, double opacity) {
     if (opacity < 1.0) {
-      return 'rgba(${color.red},${color.green},${color.blue},$opacity)';
+      final r = (color.r * 255.0).round().clamp(0, 255);
+      final g = (color.g * 255.0).round().clamp(0, 255);
+      final b = (color.b * 255.0).round().clamp(0, 255);
+      return 'rgba($r,$g,$b,$opacity)';
     }
     return '#${_toHex(color)}';
   }

@@ -165,9 +165,7 @@ blockquote {
             supportZoom: false,
             transparentBackground: true,
             useShouldOverrideUrlLoading: true,
-            forceDark: widget.enableDarkMode ? ForceDark.ON : ForceDark.AUTO,
-            forceDarkStrategy:
-                ForceDarkStrategy.PREFER_WEB_THEME_OVER_USER_AGENT_DARKENING,
+            algorithmicDarkeningAllowed: widget.enableDarkMode,
           ),
 
           // initialOptions: InAppWebViewGroupOptions(

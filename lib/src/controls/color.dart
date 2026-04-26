@@ -145,11 +145,11 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
     final col = color ?? widget.color;
     final themeColors = widget.themeColors;
     if (themeColors != null) {
-      if (!themeColors.any((existing) => existing.value == col.value)) {
+      if (!themeColors.any((existing) => existing == col)) {
         themeColors.insert(0, col);
       }
     }
-    if (!_lastColors.any((c) => c.value == col.value)) {
+    if (!_lastColors.any((c) => c == col)) {
       _lastColors.insert(0, col);
       if (_lastColors.length >= 5) {
         _lastColors.removeLast();
@@ -210,7 +210,7 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
   Future<void> _setColor(Color color, HtmlEditorApi api) async {
     _currentColor = color;
     _lastColors
-      ..removeWhere((c) => c.value == color.value)
+      ..removeWhere((c) => c == color)
       ..insert(0, color);
     if (_lastColors.length >= 5) {
       _lastColors.removeLast();
@@ -218,7 +218,7 @@ class _ColorPickerControlState extends State<ColorPickerControl> {
     await widget.setColor(color, api);
     final themeColors = widget.themeColors;
     if (themeColors != null) {
-      if (!themeColors.any((existing) => existing.value == color.value)) {
+      if (!themeColors.any((existing) => existing == color)) {
         themeColors.insert(0, color);
       }
     }
