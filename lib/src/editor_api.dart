@@ -17,7 +17,7 @@ import 'models.dart';
 class HtmlEditorApi {
   /// Creates a new HTML editor api
   HtmlEditorApi(HtmlEditorState htmlEditorState)
-      : _htmlEditorState = htmlEditorState;
+    : _htmlEditorState = htmlEditorState;
 
   late InAppWebViewController _webViewController;
   final HtmlEditorState _htmlEditorState;
@@ -191,8 +191,11 @@ class HtmlEditorApi {
   /// image data and inserts it into the editor.
   ///
   /// Optionally set the given [maxWidth] for the decoded image.
-  Future<void> insertImageFile(File file, String mimeType,
-      {int? maxWidth}) async {
+  Future<void> insertImageFile(
+    File file,
+    String mimeType, {
+    int? maxWidth,
+  }) async {
     final data = await file.readAsBytes();
     return insertImageData(data, mimeType, maxWidth: maxWidth);
   }
@@ -201,8 +204,11 @@ class HtmlEditorApi {
   /// into the editor.
   ///
   /// Optionally set the given [maxWidth] for the decoded image.
-  Future<void> insertImageData(Uint8List data, String mimeType,
-      {int? maxWidth}) async {
+  Future<void> insertImageData(
+    Uint8List data,
+    String mimeType, {
+    int? maxWidth,
+  }) async {
     if (maxWidth != null) {
       final image = img.decodeImage(data);
       if (image == null) {
@@ -218,7 +224,8 @@ class HtmlEditorApi {
     }
     final base64Data = base64Encode(data);
     return insertHtml(
-        '<img src="data:$mimeType;base64,$base64Data" style="max-width: 100%" />');
+      '<img src="data:$mimeType;base64,$base64Data" style="max-width: 100%" />',
+    );
   }
 
   String _toHex(Color color) {
@@ -251,8 +258,10 @@ class HtmlEditorApi {
   ///
   /// Optionally specify the [opacity] being between `1.0` (fully opaque)
   /// and `0.0` (fully transparent).
-  Future<void> setColorTextForeground(Color color,
-      {double opacity = 1.0}) async {
+  Future<void> setColorTextForeground(
+    Color color, {
+    double opacity = 1.0,
+  }) async {
     final colorText = _getColor(color, opacity);
     return _execCommand('"foreColor", false, "$colorText"');
   }
@@ -261,8 +270,10 @@ class HtmlEditorApi {
   ///
   /// Optionally specify the [opacity] being between `1.0` (fully opaque) and
   /// `0.0` (fully transparent).
-  Future<void> setColorTextBackground(Color color,
-      {double opacity = 1.0}) async {
+  Future<void> setColorTextBackground(
+    Color color, {
+    double opacity = 1.0,
+  }) async {
     final colorText = _getColor(color, opacity);
     return _execCommand('"backColor", false, "$colorText"');
   }
@@ -272,7 +283,8 @@ class HtmlEditorApi {
     final colorText = _getColor(color, 1.0);
     _documentBackgroundColor = colorText;
     return _webViewController.evaluateJavascript(
-        source: 'document.body.style.backgroundColor="$colorText";');
+      source: 'document.body.style.backgroundColor="$colorText";',
+    );
   }
 
   /// Sets the document's foreground color
@@ -280,12 +292,14 @@ class HtmlEditorApi {
     final colorText = _getColor(color, 1.0);
     _documentForegroundColor = colorText;
     return _webViewController.evaluateJavascript(
-        source: 'document.body.style.color="$colorText";');
+      source: 'document.body.style.color="$colorText";',
+    );
   }
 
   Future<void> _execCommand(String command) async {
     await _webViewController.evaluateJavascript(
-        source: 'document.execCommand($command);');
+      source: 'document.execCommand($command);',
+    );
   }
 
   /// Retrieves the edited text as HTML
@@ -293,7 +307,8 @@ class HtmlEditorApi {
   /// Compare [getFullHtml()] to the complete HTML document's text.
   Future<String> getText() async {
     final innerHtml = await _webViewController.evaluateJavascript(
-        source: 'document.getElementById("editor").innerHTML;');
+      source: 'document.getElementById("editor").innerHTML;',
+    );
     return innerHtml;
   }
 
@@ -307,13 +322,13 @@ class HtmlEditorApi {
     content ??= await getText();
     final bodyStyle =
         (_documentBackgroundColor != null && _documentForegroundColor != null)
-            ? ' style="color: $_documentForegroundColor;'
-                'background-color: $_documentBackgroundColor;"'
-            : _documentForegroundColor != null
-                ? ' style="color: $_documentForegroundColor;"'
-                : _documentBackgroundColor != null
-                    ? ' style="background-color: $_documentBackgroundColor;"'
-                    : '';
+        ? ' style="color: $_documentForegroundColor;'
+              'background-color: $_documentBackgroundColor;"'
+        : _documentForegroundColor != null
+        ? ' style="color: $_documentForegroundColor;"'
+        : _documentBackgroundColor != null
+        ? ' style="background-color: $_documentBackgroundColor;"'
+        : '';
     final styles = _htmlEditorState.styles.replaceFirst('''#editor {
   min-height: ==minHeight==px;
 }''', '');
@@ -331,7 +346,8 @@ class HtmlEditorApi {
   /// Retrieves the currently selected text.
   Future<String?> getSelectedText() async {
     final text = await _webViewController.evaluateJavascript(
-        source: '''document.getSelection().getRangeAt(0).toString();''');
+      source: '''document.getSelection().getRangeAt(0).toString();''',
+    );
     if (text.isEmpty || text == 'null') {
       return null;
     }
@@ -350,7 +366,8 @@ class HtmlEditorApi {
   /// Compare [restoreSelectionRange]
   Future<String> storeSelectionRange() async {
     final text = await _webViewController.evaluateJavascript(
-        source: 'storeSelectionRange();');
+      source: 'storeSelectionRange();',
+    );
     return _removeQuotes(text);
   }
 

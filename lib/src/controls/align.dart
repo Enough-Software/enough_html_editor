@@ -26,14 +26,21 @@ class _AlignDropdownState extends State<AlignDropdown> {
     return PlatformDropdownButton<ElementAlign>(
       items: const [
         DropdownMenuItem<ElementAlign>(
-            child: Icon(Icons.format_align_left), value: ElementAlign.left),
+          child: Icon(Icons.format_align_left),
+          value: ElementAlign.left,
+        ),
         DropdownMenuItem<ElementAlign>(
-            child: Icon(Icons.format_align_center), value: ElementAlign.center),
+          child: Icon(Icons.format_align_center),
+          value: ElementAlign.center,
+        ),
         DropdownMenuItem<ElementAlign>(
-            child: Icon(Icons.format_align_right), value: ElementAlign.right),
+          child: Icon(Icons.format_align_right),
+          value: ElementAlign.right,
+        ),
         DropdownMenuItem<ElementAlign>(
-            child: Icon(Icons.format_align_justify),
-            value: ElementAlign.justify),
+          child: Icon(Icons.format_align_justify),
+          value: ElementAlign.justify,
+        ),
       ],
       onChanged: (value) {
         final align = value ?? ElementAlign.left;

@@ -31,8 +31,9 @@ class _LinkButtonState extends State<LinkButton> {
   @override
   Widget build(BuildContext context) {
     final api = HtmlEditorApiWidget.of(context)!.editorApi;
-    final buttonColor =
-        _isInLink ? Theme.of(context).colorScheme.secondary : null;
+    final buttonColor = _isInLink
+        ? Theme.of(context).colorScheme.secondary
+        : null;
     api.onLinkSettingsChanged = _onLinkSettingsChanged;
     return DensePlatformIconButton(
       icon: const Icon(Icons.link),
@@ -122,44 +123,45 @@ class _LinkEditorState extends State<LinkEditor> {
 
   @override
   Widget build(BuildContext context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          DecoratedPlatformTextField(
-            controller: widget.urlController,
-            decoration: InputDecoration(
-              icon: const Icon(Icons.link),
-              suffix: IconButton(
-                icon: Icon(CommonPlatformIcons.clear),
-                onPressed: () => widget.urlController.text = '',
-              ),
-            ),
-            autofocus: true,
-            keyboardType: TextInputType.url,
-            onChanged: (text) => _updatePreview(),
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      DecoratedPlatformTextField(
+        controller: widget.urlController,
+        decoration: InputDecoration(
+          icon: const Icon(Icons.link),
+          suffix: IconButton(
+            icon: Icon(CommonPlatformIcons.clear),
+            onPressed: () => widget.urlController.text = '',
           ),
-          DecoratedPlatformTextField(
-            controller: widget.textController,
-            decoration: InputDecoration(
-              icon: const Icon(Icons.text_fields),
-              suffix: DensePlatformIconButton(
-                icon: Icon(CommonPlatformIcons.clear),
-                onPressed: () => widget.textController.text = '',
-              ),
-            ),
-            autofocus: true,
-            keyboardType: TextInputType.text,
-            onChanged: (text) => _updatePreview(),
+        ),
+        autofocus: true,
+        keyboardType: TextInputType.url,
+        onChanged: (text) => _updatePreview(),
+      ),
+      DecoratedPlatformTextField(
+        controller: widget.textController,
+        decoration: InputDecoration(
+          icon: const Icon(Icons.text_fields),
+          suffix: DensePlatformIconButton(
+            icon: Icon(CommonPlatformIcons.clear),
+            onPressed: () => widget.textController.text = '',
           ),
-          const Divider(),
-          PlatformTextButton(
-            child: Text(_previewText),
-            onPressed: () {
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(url)));
-            },
-          ),
-        ],
-      );
+        ),
+        autofocus: true,
+        keyboardType: TextInputType.text,
+        onChanged: (text) => _updatePreview(),
+      ),
+      const Divider(),
+      PlatformTextButton(
+        child: Text(_previewText),
+        onPressed: () {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(url)));
+        },
+      ),
+    ],
+  );
 
   String get url {
     var text = widget.urlController.text;

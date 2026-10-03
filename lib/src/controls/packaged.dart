@@ -97,27 +97,27 @@ class PackagedHtmlEditorState extends State<PackagedHtmlEditor> {
 
   @override
   Widget build(BuildContext context) => Column(
-        children: [
-          if (editorApi == null) ...{
-            const PlatformProgressIndicator(),
-          } else ...{
-            HtmlEditorControls(
-              editorApi: editorApi,
-              excludeDocumentLevelControls: widget.excludeDocumentLevelControls,
-            ),
-          },
-          HtmlEditor(
-            initialContent: widget.initialContent,
-            minHeight: widget.minHeight,
-            // addDefaultSelectionMenuItems:
-            // widget.addDefaultSelectionMenuItems,
-            adjustHeight: widget.adjustHeight,
-            splitBlockquotes: widget.splitBlockquotes,
-            // textSelectionMenuItems: widget.textSelectionMenuItems,
-            onCreated: _onCreated,
-          ),
-        ],
-      );
+    children: [
+      if (editorApi == null) ...{
+        const PlatformProgressIndicator(),
+      } else ...{
+        HtmlEditorControls(
+          editorApi: editorApi,
+          excludeDocumentLevelControls: widget.excludeDocumentLevelControls,
+        ),
+      },
+      HtmlEditor(
+        initialContent: widget.initialContent,
+        minHeight: widget.minHeight,
+        // addDefaultSelectionMenuItems:
+        // widget.addDefaultSelectionMenuItems,
+        adjustHeight: widget.adjustHeight,
+        splitBlockquotes: widget.splitBlockquotes,
+        // textSelectionMenuItems: widget.textSelectionMenuItems,
+        onCreated: _onCreated,
+      ),
+    ],
+  );
 
   void _onCreated(HtmlEditorApi api) {
     setState(() {

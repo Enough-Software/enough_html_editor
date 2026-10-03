@@ -74,10 +74,7 @@ class ColorControls extends StatelessWidget {
             builder: (context, color) => Container(
               width: 20,
               height: 40,
-              decoration: BoxDecoration(
-                border: Border.all(),
-                color: color,
-              ),
+              decoration: BoxDecoration(border: Border.all(), color: color),
             ),
             setColor: (color, api) => api.setColorDocumentBackground(color),
           ),
@@ -98,9 +95,11 @@ class ColorPickerControl extends StatefulWidget {
     this.getColor,
     this.builder,
     this.icon,
-  })  : assert(builder != null || icon != null,
-            'Please specify either an builder or an icon'),
-        super(key: key);
+  }) : assert(
+         builder != null || icon != null,
+         'Please specify either an builder or an icon',
+       ),
+       super(key: key);
 
   /// The current color
   final Color color;
@@ -290,17 +289,19 @@ class __ColorSelectorState extends State<_ColorSelector> {
                   child: ListView(
                     padding: EdgeInsets.zero,
                     children: themeColors
-                        .map((c) => Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: InkWell(
-                                child: _buildColorPreview(c),
-                                onTap: () {
-                                  setState(() {
-                                    _color = c;
-                                  });
-                                },
-                              ),
-                            ))
+                        .map(
+                          (c) => Padding(
+                            padding: const EdgeInsets.all(4.0),
+                            child: InkWell(
+                              child: _buildColorPreview(c),
+                              onTap: () {
+                                setState(() {
+                                  _color = c;
+                                });
+                              },
+                            ),
+                          ),
+                        )
                         .toList(),
                     scrollDirection: Axis.horizontal,
                   ),
@@ -349,13 +350,13 @@ class __ColorSelectorState extends State<_ColorSelector> {
   }
 
   Widget _buildColorPreview(Color color, {Widget? child}) => Container(
-        width: 16,
-        height: 16,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-          border: Border.all(),
-        ),
-        child: child,
-      );
+    width: 16,
+    height: 16,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: color,
+      border: Border.all(),
+    ),
+    child: child,
+  );
 }
