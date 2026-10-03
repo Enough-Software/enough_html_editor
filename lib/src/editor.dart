@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -118,10 +119,13 @@ blockquote {
   /// Generates the editor document html from the specified [content].
   String generateHtmlDocument(String content) {
     final buffer = StringBuffer();
-    final stylesWithMinHeight =
-        styles.replaceFirst('==minHeight==', '${widget.minHeight}');
-    buffer
-        .write(_templateStart.replaceFirst('==styles==', stylesWithMinHeight));
+    final stylesWithMinHeight = styles.replaceFirst(
+      '==minHeight==',
+      '${widget.minHeight}',
+    );
+    buffer.write(
+      _templateStart.replaceFirst('==styles==', stylesWithMinHeight),
+    );
     if (widget.splitBlockquotes) {
       buffer.write(_templateBlockquote);
     }
@@ -138,14 +142,15 @@ blockquote {
       return SizedBox(
         height: _documentHeight ?? size.height,
         width: size.width,
-        child: _buildEditor(),
+        child: _buildEditor(widget.textSelectionMenuItems),
       );
     } else {
-      return _buildEditor();
+      return _buildEditor(widget.textSelectionMenuItems);
     }
   }
 
-  Widget _buildEditor() => Focus(
+  Widget _buildEditor(List<TextSelectionMenuItem>? textSelectionMenuItems) =>
+      Focus(
         focusNode: _focusNode,
         child: InAppWebView(
           key: ValueKey(_initialPageContent),
@@ -153,7 +158,8 @@ blockquote {
           onLoadStop: (controller, uri) async {
             if (widget.adjustHeight) {
               final scrollHeight = await controller.evaluateJavascript(
-                  source: 'document.body.scrollHeight');
+                source: 'document.body.scrollHeight',
+              );
               if (mounted && (scrollHeight + 15.0 > widget.minHeight)) {
                 setState(() {
                   _documentHeight = scrollHeight + 15.0;
@@ -185,46 +191,45 @@ blockquote {
           shouldOverrideUrlLoading: (controller, navigation) =>
               // this is required for iOS / WKWebKit:
               navigation.isForMainFrame &&
-                      navigation.request.url?.toString() == 'about:blank'
-                  ? Future.value(NavigationActionPolicy.ALLOW)
-                  // for all other requests: block
-                  : Future.value(NavigationActionPolicy.CANCEL),
+                  navigation.request.url?.toString() == 'about:blank'
+              ? Future.value(NavigationActionPolicy.ALLOW)
+              // for all other requests: block
+              : Future.value(NavigationActionPolicy.CANCEL),
           gestureRecognizers: const {
             Factory<LongPressGestureRecognizer>(LongPressGestureRecognizer.new),
           },
           contextMenu: ContextMenu(
             menuItems: [
-              if (widget.addDefaultSelectionMenuItems) ...{
+              if (widget.addDefaultSelectionMenuItems) ...[
                 ContextMenuItem(
-                  id: '1',
+                  id: 1,
                   title: '𝗕',
                   action: () => _api.formatBold(),
                 ),
                 ContextMenuItem(
-                  id: '2',
+                  id: 2,
                   title: '𝑰',
                   action: () => _api.formatItalic(),
                 ),
                 ContextMenuItem(
-                  id: '3',
+                  id: 3,
                   title: 'U̲',
                   action: () => _api.formatUnderline(),
                 ),
                 ContextMenuItem(
-                  id: '4',
+                  id: 4,
                   title: '̶T̶',
                   action: () => _api.formatStrikeThrough(),
                 ),
-              },
-              if (widget.textSelectionMenuItems != null) ...{
-                for (final item in widget.textSelectionMenuItems!) ...{
-                  ContextMenuItem(
-                    id: 100 + widget.textSelectionMenuItems!.indexOf(item),
+              ],
+              if (textSelectionMenuItems != null)
+                ...textSelectionMenuItems.mapIndexed(
+                  (index, item) => ContextMenuItem(
+                    id: 100 + index,
                     title: item.label,
                     action: () => item.action(_api),
                   ),
-                },
-              },
+                ),
             ],
           ),
           onScrollChanged: (controller, x, y) =>
@@ -402,8 +407,10 @@ blockquote {
           colorValue.endsWith(')')) {
         try {
           final values = colorValue
-              .substring(startsWithRgb ? 'rgb('.length : 'rgba('.length,
-                  colorValue.length - 1)
+              .substring(
+                startsWithRgb ? 'rgb('.length : 'rgba('.length,
+                colorValue.length - 1,
+              )
               .split(',')
               .map((text) => int.parse(text.trim()))
               .toList();
@@ -459,7 +466,8 @@ blockquote {
   Future<void> onDocumentChanged() async {
     if (widget.adjustHeight) {
       final scrollHeight = await _webViewController.evaluateJavascript(
-          source: 'document.body.scrollHeight');
+        source: 'document.body.scrollHeight',
+      );
       if (scrollHeight != null &&
           mounted &&
           (scrollHeight + 15.0 > widget.minHeight)) {
