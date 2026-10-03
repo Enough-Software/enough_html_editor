@@ -31,6 +31,12 @@ dependencies:
     sdk: flutter
   intl: any
 
+dependency_overrides:
+  # uncomment path for git/ local development
+  # enough_platform_widgets:
+  #   git:
+  #     url: https://github.com/Enough-Software/enough_platform_widgets.git
+    # path: ../../enough_platform_widgets
 
 dev_dependencies:
   flutter_test:

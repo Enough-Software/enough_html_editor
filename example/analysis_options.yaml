@@ -1,6 +1,10 @@
 analyzer:
   errors:
     todo: ignore
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
 
 linter:
   rules:

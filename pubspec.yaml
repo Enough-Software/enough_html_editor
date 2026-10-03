@@ -8,11 +8,12 @@ environment:
   flutter: ">=3.41.7"
 
 dependencies:
+  collection: ^1.19.0
   enough_platform_widgets: ^1.1.2
   flutter:
     sdk: flutter
   flutter_colorpicker: ^1.1.0
-  flutter_inappwebview: ^6.2.0-beta.2
+  flutter_inappwebview: ^6.2.0-beta.3
   image: ^4.5.4
 
 
@@ -21,7 +22,7 @@ dependency_overrides:
   # enough_platform_widgets:
   #   git:
   #     url: https://github.com/Enough-Software/enough_platform_widgets.git
-  #   path: ../enough_platform_widgets
+    # path: ../enough_platform_widgets
 
 dev_dependencies:
   flutter_test:
