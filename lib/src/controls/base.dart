@@ -25,9 +25,11 @@ import 'controls.dart';
 class HtmlEditorApiWidget extends InheritedWidget {
   /// Creates a new HtmlEditorApiWidget
   /// with the specified [editorApi] and [child]
-  const HtmlEditorApiWidget(
-      {Key? key, required this.editorApi, required Widget child})
-      : super(key: key, child: child);
+  const HtmlEditorApiWidget({
+    Key? key,
+    required this.editorApi,
+    required Widget child,
+  }) : super(key: key, child: child);
 
   /// The editor API
   final HtmlEditorApi editorApi;
@@ -67,9 +69,14 @@ class HtmlEditorControls extends StatefulWidget {
     this.suffix,
     this.themeColors,
     this.excludeDocumentLevelControls = false,
-  })  : assert(editorApi != null || editorKey != null,
-            'Please define either the editorApi or editorKey parameter.'),
-        super(key: key);
+  }) : assert(
+         editorApi != null || editorKey != null,
+         'Please define either the editorApi or editorKey parameter.',
+       ),
+       super(key: key);
+
+  /// The default height of the control bar.
+  static const double defaultHeight = 50;
 
   /// The key for the editor state
   final GlobalKey<HtmlEditorState>? editorKey;
@@ -118,14 +125,12 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
       editorApi: _editorApi,
       child: SizedBox(
         width: size.width,
-        height: 50,
+        height: HtmlEditorControls.defaultHeight,
         child: Material(
           child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
-              if (prefix != null) ...{
-                prefix,
-              },
+              if (prefix != null) prefix,
               const BaseFormatButtons(),
               DensePlatformIconButton(
                 icon: const Icon(Icons.format_list_bulleted),
@@ -144,9 +149,7 @@ class _HtmlEditorControlsState extends State<HtmlEditorControls> {
                     widget.excludeDocumentLevelControls,
               ),
               const LinkButton(),
-              if (suffix != null) ...{
-                suffix,
-              },
+              if (suffix != null) suffix,
             ],
           ),
         ),

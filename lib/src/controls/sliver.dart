@@ -16,9 +16,11 @@ class SliverHeaderHtmlEditorControls extends StatelessWidget {
     this.prefix,
     this.suffix,
     this.excludeDocumentLevelControls = false,
-  })  : assert(editorKey != null || editorApi != null,
-            'either editorKey or editorApi is required.'),
-        super(key: key);
+  }) : assert(
+         editorKey != null || editorApi != null,
+         'either editorKey or editorApi is required.',
+       ),
+       super(key: key);
 
   /// The global key for [HtmlEditorState]
   final GlobalKey<HtmlEditorState>? editorKey;
@@ -38,17 +40,20 @@ class SliverHeaderHtmlEditorControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SliverPersistentHeader(
-        delegate: _SliverHeaderHtmlEditorControlsDelegate(
-          editorKey: editorKey,
-          editorApi: editorApi,
-          prefix: prefix,
-          suffix: suffix,
-          height: excludeDocumentLevelControls
-              ? 40
-              : 80, // TODO make this more dynamic
-        ),
-        pinned: true,
-      );
+    delegate: _SliverHeaderHtmlEditorControlsDelegate(
+      editorKey: editorKey,
+      editorApi: editorApi,
+      prefix: prefix,
+      suffix: suffix,
+      excludeDocumentLevelControls: excludeDocumentLevelControls,
+      // The controls are laid out with a fixed height of
+      // [HtmlEditorControls.defaultHeight]. The persistent header has to
+      // use the same extent, otherwise its layoutExtent exceeds its
+      // paintExtent and triggers a SliverGeometry assertion.
+      height: HtmlEditorControls.defaultHeight,
+    ),
+    pinned: true,
+  );
 }
 
 class _SliverHeaderHtmlEditorControlsDelegate
@@ -59,25 +64,37 @@ class _SliverHeaderHtmlEditorControlsDelegate
     this.editorApi,
     this.prefix,
     this.suffix,
+    this.excludeDocumentLevelControls = false,
   });
   final double height;
   final GlobalKey<HtmlEditorState>? editorKey;
   final HtmlEditorApi? editorApi;
   final Widget? prefix;
   final Widget? suffix;
+  final bool excludeDocumentLevelControls;
 
   @override
   Widget build(
-          BuildContext context, double shrinkOffset, bool overlapsContent) =>
-      Container(
-        color: Theme.of(context).canvasColor,
-        child: HtmlEditorControls(
-          editorKey: editorKey,
-          editorApi: editorApi,
-          prefix: prefix,
-          suffix: suffix,
-        ),
-      );
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) => Container(
+    color: Theme.of(context).canvasColor,
+    // Make sure the header child always fills the persistent header's
+    // main-axis extent. Otherwise `layoutExtent` can exceed `paintExtent`
+    // when the controls report a smaller height (for example while they are
+    // still showing a progress indicator).
+    child: SizedBox(
+      height: height,
+      child: HtmlEditorControls(
+        editorKey: editorKey,
+        editorApi: editorApi,
+        prefix: prefix,
+        suffix: suffix,
+        excludeDocumentLevelControls: excludeDocumentLevelControls,
+      ),
+    ),
+  );
 
   @override
   double get maxExtent => height;
@@ -86,5 +103,13 @@ class _SliverHeaderHtmlEditorControlsDelegate
   double get minExtent => height;
 
   @override
-  bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) => false;
+  bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) {
+    final old = oldDelegate as _SliverHeaderHtmlEditorControlsDelegate;
+    return editorKey != old.editorKey ||
+        editorApi != old.editorApi ||
+        prefix != old.prefix ||
+        suffix != old.suffix ||
+        excludeDocumentLevelControls != old.excludeDocumentLevelControls ||
+        height != old.height;
+  }
 }
